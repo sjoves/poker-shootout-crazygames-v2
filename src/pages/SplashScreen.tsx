@@ -81,7 +81,7 @@ export default function SplashScreen() {
         <Button
           variant="outline"
           size="lg"
-          className="w-full h-16 text-lg font-display primary-gradient text-primary-foreground border-0"
+          className="w-full h-16 text-lg font-display"
           onClick={() => handleModeSelect('ssc')}
         >
           🏆 Sharp Shooter Challenge
