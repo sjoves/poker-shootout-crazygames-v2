@@ -1,13 +1,20 @@
+import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { GameState } from '@/types/game';
-import { Star, Trophy } from 'lucide-react';
+import { Star, Trophy, Crown, Play } from 'lucide-react';
+import { useSubscription } from '@/hooks/useSubscription';
+import { useAuth } from '@/hooks/useAuth';
+import { RewardedAd, useRewardedAd } from '@/components/ads/RewardedAd';
 
 export default function GameOverScreen() {
   const location = useLocation();
   const navigate = useNavigate();
   const gameState = location.state?.gameState as GameState | undefined;
+  const { user } = useAuth();
+  const { isPremium, openCheckout } = useSubscription();
+  const rewardedAd = useRewardedAd();
 
   if (!gameState) {
     navigate('/');
@@ -30,6 +37,16 @@ export default function GameOverScreen() {
     "Sharp shootin' there!",
     "Legendary gunslinger!"
   ];
+
+  const handlePlayAgain = () => {
+    if (isPremium) {
+      navigate(`/play/${gameState.mode}`);
+    } else {
+      rewardedAd.showAd('play_again', () => {
+        navigate(`/play/${gameState.mode}`);
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen modern-bg flex flex-col items-center justify-center p-6">
@@ -67,14 +84,52 @@ export default function GameOverScreen() {
           <Button onClick={() => navigate('/leaderboard')} variant="outline" size="lg">
             🏅 View Leaderboard
           </Button>
-          <Button onClick={() => navigate(`/play/${gameState.mode}`)} size="lg">
-            🔄 Play Again
+          
+          <Button onClick={handlePlayAgain} size="lg" className="gap-2">
+            {isPremium ? (
+              <>
+                <Play className="w-4 h-4" />
+                Play Again
+              </>
+            ) : (
+              <>
+                🎬 Watch Ad to Play Again
+              </>
+            )}
           </Button>
+          
+          {!isPremium && (
+            <Button
+              onClick={async () => {
+                if (!user) {
+                  navigate('/auth');
+                } else {
+                  await openCheckout();
+                }
+              }}
+              variant="secondary"
+              size="lg"
+              className="gap-2"
+            >
+              <Crown className="w-4 h-4" />
+              Go Premium - No Ads
+            </Button>
+          )}
+          
           <Button onClick={() => navigate('/')} variant="ghost">
             🏠 Back to Menu
           </Button>
         </div>
       </motion.div>
+
+      {/* Rewarded Ad Modal */}
+      <RewardedAd
+        isOpen={rewardedAd.isOpen}
+        onClose={rewardedAd.hideAd}
+        onAdComplete={rewardedAd.onComplete}
+        adType={rewardedAd.adType}
+        modeName={rewardedAd.modeName}
+      />
     </div>
   );
 }
