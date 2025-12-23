@@ -48,9 +48,10 @@ interface ScorePanelProps {
   progressLabel: string;
   progressValue: string;
   currentHand?: HandResult | null;
+  goalScore?: number;
 }
 
-export function ScorePanel({ score, timeDisplay, progressLabel, progressValue }: ScorePanelProps) {
+export function ScorePanel({ score, timeDisplay, progressLabel, progressValue, goalScore }: ScorePanelProps) {
   return (
     <div className="flex items-center justify-between bg-card/80 backdrop-blur-sm rounded-xl p-4 border border-border">
       <div className="text-center">
@@ -61,7 +62,7 @@ export function ScorePanel({ score, timeDisplay, progressLabel, progressValue }:
           animate={{ scale: 1 }}
           className="text-2xl font-display text-gold"
         >
-          {score.toLocaleString()}
+          {goalScore ? `${score.toLocaleString()}/${goalScore.toLocaleString()}` : score.toLocaleString()}
         </motion.div>
       </div>
       

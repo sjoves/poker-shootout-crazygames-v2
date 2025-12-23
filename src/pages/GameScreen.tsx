@@ -75,6 +75,7 @@ export default function GameScreen() {
         progressLabel={progress.label}
         progressValue={progress.value}
         currentHand={state.currentHand}
+        goalScore={isSSC ? state.levelGoal : undefined}
       />
 
       <div className="flex-1 relative overflow-hidden p-4">
