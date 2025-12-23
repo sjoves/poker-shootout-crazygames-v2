@@ -61,12 +61,32 @@ export function FallingCards({
     [deck, selectedCardIds, speed, isRecycling]
   );
 
+  // Seed a first card as soon as the deck becomes available
+  // (prevents an empty screen when the container measures 0px briefly on mount)
+  useEffect(() => {
+    if (isPaused) return;
+    if (deck.length === 0) return;
+
+    setFallingCards((prev) => {
+      if (prev.length > 0) return prev;
+
+      const measuredWidth = containerRef.current?.offsetWidth ?? 0;
+      const effectiveWidth = measuredWidth > 0 ? measuredWidth : 480;
+      const next = createSpawn(effectiveWidth);
+      if (!next) return prev;
+
+      lastSpawnRef.current = performance.now();
+      return [next];
+    });
+  }, [deck.length, isPaused, createSpawn]);
+
   useEffect(() => {
     if (isPaused) return;
 
     const tick = (t: number) => {
       const containerHeight = containerRef.current?.offsetHeight ?? 600;
-      const containerWidth = containerRef.current?.offsetWidth ?? 0;
+      const measuredWidth = containerRef.current?.offsetWidth ?? 0;
+      const effectiveWidth = measuredWidth > 0 ? measuredWidth : 480;
 
       setFallingCards((prev) => {
         const moved = prev
@@ -82,10 +102,11 @@ export function FallingCards({
           });
 
         const shouldSpawn = t - lastSpawnRef.current > 600 / speed;
-        if (!shouldSpawn || containerWidth <= 0) return moved;
+        if (!shouldSpawn) return moved;
         if (moved.length >= 14) return moved;
+        if (deck.length === 0) return moved;
 
-        const next = createSpawn(containerWidth);
+        const next = createSpawn(effectiveWidth);
         if (!next) return moved;
 
         lastSpawnRef.current = t;
@@ -112,12 +133,15 @@ export function FallingCards({
 
   const containerWidth = containerRef.current?.offsetWidth ?? 0;
   const containerHeight = containerRef.current?.offsetHeight ?? 0;
+  const showDebug =
+    import.meta.env.DEV ||
+    (typeof window !== "undefined" && window.location.hostname.includes("lovableproject.com"));
 
   return (
     <div ref={containerRef} className="relative w-full h-full overflow-hidden">
       {/* Debug overlay - dev only */}
-      {import.meta.env.DEV && (
-        <div className="absolute top-2 left-2 z-50 bg-black/80 text-white text-xs p-2 rounded font-mono">
+      {showDebug && (
+        <div className="absolute top-2 left-2 z-50 rounded-md border border-border bg-card/90 text-card-foreground text-xs p-2 font-mono shadow-sm backdrop-blur">
           <div>Deck: {deck.length}</div>
           <div>Falling: {fallingCards.length}</div>
           <div>Container: {containerWidth}x{containerHeight}</div>
@@ -142,7 +166,12 @@ export function FallingCards({
             }}
             className="cursor-pointer z-10"
           >
-            <PlayingCard card={card} onClick={() => handleCardClick(card)} size="md" animate={false} />
+            <PlayingCard
+              card={card}
+              onClick={() => handleCardClick(card)}
+              size="md"
+              animate={false}
+            />
           </motion.div>
         ))}
       </AnimatePresence>
