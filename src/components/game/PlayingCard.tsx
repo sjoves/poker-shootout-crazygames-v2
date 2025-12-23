@@ -19,18 +19,47 @@ const SUIT_SYMBOLS: Record<Suit, string> = {
   spades: '♠',
 };
 
-const SUIT_COLORS: Record<Suit, string> = {
-  hearts: 'text-suit-hearts',
-  diamonds: 'text-suit-diamonds',
-  clubs: 'text-suit-clubs',
-  spades: 'text-suit-spades',
+const isRedSuit = (suit: Suit) => suit === 'hearts' || suit === 'diamonds';
+
+const SIZE_CONFIG = {
+  sm: { card: 'w-12 h-[66px]', rank: 'text-xs', corner: 'text-[8px]', center: 'text-base', pip: 'text-[6px]', gap: 'gap-0' },
+  md: { card: 'w-16 h-[88px]', rank: 'text-sm', corner: 'text-[10px]', center: 'text-xl', pip: 'text-[8px]', gap: 'gap-0.5' },
+  lg: { card: 'w-24 h-[132px]', rank: 'text-lg', corner: 'text-xs', center: 'text-3xl', pip: 'text-[10px]', gap: 'gap-1' },
 };
 
-const SIZE_CLASSES = {
-  sm: 'w-12 h-16 text-sm',
-  md: 'w-16 h-22 text-base',
-  lg: 'w-20 h-28 text-lg',
+// Number of pips to show based on card rank
+const PIP_LAYOUTS: Record<string, number> = {
+  'A': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10,
 };
+
+function CenterPips({ rank, suit, size }: { rank: string; suit: Suit; size: 'sm' | 'md' | 'lg' }) {
+  const symbol = SUIT_SYMBOLS[suit];
+  const count = PIP_LAYOUTS[rank];
+  const config = SIZE_CONFIG[size];
+  
+  if (!count) {
+    // Face card (J, Q, K)
+    return (
+      <div className={cn('flex flex-col items-center justify-center', config.center)}>
+        <span className="font-bold">{rank}</span>
+        <span>{symbol}</span>
+      </div>
+    );
+  }
+
+  if (count === 1) {
+    return <span className={cn(config.center, 'font-normal')}>{symbol}</span>;
+  }
+
+  // Simple grid layout for pips
+  return (
+    <div className={cn('grid grid-cols-2 gap-x-1', config.pip, config.gap)}>
+      {Array.from({ length: count }).map((_, i) => (
+        <span key={i} className="text-center leading-tight">{symbol}</span>
+      ))}
+    </div>
+  );
+}
 
 export function PlayingCard({
   card,
@@ -41,8 +70,9 @@ export function PlayingCard({
   animate = true,
   className,
 }: PlayingCardProps) {
-  const suitColor = SUIT_COLORS[card.suit];
   const suitSymbol = SUIT_SYMBOLS[card.suit];
+  const colorClass = isRedSuit(card.suit) ? 'text-red-600' : 'text-gray-900';
+  const config = SIZE_CONFIG[size];
 
   return (
     <motion.button
@@ -53,11 +83,12 @@ export function PlayingCard({
       initial={animate ? { scale: 0.8, opacity: 0 } : false}
       animate={{ scale: 1, opacity: 1 }}
       className={cn(
-        SIZE_CLASSES[size],
-        'relative rounded-lg bg-foreground shadow-lg cursor-pointer select-none',
+        config.card,
+        'relative rounded-lg bg-white shadow-lg cursor-pointer select-none',
         'flex flex-col items-center justify-center',
-        'border-2 border-border/20',
+        'border border-gray-200',
         'transition-all duration-200',
+        colorClass,
         isSelected && 'ring-2 ring-primary opacity-50 cursor-not-allowed',
         isDisabled && 'opacity-50 cursor-not-allowed',
         !isDisabled && !isSelected && 'hover:shadow-xl active:shadow-md',
@@ -65,28 +96,34 @@ export function PlayingCard({
       )}
     >
       {/* Top-left corner */}
-      <div className={cn('absolute top-1 left-1 flex flex-col items-center leading-none', suitColor)}>
-        <span className="font-bold">{card.rank}</span>
-        <span className="text-xs">{suitSymbol}</span>
+      <div className={cn('absolute top-0.5 left-1 flex flex-col items-center leading-none')}>
+        <span className={cn('font-bold', config.rank)}>{card.rank}</span>
+        <span className={config.corner}>{suitSymbol}</span>
       </div>
 
-      {/* Center symbol */}
-      <span className={cn('text-2xl', suitColor)}>{suitSymbol}</span>
+      {/* Center pips/face */}
+      <CenterPips rank={card.rank} suit={card.suit} size={size} />
 
       {/* Bottom-right corner (inverted) */}
-      <div className={cn('absolute bottom-1 right-1 flex flex-col items-center leading-none rotate-180', suitColor)}>
-        <span className="font-bold">{card.rank}</span>
-        <span className="text-xs">{suitSymbol}</span>
+      <div className={cn('absolute bottom-0.5 right-1 flex flex-col items-center leading-none rotate-180')}>
+        <span className={cn('font-bold', config.rank)}>{card.rank}</span>
+        <span className={config.corner}>{suitSymbol}</span>
       </div>
     </motion.button>
   );
 }
 
+const EMPTY_SLOT_SIZES = {
+  sm: 'w-12 h-[66px]',
+  md: 'w-16 h-[88px]',
+  lg: 'w-24 h-[132px]',
+};
+
 export function EmptyCardSlot({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
   return (
     <div
       className={cn(
-        SIZE_CLASSES[size],
+        EMPTY_SLOT_SIZES[size],
         'rounded-lg border-2 border-dashed border-muted-foreground/30',
         'flex items-center justify-center',
         'bg-muted/20'
