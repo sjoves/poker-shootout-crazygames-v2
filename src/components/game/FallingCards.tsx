@@ -51,7 +51,7 @@ export function FallingCards({
         instanceKey: `${picked.id}-${spawnCountRef.current}`,
         x: Math.random() * Math.max(0, containerWidth - cardWidth),
         y: -110,
-        speed: (2.2 + Math.random() * 2.2) * speed,
+        speed: (1.2 + Math.random() * 1.4) * speed,
         rotation: (Math.random() - 0.5) * 40,
         rotationSpeed: (Math.random() - 0.5) * 2.5,
         sway: 12 + Math.random() * 16,
