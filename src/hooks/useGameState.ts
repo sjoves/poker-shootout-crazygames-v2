@@ -96,9 +96,9 @@ export function useGameState() {
       const newHandsPlayed = prev.handsPlayed + 1;
       const newScore = prev.score + result.totalPoints;
 
-      // Check if game ends for Classic modes
+      // Check if game ends for Classic modes (when deck runs out of cards for another hand)
       const isClassic = prev.mode === 'classic_fc' || prev.mode === 'classic_cb';
-      const isGameOver = isClassic && newHandsPlayed >= 10;
+      const isGameOver = isClassic && prev.deck.length < 5;
 
       // For SSC, check if level is complete
       if (prev.mode === 'ssc') {

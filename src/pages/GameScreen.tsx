@@ -39,7 +39,9 @@ export default function GameScreen() {
     if (state.mode === 'blitz_fc' || state.mode === 'blitz_cb') {
       return { label: 'Hands', value: `${state.handsPlayed}` };
     }
-    return { label: 'Hands', value: `${state.handsPlayed}/10` };
+    // Classic modes: show remaining cards in deck
+    const remainingCards = state.deck.length;
+    return { label: 'Cards', value: `${remainingCards}` };
   };
 
   const isBlitz = state.mode === 'blitz_fc' || state.mode === 'blitz_cb';
