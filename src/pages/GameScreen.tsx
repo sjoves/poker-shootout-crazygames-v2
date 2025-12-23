@@ -81,7 +81,7 @@ export default function GameScreen() {
             deck={state.deck}
             selectedCardIds={selectedIds}
             onSelectCard={selectCard}
-            speed={speed * (isBlitz ? 1.5 : 1)}
+            speed={speed * (isBlitz ? 1.2 : 1)}
             isPaused={state.isPaused}
             isRecycling={isBlitz}
           />
