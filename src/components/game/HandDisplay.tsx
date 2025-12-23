@@ -15,13 +15,13 @@ export function HandDisplay({ cards, maxCards = 5, currentHand, className }: Han
   const slots = Array(maxCards).fill(null);
   const [visibleHand, setVisibleHand] = useState<HandResult | null>(null);
 
-  // Show overlay for 0.5 seconds when a new hand result comes in
+  // Show overlay for 0.75 seconds when a new hand result comes in
   useEffect(() => {
     if (currentHand) {
       setVisibleHand(currentHand);
       const timer = setTimeout(() => {
         setVisibleHand(null);
-      }, 500);
+      }, 750);
       return () => clearTimeout(timer);
     }
   }, [currentHand]);
@@ -52,36 +52,34 @@ export function HandDisplay({ cards, maxCards = 5, currentHand, className }: Han
         </AnimatePresence>
       </div>
       
-      {/* Hand result overlay - shows for 0.5 seconds */}
+      {/* Hand result overlay - shows for 0.75 seconds */}
       <AnimatePresence>
         {visibleHand && (
           <motion.div
-            initial={{ opacity: 0, scaleX: 0 }}
-            animate={{ opacity: 1, scaleX: 1 }}
-            exit={{ opacity: 0, scaleX: 0 }}
-            transition={{ duration: 0.15, ease: "easeOut" }}
-            className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex items-center justify-center z-20"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="absolute inset-0 flex items-center justify-center z-20 rounded-xl overflow-hidden bg-gradient-to-br from-primary/95 via-primary/90 to-primary/95 shadow-[0_0_40px_hsl(var(--primary)/0.5)]"
           >
-            <div className="w-full py-4 bg-gradient-to-r from-primary/90 via-primary to-primary/90 shadow-[0_0_30px_hsl(var(--primary)/0.6)] border-y-2 border-primary-foreground/30">
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="text-center"
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.1, type: "spring", stiffness: 300 }}
+              className="text-center"
+            >
+              <div className="text-2xl font-bold text-primary-foreground tracking-wide uppercase drop-shadow-lg">
+                {visibleHand.hand.name}
+              </div>
+              <motion.div 
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.15, type: "spring", stiffness: 400 }}
+                className="text-4xl font-bold text-gold drop-shadow-[0_0_12px_hsl(var(--gold)/0.8)]"
               >
-                <div className="text-2xl font-bold text-primary-foreground tracking-wide uppercase drop-shadow-lg">
-                  {visibleHand.hand.name}
-                </div>
-                <motion.div 
-                  initial={{ scale: 0.5 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.15, type: "spring", stiffness: 400 }}
-                  className="text-3xl font-bold text-gold drop-shadow-[0_0_10px_hsl(var(--gold)/0.8)]"
-                >
-                  +{visibleHand.totalPoints}
-                </motion.div>
+                +{visibleHand.totalPoints}
               </motion.div>
-            </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
