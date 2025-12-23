@@ -25,6 +25,7 @@ export function FallingCards({
   const animationRef = useRef<number>();
   const lastSpawnRef = useRef(0);
   const deckIndexRef = useRef(0);
+  const spawnCountRef = useRef(0);
 
   // Spawn new cards
   const spawnCard = useCallback(() => {
@@ -41,15 +42,17 @@ export function FallingCards({
     if (!card) return;
     
     deckIndexRef.current++;
+    spawnCountRef.current++;
     
     const containerWidth = containerRef.current.offsetWidth;
     const cardWidth = 64;
     
     const fallingCard: FallingCard = {
       ...card,
+      id: `${card.id}-${spawnCountRef.current}`, // Unique spawn ID
       x: Math.random() * (containerWidth - cardWidth),
       y: -100,
-      speed: (1.5 + Math.random() * 1.5) * speed,
+      speed: (2 + Math.random() * 2) * speed,
       rotation: (Math.random() - 0.5) * 30,
       rotationSpeed: (Math.random() - 0.5) * 0.5,
       sway: Math.random() * 20,
@@ -57,44 +60,49 @@ export function FallingCards({
     };
     
     setFallingCards(prev => {
-      // Limit max cards on screen
-      if (prev.length >= 15) return prev;
+      if (prev.length >= 12) return prev;
       return [...prev, fallingCard];
     });
   }, [deck, selectedCardIds, speed, isRecycling]);
 
-  // Animation loop
+  // Animation loop using refs to avoid re-renders
   useEffect(() => {
     if (isPaused) return;
     
-    const containerHeight = containerRef.current?.offsetHeight || 600;
-    
-    const animate = (timestamp: number) => {
-      // Spawn new cards periodically
-      if (timestamp - lastSpawnRef.current > 600 / speed) {
-        spawnCard();
-        lastSpawnRef.current = timestamp;
-      }
+    const animate = () => {
+      const containerHeight = containerRef.current?.offsetHeight || 600;
       
       setFallingCards(prev => {
+        const now = performance.now();
+        
+        // Spawn new cards periodically
+        if (now - lastSpawnRef.current > 500 / speed) {
+          lastSpawnRef.current = now;
+          // We'll spawn in next frame to avoid state issues
+          setTimeout(() => spawnCard(), 0);
+        }
+        
         return prev
           .map(card => ({
             ...card,
             y: card.y + card.speed,
             rotation: card.rotation + card.rotationSpeed,
-            x: card.x + Math.sin(timestamp / 1000 * card.swaySpeed) * 0.5,
+            x: card.x + Math.sin(now / 1000 * card.swaySpeed) * 0.3,
           }))
           .filter(card => {
             if (card.y > containerHeight + 50) {
-              return isRecycling; // Keep for recycling, remove otherwise
+              return false;
             }
-            return !selectedCardIds.includes(card.id);
+            const originalId = card.id.split('-')[0] + '-' + card.id.split('-')[1];
+            return !selectedCardIds.includes(originalId);
           });
       });
       
       animationRef.current = requestAnimationFrame(animate);
     };
     
+    // Initial spawn
+    spawnCard();
     animationRef.current = requestAnimationFrame(animate);
     
     return () => {
@@ -102,11 +110,13 @@ export function FallingCards({
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [isPaused, speed, spawnCard, selectedCardIds, isRecycling]);
+  }, [isPaused, speed, selectedCardIds]);
 
   const handleCardClick = useCallback((card: FallingCard) => {
     setFallingCards(prev => prev.filter(c => c.id !== card.id));
-    onSelectCard(card);
+    // Extract original card ID for game state
+    const originalId = card.id.split('-').slice(0, 2).join('-');
+    onSelectCard({ ...card, id: originalId });
   }, [onSelectCard]);
 
   return (
@@ -117,21 +127,22 @@ export function FallingCards({
       <AnimatePresence>
         {fallingCards.map(card => (
           <motion.div
-            key={`${card.id}-${card.y}`}
-            initial={{ opacity: 0, scale: 0.5 }}
+            key={card.id}
+            initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0 }}
+            exit={{ opacity: 0, scale: 0.5 }}
+            transition={{ duration: 0.15 }}
             style={{
               position: 'absolute',
               left: card.x,
               top: card.y,
               transform: `rotate(${card.rotation}deg)`,
             }}
-            className="cursor-pointer"
+            className="cursor-pointer z-10"
+            onClick={() => handleCardClick(card)}
           >
             <PlayingCard
               card={card}
-              onClick={() => handleCardClick(card)}
               size="md"
               animate={false}
             />
