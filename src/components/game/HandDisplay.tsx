@@ -83,12 +83,6 @@ export function HandDisplay({ cards, maxCards = 5, currentHand, className }: Han
           </motion.div>
         )}
       </AnimatePresence>
-      
-      <div className="text-center">
-        <span className="text-lg font-medium text-foreground">
-          {cards.length}/{maxCards} Cards
-        </span>
-      </div>
     </div>
   );
 }
