@@ -116,7 +116,7 @@ export default function GameScreen() {
       </div>
 
       <div className="p-4 bg-card/80 backdrop-blur-sm border-t border-border">
-        <HandDisplay cards={state.selectedCards} />
+        <HandDisplay cards={state.selectedCards} currentHand={state.currentHand} />
       </div>
     </div>
   );
