@@ -56,19 +56,31 @@ export function HandDisplay({ cards, maxCards = 5, currentHand, className }: Han
       <AnimatePresence>
         {visibleHand && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            transition={{ duration: 0.15 }}
-            className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-sm rounded-xl"
+            initial={{ opacity: 0, scaleX: 0 }}
+            animate={{ opacity: 1, scaleX: 1 }}
+            exit={{ opacity: 0, scaleX: 0 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
+            className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex items-center justify-center z-20"
           >
-            <div className="px-6 py-3 rounded-lg bg-card/90 border border-primary/40 shadow-lg text-center">
-              <div className="text-xl font-bold text-primary">
-                {visibleHand.hand.name}
-              </div>
-              <div className="text-lg text-muted-foreground">
-                +{visibleHand.totalPoints}
-              </div>
+            <div className="w-full py-4 bg-gradient-to-r from-primary/90 via-primary to-primary/90 shadow-[0_0_30px_hsl(var(--primary)/0.6)] border-y-2 border-primary-foreground/30">
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="text-center"
+              >
+                <div className="text-2xl font-bold text-primary-foreground tracking-wide uppercase drop-shadow-lg">
+                  {visibleHand.hand.name}
+                </div>
+                <motion.div 
+                  initial={{ scale: 0.5 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.15, type: "spring", stiffness: 400 }}
+                  className="text-3xl font-bold text-gold drop-shadow-[0_0_10px_hsl(var(--gold)/0.8)]"
+                >
+                  +{visibleHand.totalPoints}
+                </motion.div>
+              </motion.div>
             </div>
           </motion.div>
         )}
