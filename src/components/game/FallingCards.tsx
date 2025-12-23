@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Card, FallingCard } from '@/types/game';
-import { PlayingCard } from './PlayingCard';
+import { useState, useEffect, useCallback, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import type { Card, FallingCard } from "@/types/game";
+import { PlayingCard } from "./PlayingCard";
 
 interface FallingCardsProps {
   deck: Card[];
@@ -12,6 +12,8 @@ interface FallingCardsProps {
   isRecycling?: boolean;
 }
 
+type LocalFallingCard = FallingCard & { instanceKey: string };
+
 export function FallingCards({
   deck,
   selectedCardIds,
@@ -20,132 +22,114 @@ export function FallingCards({
   isPaused = false,
   isRecycling = false,
 }: FallingCardsProps) {
-  const [fallingCards, setFallingCards] = useState<FallingCard[]>([]);
+  const [fallingCards, setFallingCards] = useState<LocalFallingCard[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
-  const animationRef = useRef<number>();
-  const lastSpawnRef = useRef(0);
-  const deckIndexRef = useRef(0);
-  const spawnCountRef = useRef(0);
+  const rafRef = useRef<number>();
+  const lastSpawnRef = useRef<number>(0);
+  const deckIndexRef = useRef<number>(0);
+  const spawnCountRef = useRef<number>(0);
 
-  // Spawn new cards
-  const spawnCard = useCallback(() => {
-    if (!containerRef.current) return;
-    
-    const availableCards = deck.filter(c => !selectedCardIds.includes(c.id));
-    if (availableCards.length === 0) return;
-    
-    const cardIndex = isRecycling 
-      ? Math.floor(Math.random() * availableCards.length)
-      : deckIndexRef.current % availableCards.length;
-    
-    const card = availableCards[cardIndex];
-    if (!card) return;
-    
-    deckIndexRef.current++;
-    spawnCountRef.current++;
-    
-    const containerWidth = containerRef.current.offsetWidth;
-    const cardWidth = 64;
-    
-    const fallingCard: FallingCard = {
-      ...card,
-      id: `${card.id}-${spawnCountRef.current}`, // Unique spawn ID
-      x: Math.random() * (containerWidth - cardWidth),
-      y: -100,
-      speed: (2 + Math.random() * 2) * speed,
-      rotation: (Math.random() - 0.5) * 30,
-      rotationSpeed: (Math.random() - 0.5) * 0.5,
-      sway: Math.random() * 20,
-      swaySpeed: 2 + Math.random() * 2,
-    };
-    
-    setFallingCards(prev => {
-      if (prev.length >= 12) return prev;
-      return [...prev, fallingCard];
-    });
-  }, [deck, selectedCardIds, speed, isRecycling]);
+  const createSpawn = useCallback(
+    (containerWidth: number): LocalFallingCard | null => {
+      const availableCards = deck.filter((c) => !selectedCardIds.includes(c.id));
+      if (availableCards.length === 0) return null;
 
-  // Animation loop using refs to avoid re-renders
+      const pickIndex = isRecycling
+        ? Math.floor(Math.random() * availableCards.length)
+        : deckIndexRef.current % availableCards.length;
+
+      const picked = availableCards[pickIndex];
+      if (!picked) return null;
+
+      deckIndexRef.current += 1;
+      spawnCountRef.current += 1;
+
+      const cardWidth = 64;
+
+      return {
+        ...picked,
+        instanceKey: `${picked.id}-${spawnCountRef.current}`,
+        x: Math.random() * Math.max(0, containerWidth - cardWidth),
+        y: -110,
+        speed: (2.2 + Math.random() * 2.2) * speed,
+        rotation: (Math.random() - 0.5) * 28,
+        rotationSpeed: (Math.random() - 0.5) * 0.6,
+        sway: 12 + Math.random() * 16,
+        swaySpeed: 1.2 + Math.random() * 1.6,
+      };
+    },
+    [deck, selectedCardIds, speed, isRecycling]
+  );
+
   useEffect(() => {
     if (isPaused) return;
-    
-    const animate = () => {
-      const containerHeight = containerRef.current?.offsetHeight || 600;
-      
-      setFallingCards(prev => {
-        const now = performance.now();
-        
-        // Spawn new cards periodically
-        if (now - lastSpawnRef.current > 500 / speed) {
-          lastSpawnRef.current = now;
-          // We'll spawn in next frame to avoid state issues
-          setTimeout(() => spawnCard(), 0);
-        }
-        
-        return prev
-          .map(card => ({
+
+    const tick = (t: number) => {
+      const containerHeight = containerRef.current?.offsetHeight ?? 600;
+      const containerWidth = containerRef.current?.offsetWidth ?? 0;
+
+      setFallingCards((prev) => {
+        const moved = prev
+          .map((card) => ({
             ...card,
             y: card.y + card.speed,
             rotation: card.rotation + card.rotationSpeed,
-            x: card.x + Math.sin(now / 1000 * card.swaySpeed) * 0.3,
+            x: card.x + Math.sin((t / 1000) * card.swaySpeed) * 0.35,
           }))
-          .filter(card => {
-            if (card.y > containerHeight + 50) {
-              return false;
-            }
-            const originalId = card.id.split('-')[0] + '-' + card.id.split('-')[1];
-            return !selectedCardIds.includes(originalId);
+          .filter((card) => {
+            if (card.y > containerHeight + 60) return false;
+            return !selectedCardIds.includes(card.id);
           });
-      });
-      
-      animationRef.current = requestAnimationFrame(animate);
-    };
-    
-    // Initial spawn
-    spawnCard();
-    animationRef.current = requestAnimationFrame(animate);
-    
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  }, [isPaused, speed, selectedCardIds]);
 
-  const handleCardClick = useCallback((card: FallingCard) => {
-    setFallingCards(prev => prev.filter(c => c.id !== card.id));
-    // Extract original card ID for game state
-    const originalId = card.id.split('-').slice(0, 2).join('-');
-    onSelectCard({ ...card, id: originalId });
-  }, [onSelectCard]);
+        const shouldSpawn = t - lastSpawnRef.current > 600 / speed;
+        if (!shouldSpawn || containerWidth <= 0) return moved;
+        if (moved.length >= 14) return moved;
+
+        const next = createSpawn(containerWidth);
+        if (!next) return moved;
+
+        lastSpawnRef.current = t;
+        return [...moved, next];
+      });
+
+      rafRef.current = requestAnimationFrame(tick);
+    };
+
+    rafRef.current = requestAnimationFrame(tick);
+
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [isPaused, speed, selectedCardIds, createSpawn]);
+
+  const handleCardClick = useCallback(
+    (card: LocalFallingCard) => {
+      setFallingCards((prev) => prev.filter((c) => c.instanceKey !== card.instanceKey));
+      onSelectCard(card);
+    },
+    [onSelectCard]
+  );
 
   return (
-    <div 
-      ref={containerRef}
-      className="relative w-full h-full overflow-hidden"
-    >
+    <div ref={containerRef} className="relative w-full h-full overflow-hidden">
       <AnimatePresence>
-        {fallingCards.map(card => (
+        {fallingCards.map((card) => (
           <motion.div
-            key={card.id}
-            initial={{ opacity: 0, scale: 0.8 }}
+            key={card.instanceKey}
+            initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.5 }}
-            transition={{ duration: 0.15 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.12 }}
             style={{
-              position: 'absolute',
+              position: "absolute",
               left: card.x,
               top: card.y,
               transform: `rotate(${card.rotation}deg)`,
+              willChange: "transform, top, left",
             }}
             className="cursor-pointer z-10"
-            onClick={() => handleCardClick(card)}
           >
-            <PlayingCard
-              card={card}
-              size="md"
-              animate={false}
-            />
+            <PlayingCard card={card} onClick={() => handleCardClick(card)} size="md" animate={false} />
           </motion.div>
         ))}
       </AnimatePresence>
