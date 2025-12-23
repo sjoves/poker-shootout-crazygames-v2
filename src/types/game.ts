@@ -52,6 +52,7 @@ export interface GameState {
   isPlaying: boolean;
   isPaused: boolean;
   isGameOver: boolean;
+  isLevelComplete: boolean;
   selectedCards: Card[];
   deck: Card[];
   usedCards: Card[];
