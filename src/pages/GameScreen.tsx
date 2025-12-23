@@ -117,15 +117,6 @@ export default function GameScreen() {
 
       <div className="p-4 bg-card/80 backdrop-blur-sm border-t border-border">
         <HandDisplay cards={state.selectedCards} />
-        <GameControls
-          speed={speed}
-          isMuted={isMuted}
-          showUsedCards={showUsedCards}
-          onSpeedChange={(d) => setSpeed(s => Math.max(0.5, Math.min(2, s + d)))}
-          onMuteToggle={() => setIsMuted(!isMuted)}
-          onUsedCardsToggle={() => setShowUsedCards(!showUsedCards)}
-          className="mt-4"
-        />
       </div>
     </div>
   );
