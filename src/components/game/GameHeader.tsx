@@ -26,7 +26,7 @@ export function GameHeader({
       'flex items-center justify-between px-4 py-2 bg-card/80 backdrop-blur-sm border-b border-border',
       className
     )}>
-      <h1 className="text-xl font-display text-primary text-glow tracking-wide">
+      <h1 className="text-xl font-display text-primary tracking-wide">
         POKER RUSH
       </h1>
       
