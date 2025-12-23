@@ -52,8 +52,8 @@ export function FallingCards({
         x: Math.random() * Math.max(0, containerWidth - cardWidth),
         y: -110,
         speed: (2.2 + Math.random() * 2.2) * speed,
-        rotation: (Math.random() - 0.5) * 28,
-        rotationSpeed: (Math.random() - 0.5) * 0.6,
+        rotation: (Math.random() - 0.5) * 40,
+        rotationSpeed: (Math.random() - 0.5) * 2.5,
         sway: 12 + Math.random() * 16,
         swaySpeed: 1.2 + Math.random() * 1.6,
       };
