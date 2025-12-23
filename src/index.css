@@ -6,120 +6,120 @@
 
 @layer base {
   :root {
-    /* Modern Dark Theme */
-    --background: 230 25% 10%;
-    --background-gradient-start: 230 25% 8%;
-    --background-gradient-end: 240 20% 15%;
-    --foreground: 220 15% 95%;
+    /* Raiders Black & Silver Theme */
+    --background: 0 0% 5%;
+    --background-gradient-start: 0 0% 3%;
+    --background-gradient-end: 0 0% 8%;
+    --foreground: 0 0% 95%;
 
-    --card: 230 20% 14%;
-    --card-foreground: 220 15% 95%;
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 95%;
 
-    --popover: 230 20% 12%;
-    --popover-foreground: 220 15% 95%;
+    --popover: 0 0% 8%;
+    --popover-foreground: 0 0% 95%;
 
-    /* Electric Blue - Primary */
-    --primary: 220 90% 56%;
-    --primary-foreground: 220 15% 98%;
-    --primary-glow: 220 100% 65%;
+    /* Silver - Primary */
+    --primary: 0 0% 75%;
+    --primary-foreground: 0 0% 5%;
+    --primary-glow: 0 0% 85%;
 
-    /* Cool Gray - Secondary */
-    --secondary: 220 15% 25%;
-    --secondary-foreground: 220 15% 95%;
+    /* Dark Gray - Secondary */
+    --secondary: 0 0% 18%;
+    --secondary-foreground: 0 0% 95%;
 
     /* Muted tones */
-    --muted: 230 15% 20%;
-    --muted-foreground: 220 10% 55%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 55%;
 
-    /* Accent - Cyan */
-    --accent: 185 80% 50%;
-    --accent-foreground: 230 25% 10%;
+    /* Accent - Bright Silver */
+    --accent: 0 0% 90%;
+    --accent-foreground: 0 0% 5%;
 
     /* Destructive */
     --destructive: 0 72% 55%;
-    --destructive-foreground: 220 15% 98%;
+    --destructive-foreground: 0 0% 98%;
 
     /* Borders and inputs */
-    --border: 230 15% 22%;
-    --input: 230 15% 18%;
-    --ring: 220 90% 56%;
+    --border: 0 0% 20%;
+    --input: 0 0% 12%;
+    --ring: 0 0% 75%;
 
     --radius: 0.75rem;
 
     /* Card suit colors */
-    --suit-hearts: 0 85% 55%;
-    --suit-diamonds: 0 85% 55%;
-    --suit-clubs: 230 10% 15%;
-    --suit-spades: 230 10% 15%;
+    --suit-hearts: 0 0% 95%;
+    --suit-diamonds: 0 0% 95%;
+    --suit-clubs: 0 0% 20%;
+    --suit-spades: 0 0% 20%;
 
     /* Game specific */
-    --gold: 48 100% 50%;
-    --gold-glow: 48 100% 60%;
-    --bronze: 30 60% 45%;
-    --silver: 220 10% 75%;
+    --gold: 0 0% 85%;
+    --gold-glow: 0 0% 95%;
+    --bronze: 0 0% 60%;
+    --silver: 0 0% 75%;
 
     /* Shadows */
-    --shadow-glow: 0 0 30px hsl(220 90% 56% / 0.4);
-    --shadow-card: 0 4px 24px hsl(0 0% 0% / 0.4);
+    --shadow-glow: 0 0 30px hsl(0 0% 75% / 0.3);
+    --shadow-card: 0 4px 24px hsl(0 0% 0% / 0.6);
 
-    /* Game specific gradients */
-    --game-field-start: 145 60% 25%;
-    --game-field-end: 145 50% 12%;
+    /* Game specific gradients - Black field */
+    --game-field-start: 0 0% 12%;
+    --game-field-end: 0 0% 5%;
 
-    /* Title color */
-    --title-gold: 48 100% 50%;
+    /* Title color - Silver */
+    --title-gold: 0 0% 90%;
 
     /* Sidebar */
-    --sidebar-background: 230 25% 12%;
-    --sidebar-foreground: 220 15% 95%;
-    --sidebar-primary: 220 90% 56%;
-    --sidebar-primary-foreground: 220 15% 98%;
-    --sidebar-accent: 230 15% 20%;
-    --sidebar-accent-foreground: 220 15% 95%;
-    --sidebar-border: 230 15% 22%;
-    --sidebar-ring: 220 90% 56%;
+    --sidebar-background: 0 0% 8%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 0 0% 75%;
+    --sidebar-primary-foreground: 0 0% 5%;
+    --sidebar-accent: 0 0% 15%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 0 0% 20%;
+    --sidebar-ring: 0 0% 75%;
   }
 
   .dark {
-    --background: 230 25% 10%;
-    --background-gradient-start: 230 25% 8%;
-    --background-gradient-end: 240 20% 15%;
-    --foreground: 220 15% 95%;
+    --background: 0 0% 5%;
+    --background-gradient-start: 0 0% 3%;
+    --background-gradient-end: 0 0% 8%;
+    --foreground: 0 0% 95%;
 
-    --card: 230 20% 14%;
-    --card-foreground: 220 15% 95%;
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 95%;
 
-    --popover: 230 20% 12%;
-    --popover-foreground: 220 15% 95%;
+    --popover: 0 0% 8%;
+    --popover-foreground: 0 0% 95%;
 
-    --primary: 220 90% 56%;
-    --primary-foreground: 220 15% 98%;
-    --primary-glow: 220 100% 65%;
+    --primary: 0 0% 75%;
+    --primary-foreground: 0 0% 5%;
+    --primary-glow: 0 0% 85%;
 
-    --secondary: 220 15% 25%;
-    --secondary-foreground: 220 15% 95%;
+    --secondary: 0 0% 18%;
+    --secondary-foreground: 0 0% 95%;
 
-    --muted: 230 15% 20%;
-    --muted-foreground: 220 10% 55%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 55%;
 
-    --accent: 185 80% 50%;
-    --accent-foreground: 230 25% 10%;
+    --accent: 0 0% 90%;
+    --accent-foreground: 0 0% 5%;
 
     --destructive: 0 62% 30%;
-    --destructive-foreground: 220 15% 98%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 230 15% 22%;
-    --input: 230 15% 18%;
-    --ring: 220 90% 56%;
+    --border: 0 0% 20%;
+    --input: 0 0% 12%;
+    --ring: 0 0% 75%;
 
-    --sidebar-background: 230 25% 12%;
-    --sidebar-foreground: 220 15% 95%;
-    --sidebar-primary: 220 90% 56%;
-    --sidebar-primary-foreground: 220 15% 98%;
-    --sidebar-accent: 230 15% 20%;
-    --sidebar-accent-foreground: 220 15% 95%;
-    --sidebar-border: 230 15% 22%;
-    --sidebar-ring: 220 90% 56%;
+    --sidebar-background: 0 0% 8%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 0 0% 75%;
+    --sidebar-primary-foreground: 0 0% 5%;
+    --sidebar-accent: 0 0% 15%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 0 0% 20%;
+    --sidebar-ring: 0 0% 75%;
   }
 }
 
