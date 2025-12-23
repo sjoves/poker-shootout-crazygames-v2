@@ -63,8 +63,8 @@
     --shadow-card: 0 4px 24px hsl(0 0% 0% / 0.4);
 
     /* Game specific gradients */
-    --game-field-start: 0 70% 25%;
-    --game-field-end: 0 60% 15%;
+    --game-field-start: 145 60% 25%;
+    --game-field-end: 145 50% 12%;
 
     /* Title color */
     --title-gold: 48 100% 50%;
