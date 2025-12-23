@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, HandResult } from '@/types/game';
 import { PlayingCard, EmptyCardSlot } from './PlayingCard';
@@ -12,7 +13,18 @@ interface HandDisplayProps {
 
 export function HandDisplay({ cards, maxCards = 5, currentHand, className }: HandDisplayProps) {
   const slots = Array(maxCards).fill(null);
-  const isComplete = cards.length === maxCards;
+  const [visibleHand, setVisibleHand] = useState<HandResult | null>(null);
+
+  // Show overlay for 0.5 seconds when a new hand result comes in
+  useEffect(() => {
+    if (currentHand) {
+      setVisibleHand(currentHand);
+      const timer = setTimeout(() => {
+        setVisibleHand(null);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [currentHand]);
 
   return (
     <div className={cn('relative flex flex-col items-center gap-3', className)}>
@@ -40,21 +52,22 @@ export function HandDisplay({ cards, maxCards = 5, currentHand, className }: Han
         </AnimatePresence>
       </div>
       
-      {/* Hand result overlay - only shows when hand is complete */}
+      {/* Hand result overlay - shows for 0.5 seconds */}
       <AnimatePresence>
-        {isComplete && currentHand && (
+        {visibleHand && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.8, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.8, y: -20 }}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.15 }}
             className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-sm rounded-xl"
           >
             <div className="px-6 py-3 rounded-lg bg-card/90 border border-primary/40 shadow-lg text-center">
               <div className="text-xl font-bold text-primary">
-                {currentHand.hand.name}
+                {visibleHand.hand.name}
               </div>
               <div className="text-lg text-muted-foreground">
-                +{currentHand.totalPoints}
+                +{visibleHand.totalPoints}
               </div>
             </div>
           </motion.div>
