@@ -21,6 +21,7 @@ const INITIAL_STATE: GameState = {
   isPlaying: false,
   isPaused: false,
   isGameOver: false,
+  isLevelComplete: false,
   selectedCards: [],
   deck: [],
   usedCards: [],
@@ -101,10 +102,15 @@ export function useGameState() {
       const classicGameOver = isClassic && newHandsPlayed >= 10;
 
       // For SSC, check if level is complete
-      if (prev.mode === 'ssc') {
-        if (newScore >= prev.levelGoal) {
-          // Level complete - will be handled separately
-        }
+      if (prev.mode === 'ssc' && newScore >= prev.levelGoal) {
+        return {
+          ...prev,
+          score: newScore,
+          handsPlayed: newHandsPlayed,
+          selectedCards: [],
+          currentHand: result,
+          isLevelComplete: true,
+        };
       }
 
       // If classic game is over, apply leftover card penalty
@@ -186,6 +192,7 @@ export function useGameState() {
         deck,
         usedCards: [],
         currentHand: null,
+        isLevelComplete: false,
         unlockedPowerUps: newUnlocked,
         activePowerUps: [...newUnlocked],
       };
