@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, X, Trophy, Zap, Target, Clock, Hand } from 'lucide-react';
-import { POKER_HANDS } from '@/types/game';
-import { PlayingCard } from '@/components/game/PlayingCard';
-import { Card as CardType } from '@/types/game';
+import { ChevronLeft, ChevronRight, X, Trophy, Zap, Target, Clock, Hand, RotateCcw, Sparkles } from 'lucide-react';
+import { POKER_HANDS, Card as CardType } from '@/types/game';
+import { PlayingCard, EmptyCardSlot } from '@/components/game/PlayingCard';
+import { evaluateHand } from '@/lib/pokerEngine';
 
 interface TutorialModalProps {
   isOpen: boolean;
@@ -61,7 +61,7 @@ const EXAMPLE_HANDS: Record<string, CardType[]> = {
     { id: '9-diamonds', suit: 'diamonds', rank: '9', value: 9 },
     { id: '9-clubs', suit: 'clubs', rank: '9', value: 9 },
     { id: '4-spades', suit: 'spades', rank: '4', value: 4 },
-    { id: 'K-hearts', suit: 'hearts', rank: 'K', value: 13 },
+    { id: 'K-hearts2', suit: 'hearts', rank: 'K', value: 13 },
   ],
   'Two Pair': [
     { id: 'J-hearts', suit: 'hearts', rank: 'J', value: 11 },
@@ -75,14 +75,14 @@ const EXAMPLE_HANDS: Record<string, CardType[]> = {
     { id: '6-spades', suit: 'spades', rank: '6', value: 6 },
     { id: '3-clubs', suit: 'clubs', rank: '3', value: 3 },
     { id: '9-diamonds', suit: 'diamonds', rank: '9', value: 9 },
-    { id: 'K-hearts', suit: 'hearts', rank: 'K', value: 13 },
+    { id: 'K-hearts3', suit: 'hearts', rank: 'K', value: 13 },
   ],
   'High Card': [
     { id: '2-hearts', suit: 'hearts', rank: '2', value: 2 },
     { id: '5-clubs', suit: 'clubs', rank: '5', value: 5 },
     { id: '7-diamonds', suit: 'diamonds', rank: '7', value: 7 },
     { id: '9-spades', suit: 'spades', rank: '9', value: 9 },
-    { id: 'K-hearts', suit: 'hearts', rank: 'K', value: 13 },
+    { id: 'K-hearts4', suit: 'hearts', rank: 'K', value: 13 },
   ],
 };
 
@@ -99,11 +99,155 @@ const HAND_DESCRIPTIONS: Record<string, string> = {
   'High Card': 'No matching cards - highest card wins',
 };
 
+// Cards available for the interactive demo - includes cards to make a flush
+const DEMO_AVAILABLE_CARDS: CardType[] = [
+  { id: '7-hearts', suit: 'hearts', rank: '7', value: 7 },
+  { id: 'K-diamonds', suit: 'diamonds', rank: 'K', value: 13 },
+  { id: '3-hearts', suit: 'hearts', rank: '3', value: 3 },
+  { id: 'J-hearts', suit: 'hearts', rank: 'J', value: 11 },
+  { id: '5-clubs', suit: 'clubs', rank: '5', value: 5 },
+  { id: 'A-hearts', suit: 'hearts', rank: 'A', value: 14 },
+  { id: '9-spades', suit: 'spades', rank: '9', value: 9 },
+  { id: '2-hearts', suit: 'hearts', rank: '2', value: 2 },
+];
+
 interface TutorialStep {
   id: string;
   title: string;
   icon: React.ReactNode;
   content: React.ReactNode;
+}
+
+// Interactive Demo Component
+function InteractiveDemo({ onComplete }: { onComplete: () => void }) {
+  const [availableCards, setAvailableCards] = useState<CardType[]>(DEMO_AVAILABLE_CARDS);
+  const [selectedCards, setSelectedCards] = useState<CardType[]>([]);
+  const [score, setScore] = useState(0);
+  const [showResult, setShowResult] = useState(false);
+  const [lastHand, setLastHand] = useState<{ name: string; points: number } | null>(null);
+
+  const handleCardClick = (card: CardType) => {
+    if (selectedCards.length >= 5) return;
+    
+    setSelectedCards([...selectedCards, card]);
+    setAvailableCards(availableCards.filter(c => c.id !== card.id));
+  };
+
+  const handleReset = () => {
+    setAvailableCards(DEMO_AVAILABLE_CARDS);
+    setSelectedCards([]);
+    setScore(0);
+    setShowResult(false);
+    setLastHand(null);
+  };
+
+  // Auto-evaluate when 5 cards are selected
+  useEffect(() => {
+    if (selectedCards.length === 5) {
+      const result = evaluateHand(selectedCards);
+      setLastHand({ name: result.hand.name, points: result.totalPoints });
+      setScore(prev => prev + result.totalPoints);
+      setShowResult(true);
+      
+      // Auto-clear after showing result
+      const timer = setTimeout(() => {
+        setSelectedCards([]);
+        setShowResult(false);
+      }, 2000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [selectedCards]);
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-center text-muted-foreground">
+        Tap 5 cards below to build a hand! <span className="text-primary">Hint: Try the hearts for a flush!</span>
+      </p>
+
+      {/* Score display */}
+      <div className="flex justify-center">
+        <motion.div 
+          className="bg-primary/20 text-primary px-4 py-2 rounded-full font-display text-lg"
+          animate={score > 0 ? { scale: [1, 1.1, 1] } : {}}
+        >
+          Score: {score}
+        </motion.div>
+      </div>
+
+      {/* Selected cards (hand) */}
+      <div className="bg-muted/30 rounded-xl p-3">
+        <p className="text-xs text-muted-foreground mb-2 text-center">Your Hand</p>
+        <div className="flex justify-center gap-1 min-h-[70px]">
+          {Array.from({ length: 5 }).map((_, i) => (
+            selectedCards[i] ? (
+              <motion.div
+                key={selectedCards[i].id}
+                initial={{ scale: 0, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+              >
+                <PlayingCard
+                  card={selectedCards[i]}
+                  size="sm"
+                  animate={false}
+                  isSelected
+                />
+              </motion.div>
+            ) : (
+              <EmptyCardSlot key={`empty-${i}`} size="sm" />
+            )
+          ))}
+        </div>
+
+        {/* Hand result */}
+        <AnimatePresence>
+          {showResult && lastHand && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="mt-3 text-center"
+            >
+              <div className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-full">
+                <Sparkles className="w-4 h-4" />
+                <span className="font-display">{lastHand.name}</span>
+                <span className="font-bold">+{lastHand.points}</span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Available cards */}
+      <div>
+        <p className="text-xs text-muted-foreground mb-2 text-center">Tap cards to select</p>
+        <div className="flex flex-wrap justify-center gap-1">
+          {availableCards.map((card) => (
+            <PlayingCard
+              key={card.id}
+              card={card}
+              size="sm"
+              onClick={() => handleCardClick(card)}
+              animate={false}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Reset button */}
+      <div className="flex justify-center gap-2">
+        <Button variant="outline" size="sm" onClick={handleReset} className="gap-1">
+          <RotateCcw className="w-3 h-3" />
+          Reset
+        </Button>
+        {score > 0 && (
+          <Button size="sm" onClick={onComplete} className="gap-1">
+            Got it! Continue
+          </Button>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export function TutorialModal({ isOpen, onClose }: TutorialModalProps) {
@@ -130,7 +274,7 @@ export function TutorialModal({ isOpen, onClose }: TutorialModalProps) {
               <span className="text-sm">Build Hands</span>
             </div>
             <div className="flex flex-col items-center gap-2 p-4 bg-muted/30 rounded-lg">
-              <Clock className="w-6 h-6 text-gold" style={{ color: 'hsl(var(--gold))' }} />
+              <Clock className="w-6 h-6" style={{ color: 'hsl(var(--gold))' }} />
               <span className="text-sm">Beat the Clock</span>
             </div>
           </div>
@@ -173,6 +317,12 @@ export function TutorialModal({ isOpen, onClose }: TutorialModalProps) {
       ),
     },
     {
+      id: 'tryit',
+      title: 'Try It Yourself!',
+      icon: <Sparkles className="w-8 h-8 text-accent" />,
+      content: <InteractiveDemo onComplete={() => setCurrentStep(3)} />,
+    },
+    {
       id: 'modes',
       title: 'Game Modes',
       icon: <Target className="w-8 h-8 text-primary" />,
@@ -205,7 +355,7 @@ export function TutorialModal({ isOpen, onClose }: TutorialModalProps) {
     {
       id: 'hands',
       title: 'Hand Rankings',
-      icon: <Trophy className="w-8 h-8 text-gold" style={{ color: 'hsl(var(--gold))' }} />,
+      icon: <Trophy className="w-8 h-8" style={{ color: 'hsl(var(--gold))' }} />,
       content: (
         <div className="space-y-4">
           {/* Hand selector */}
