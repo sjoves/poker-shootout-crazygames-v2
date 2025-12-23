@@ -6,13 +6,15 @@ import { GameMode } from '@/types/game';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/hooks/useAuth';
 import { RewardedAd, useRewardedAd } from '@/components/ads/RewardedAd';
-import { Crown, Play, Lock } from 'lucide-react';
+import { TutorialModal } from '@/components/tutorial/TutorialModal';
+import { Crown, Play, Lock, HelpCircle } from 'lucide-react';
 
 export default function SplashScreen() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isPremium, requiresAdForMode, markAdWatchedForMode, openCheckout, loading } = useSubscription();
   const [selectedMode, setSelectedMode] = useState<'classic' | 'blitz' | 'ssc' | null>(null);
+  const [showTutorial, setShowTutorial] = useState(false);
   const rewardedAd = useRewardedAd();
 
   const handleModeSelect = (mode: GameMode) => {
@@ -175,8 +177,12 @@ export default function SplashScreen() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.4 }}
-        className="mt-8 flex gap-4"
+        className="mt-8 flex flex-wrap justify-center gap-3"
       >
+        <Button variant="ghost" onClick={() => setShowTutorial(true)} className="gap-2">
+          <HelpCircle className="w-4 h-4" />
+          How to Play
+        </Button>
         <Button variant="ghost" onClick={() => navigate('/leaderboard')}>
           🏅 Leaderboard
         </Button>
@@ -184,6 +190,9 @@ export default function SplashScreen() {
           {user ? '👤 Account' : '👤 Sign In'}
         </Button>
       </motion.div>
+
+      {/* Tutorial Modal */}
+      <TutorialModal isOpen={showTutorial} onClose={() => setShowTutorial(false)} />
 
       {/* Rewarded Ad Modal */}
       <RewardedAd
