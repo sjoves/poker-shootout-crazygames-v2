@@ -22,7 +22,7 @@ const SUIT_SYMBOLS: Record<Suit, string> = {
 const isRedSuit = (suit: Suit) => suit === 'hearts' || suit === 'diamonds';
 
 const SIZE_CONFIG = {
-  xs: { card: 'w-10 h-[56px]', rank: 'text-xs', corner: 'text-[8px]', center: 'text-sm', pip: 'text-[6px]', gap: 'gap-0' },
+  xs: { card: 'w-12 h-[67px]', rank: 'text-xs', corner: 'text-[8px]', center: 'text-base', pip: 'text-[6px]', gap: 'gap-0' },
   sm: { card: 'w-14 h-[79px]', rank: 'text-sm', corner: 'text-[10px]', center: 'text-lg', pip: 'text-[7px]', gap: 'gap-0' },
   md: { card: 'w-[76px] h-[106px]', rank: 'text-base', corner: 'text-xs', center: 'text-2xl', pip: 'text-[10px]', gap: 'gap-0.5' },
   lg: { card: 'w-[115px] h-[158px]', rank: 'text-xl', corner: 'text-sm', center: 'text-4xl', pip: 'text-xs', gap: 'gap-1' },
@@ -115,7 +115,7 @@ export function PlayingCard({
 }
 
 const EMPTY_SLOT_SIZES = {
-  xs: 'w-10 h-[56px]',
+  xs: 'w-12 h-[67px]',
   sm: 'w-14 h-[79px]',
   md: 'w-[76px] h-[106px]',
   lg: 'w-[115px] h-[158px]',
