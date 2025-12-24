@@ -34,6 +34,9 @@ const INITIAL_STATE: GameState = {
   levelGoal: 1000,
   unlockedPowerUps: [],
   activePowerUps: [],
+  rawScore: 0,
+  timeBonus: 0,
+  leftoverPenalty: 0,
 };
 
 export function useGameState() {
@@ -114,6 +117,7 @@ export function useGameState() {
       handResultsRef.current.push(modifiedResult);
 
       const newHandsPlayed = prev.handsPlayed + 1;
+      const newRawScore = prev.rawScore + multipliedPoints;
       const newScore = prev.score + multipliedPoints;
 
       // Check if game ends for Classic modes (after 10 hands = 50 cards used, 2 remaining)
@@ -125,6 +129,7 @@ export function useGameState() {
         return {
           ...prev,
           score: newScore,
+          rawScore: newRawScore,
           handsPlayed: newHandsPlayed,
           selectedCards: [],
           currentHand: modifiedResult,
@@ -132,14 +137,18 @@ export function useGameState() {
         };
       }
 
-      // If classic game is over, apply leftover card penalty
+      // If classic game is over, calculate bonuses and penalties
       if (classicGameOver) {
         const leftoverPenalty = calculateLeftoverPenalty(prev.deck);
-        const finalScore = Math.max(0, newScore - leftoverPenalty);
+        const timeBonus = calculateTimeBonus(prev.timeElapsed);
+        const finalScore = Math.max(0, newRawScore + timeBonus - leftoverPenalty);
         
         return {
           ...prev,
           score: finalScore,
+          rawScore: newRawScore,
+          timeBonus,
+          leftoverPenalty,
           handsPlayed: newHandsPlayed,
           selectedCards: [],
           currentHand: modifiedResult,
@@ -150,6 +159,7 @@ export function useGameState() {
       return {
         ...prev,
         score: newScore,
+        rawScore: newRawScore,
         handsPlayed: newHandsPlayed,
         selectedCards: [],
         currentHand: modifiedResult,

@@ -29,6 +29,7 @@ export default function GameOverScreen() {
     return 1;
   };
 
+  const isClassicMode = gameState.mode === 'classic_fc' || gameState.mode === 'classic_cb';
   const stars = getStarRating(gameState.score);
   const messages = [
     "Keep practicing, partner!",
@@ -73,8 +74,25 @@ export default function GameOverScreen() {
           {gameState.score.toLocaleString()}
         </div>
 
-        <div className="bg-card/80 rounded-xl p-4 mb-6 text-left">
+        <div className="bg-card/80 rounded-xl p-4 mb-6 text-left space-y-1">
           <p className="text-sm text-muted-foreground">Hands Played: {gameState.handsPlayed}</p>
+          {isClassicMode && (
+            <>
+              <p className="text-sm text-muted-foreground">
+                Base Score: {gameState.rawScore.toLocaleString()}
+              </p>
+              {gameState.timeBonus > 0 && (
+                <p className="text-sm text-green-500">
+                  + Time Bonus: {gameState.timeBonus.toLocaleString()}
+                </p>
+              )}
+              {gameState.leftoverPenalty > 0 && (
+                <p className="text-sm text-destructive">
+                  - Leftover Cards: {gameState.leftoverPenalty.toLocaleString()}
+                </p>
+              )}
+            </>
+          )}
           {gameState.mode === 'ssc' && (
             <p className="text-sm text-muted-foreground">Level Reached: {gameState.sscLevel}</p>
           )}

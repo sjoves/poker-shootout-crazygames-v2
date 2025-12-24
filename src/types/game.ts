@@ -65,6 +65,10 @@ export interface GameState {
   levelGoal: number;
   unlockedPowerUps: string[];
   activePowerUps: string[];
+  // Classic mode scoring breakdown
+  rawScore: number;
+  timeBonus: number;
+  leftoverPenalty: number;
 }
 
 export interface PowerUp {
