@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Card, FallingCard } from "@/types/game";
 import { PlayingCard } from "./PlayingCard";
+import { useAudio } from "@/contexts/AudioContext";
 
 interface FallingCardsProps {
   deck: Card[];
@@ -28,6 +29,7 @@ export function FallingCards({
   const lastSpawnRef = useRef<number>(0);
   const deckIndexRef = useRef<number>(0);
   const spawnCountRef = useRef<number>(0);
+  const { playSound } = useAudio();
 
   const createSpawn = useCallback(
     (containerWidth: number): LocalFallingCard | null => {
@@ -126,9 +128,10 @@ export function FallingCards({
   const handleCardClick = useCallback(
     (card: LocalFallingCard) => {
       setFallingCards((prev) => prev.filter((c) => c.instanceKey !== card.instanceKey));
+      playSound('cardSelect');
       onSelectCard(card);
     },
-    [onSelectCard]
+    [onSelectCard, playSound]
   );
 
   return (

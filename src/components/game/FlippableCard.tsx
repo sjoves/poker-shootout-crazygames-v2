@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Card, Suit } from '@/types/game';
 import { cn } from '@/lib/utils';
 import { Check } from 'lucide-react';
+import { useAudio } from '@/contexts/AudioContext';
 
 interface FlippableCardProps {
   card: Card;
@@ -29,6 +30,7 @@ const AUTO_UNFLIP_DELAY = 2500;
 export function FlippableCard({ card, isKept, isFlippedExternal, onFlip, onKeep, onUnkeep, disabled }: FlippableCardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
   const unflipTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const { playSound } = useAudio();
   const suitSymbol = SUIT_SYMBOLS[card.suit];
   const colorClass = isRedSuit(card.suit) ? 'text-red-600' : 'text-gray-900';
 
@@ -57,6 +59,7 @@ export function FlippableCard({ card, isKept, isFlippedExternal, onFlip, onKeep,
   const handleCardClick = () => {
     if (disabled || isKept || isFlipped) return;
     setIsFlipped(true);
+    playSound('cardFlip');
     onFlip?.(card.id);
   };
 
@@ -70,6 +73,7 @@ export function FlippableCard({ card, isKept, isFlippedExternal, onFlip, onKeep,
       onUnkeep(card);
       setIsFlipped(false);
     } else {
+      playSound('cardSelect');
       onKeep(card);
     }
   };

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, ConveyorCard } from '@/types/game';
 import { PlayingCard } from './PlayingCard';
+import { useAudio } from '@/contexts/AudioContext';
 
 interface PendingReturn {
   card: Card;
@@ -31,6 +32,7 @@ export function ConveyorBelt({
   const animationRef = useRef<number>();
   const initializedRef = useRef(false);
   const returnDelayMs = 3000; // Cards return after 3 seconds
+  const { playSound } = useAudio();
 
   // Initialize cards on tracks
   useEffect(() => {
@@ -193,8 +195,9 @@ export function ConveyorBelt({
       rank: card.rank,
       value: card.value,
     };
+    playSound('cardSelect');
     onSelectCard(originalCard);
-  }, [onSelectCard]);
+  }, [onSelectCard, playSound]);
 
   const rowHeight = 120;
   const totalHeight = rows * rowHeight;
