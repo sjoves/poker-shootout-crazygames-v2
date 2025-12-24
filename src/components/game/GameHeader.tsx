@@ -1,6 +1,7 @@
 import { HomeIcon, ArrowPathIcon, QuestionMarkCircleIcon, TrophyIcon, PauseIcon, PlayIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import pokerShootoutLogo from '@/assets/poker-shootout-logo.svg';
 
 interface GameHeaderProps {
   highScore?: number;
@@ -26,9 +27,7 @@ export function GameHeader({
       'flex items-center justify-between px-4 py-2 bg-card/80 backdrop-blur-sm border-b border-border',
       className
     )}>
-      <h1 className="text-xl font-display text-primary tracking-wide">
-        POKER RUSH
-      </h1>
+      <img src={pokerShootoutLogo} alt="Poker Shootout" className="h-6" />
       
       <div className="flex items-center gap-2">
       {highScore > 0 && (
