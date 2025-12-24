@@ -17,6 +17,7 @@ interface BonusRoundProps {
 export function BonusRound({ deck, onSubmitHand, onSkip, timeRemaining, pointMultiplier }: BonusRoundProps) {
   const [keptCards, setKeptCards] = useState<Card[]>([]);
   const [handResult, setHandResult] = useState<HandResult | null>(null);
+  const [currentFlippedId, setCurrentFlippedId] = useState<string | null>(null);
 
   // Evaluate hand when 5 cards are kept
   useEffect(() => {
@@ -28,9 +29,14 @@ export function BonusRound({ deck, onSubmitHand, onSkip, timeRemaining, pointMul
     }
   }, [keptCards]);
 
+  const handleFlip = useCallback((cardId: string) => {
+    setCurrentFlippedId(cardId);
+  }, []);
+
   const handleKeep = useCallback((card: Card) => {
     if (keptCards.length >= 5) return;
     setKeptCards(prev => [...prev, card]);
+    setCurrentFlippedId(null); // Clear flipped state when card is kept
   }, [keptCards.length]);
 
   const handleUnkeep = useCallback((card: Card) => {
@@ -84,6 +90,8 @@ export function BonusRound({ deck, onSubmitHand, onSkip, timeRemaining, pointMul
               key={card.id}
               card={card}
               isKept={keptCardIds.includes(card.id)}
+              isFlippedExternal={currentFlippedId === card.id}
+              onFlip={handleFlip}
               onKeep={handleKeep}
               onUnkeep={handleUnkeep}
               disabled={keptCards.length >= 5 && !keptCardIds.includes(card.id)}
