@@ -12,7 +12,8 @@ import { StaticGrid } from '@/components/game/StaticGrid';
 import { PowerUpBar } from '@/components/game/PowerUpBar';
 import { BonusRound } from '@/components/game/BonusRound';
 import { GameMode } from '@/types/game';
-import { Trophy, Star, Zap } from 'lucide-react';
+import { TrophyIcon, StarIcon, BoltIcon } from '@heroicons/react/24/outline';
+import gameBackground from '@/assets/game-background.png';
 
 export default function GameScreen() {
   const { mode } = useParams<{ mode: GameMode }>();
@@ -90,7 +91,7 @@ export default function GameScreen() {
   const selectedIds = state.selectedCards.map(c => c.id);
 
   return (
-    <div className="h-screen max-h-screen game-field-bg flex flex-col overflow-hidden">
+    <div className="h-screen max-h-screen flex flex-col overflow-hidden" style={{ backgroundImage: `url(${gameBackground})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
       {!isBonusRound && (
         <>
           <GameHeader
@@ -181,9 +182,9 @@ export default function GameScreen() {
                   transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
                 >
                   {state.isBonusLevel ? (
-                    <Star className="w-16 h-16 text-accent mx-auto mb-4" />
+                    <StarIcon className="w-16 h-16 text-accent mx-auto mb-4" />
                   ) : (
-                    <Trophy className="w-16 h-16 text-primary mx-auto mb-4" />
+                    <TrophyIcon className="w-16 h-16 text-primary mx-auto mb-4" />
                   )}
                 </motion.div>
                 <h2 className="text-3xl font-display text-foreground mb-2">
@@ -204,7 +205,7 @@ export default function GameScreen() {
                 )}
                 {state.pointMultiplier > 1 && (
                   <p className="text-sm text-accent flex items-center justify-center gap-1 mb-4">
-                    <Zap className="w-4 h-4" />
+                    <BoltIcon className="w-4 h-4" />
                     {state.pointMultiplier}x Points Active
                   </p>
                 )}
@@ -223,7 +224,7 @@ export default function GameScreen() {
             animate={{ opacity: 1 }}
             className="absolute top-4 right-4 bg-primary/20 text-primary px-3 py-1 rounded-full flex items-center gap-1 font-display text-xs"
           >
-            <Zap className="w-3 h-3" />
+            <BoltIcon className="w-3 h-3" />
             {state.pointMultiplier}x
           </motion.div>
         )}
