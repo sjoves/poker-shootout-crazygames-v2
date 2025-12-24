@@ -22,9 +22,9 @@ const SUIT_SYMBOLS: Record<Suit, string> = {
 const isRedSuit = (suit: Suit) => suit === 'hearts' || suit === 'diamonds';
 
 const SIZE_CONFIG = {
-  sm: { card: 'w-12 h-[66px]', rank: 'text-xs', corner: 'text-[8px]', center: 'text-base', pip: 'text-[6px]', gap: 'gap-0' },
-  md: { card: 'w-16 h-[88px]', rank: 'text-sm', corner: 'text-[10px]', center: 'text-xl', pip: 'text-[8px]', gap: 'gap-0.5' },
-  lg: { card: 'w-24 h-[132px]', rank: 'text-lg', corner: 'text-xs', center: 'text-3xl', pip: 'text-[10px]', gap: 'gap-1' },
+  sm: { card: 'w-14 h-[79px]', rank: 'text-sm', corner: 'text-[10px]', center: 'text-lg', pip: 'text-[7px]', gap: 'gap-0' },
+  md: { card: 'w-[76px] h-[106px]', rank: 'text-base', corner: 'text-xs', center: 'text-2xl', pip: 'text-[10px]', gap: 'gap-0.5' },
+  lg: { card: 'w-[115px] h-[158px]', rank: 'text-xl', corner: 'text-sm', center: 'text-4xl', pip: 'text-xs', gap: 'gap-1' },
 };
 
 // Number of pips to show based on card rank
@@ -114,9 +114,9 @@ export function PlayingCard({
 }
 
 const EMPTY_SLOT_SIZES = {
-  sm: 'w-12 h-[66px]',
-  md: 'w-16 h-[88px]',
-  lg: 'w-24 h-[132px]',
+  sm: 'w-14 h-[79px]',
+  md: 'w-[76px] h-[106px]',
+  lg: 'w-[115px] h-[158px]',
 };
 
 export function EmptyCardSlot({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
