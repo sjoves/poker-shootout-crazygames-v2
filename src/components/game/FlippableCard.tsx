@@ -7,6 +7,8 @@ import { Check } from 'lucide-react';
 interface FlippableCardProps {
   card: Card;
   isKept: boolean;
+  isFlippedExternal?: boolean;
+  onFlip?: (cardId: string) => void;
   onKeep: (card: Card) => void;
   onUnkeep: (card: Card) => void;
   disabled?: boolean;
@@ -24,11 +26,18 @@ const isRedSuit = (suit: Suit) => suit === 'hearts' || suit === 'diamonds';
 // Time in ms before card flips back if not kept
 const AUTO_UNFLIP_DELAY = 2500;
 
-export function FlippableCard({ card, isKept, onKeep, onUnkeep, disabled }: FlippableCardProps) {
+export function FlippableCard({ card, isKept, isFlippedExternal, onFlip, onKeep, onUnkeep, disabled }: FlippableCardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
   const unflipTimerRef = useRef<NodeJS.Timeout | null>(null);
   const suitSymbol = SUIT_SYMBOLS[card.suit];
   const colorClass = isRedSuit(card.suit) ? 'text-red-600' : 'text-gray-900';
+
+  // Sync with external flipped state - flip back if another card is flipped
+  useEffect(() => {
+    if (isFlippedExternal === false && isFlipped && !isKept) {
+      setIsFlipped(false);
+    }
+  }, [isFlippedExternal, isFlipped, isKept]);
 
   // Auto-unflip after delay if not kept
   useEffect(() => {
@@ -48,6 +57,7 @@ export function FlippableCard({ card, isKept, onKeep, onUnkeep, disabled }: Flip
   const handleCardClick = () => {
     if (disabled || isKept || isFlipped) return;
     setIsFlipped(true);
+    onFlip?.(card.id);
   };
 
   const handleKeepToggle = () => {
