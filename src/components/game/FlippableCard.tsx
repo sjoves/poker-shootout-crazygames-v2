@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, Suit } from '@/types/game';
 import { cn } from '@/lib/utils';
@@ -21,28 +21,46 @@ const SUIT_SYMBOLS: Record<Suit, string> = {
 
 const isRedSuit = (suit: Suit) => suit === 'hearts' || suit === 'diamonds';
 
+// Time in ms before card flips back if not kept
+const AUTO_UNFLIP_DELAY = 2500;
+
 export function FlippableCard({ card, isKept, onKeep, onUnkeep, disabled }: FlippableCardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
+  const unflipTimerRef = useRef<NodeJS.Timeout | null>(null);
   const suitSymbol = SUIT_SYMBOLS[card.suit];
   const colorClass = isRedSuit(card.suit) ? 'text-red-600' : 'text-gray-900';
 
+  // Auto-unflip after delay if not kept
+  useEffect(() => {
+    if (isFlipped && !isKept) {
+      unflipTimerRef.current = setTimeout(() => {
+        setIsFlipped(false);
+      }, AUTO_UNFLIP_DELAY);
+    }
+
+    return () => {
+      if (unflipTimerRef.current) {
+        clearTimeout(unflipTimerRef.current);
+      }
+    };
+  }, [isFlipped, isKept]);
+
   const handleCardClick = () => {
-    if (disabled || isKept) return;
+    if (disabled || isKept || isFlipped) return;
     setIsFlipped(true);
   };
 
   const handleKeepToggle = () => {
+    // Clear the auto-unflip timer when keeping
+    if (unflipTimerRef.current) {
+      clearTimeout(unflipTimerRef.current);
+    }
+    
     if (isKept) {
       onUnkeep(card);
       setIsFlipped(false);
     } else {
       onKeep(card);
-    }
-  };
-
-  const handleUnflip = () => {
-    if (!isKept) {
-      setIsFlipped(false);
     }
   };
 
@@ -125,15 +143,6 @@ export function FlippableCard({ card, isKept, onKeep, onUnkeep, disabled }: Flip
           </AnimatePresence>
         </div>
       </motion.div>
-
-      {/* Click away to unflip overlay */}
-      {isFlipped && !isKept && (
-        <div
-          className="fixed inset-0 z-0"
-          onClick={handleUnflip}
-          style={{ pointerEvents: 'auto' }}
-        />
-      )}
     </div>
   );
 }
