@@ -265,6 +265,16 @@ export function useGameState() {
     });
   }, []);
 
+  const reshuffleUnselected = useCallback(() => {
+    setState(prev => {
+      const shuffledDeck = shuffleDeck([...prev.deck]);
+      return {
+        ...prev,
+        deck: shuffledDeck,
+      };
+    });
+  }, []);
+
   const pauseGame = useCallback(() => {
     setState(prev => ({ ...prev, isPaused: !prev.isPaused }));
   }, []);
@@ -349,6 +359,7 @@ export function useGameState() {
     skipBonusRound,
     usePowerUp,
     nextLevel,
+    reshuffleUnselected,
     pauseGame,
     endGame,
     resetGame,

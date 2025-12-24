@@ -2,18 +2,21 @@ import { motion } from 'framer-motion';
 import { Card } from '@/types/game';
 import { PlayingCard } from './PlayingCard';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Button } from '@/components/ui/button';
+import { Shuffle } from 'lucide-react';
 
 interface StaticGridProps {
   deck: Card[];
   selectedCardIds: string[];
   onSelectCard: (card: Card) => void;
+  onReshuffle?: () => void;
 }
 
 // Show at most 50% of the deck (26 cards), arranged in 5 columns x 5 rows = 25 cards max
 const MAX_VISIBLE_CARDS = 25;
 const GRID_COLUMNS = 5;
 
-export function StaticGrid({ deck, selectedCardIds, onSelectCard }: StaticGridProps) {
+export function StaticGrid({ deck, selectedCardIds, onSelectCard, onReshuffle }: StaticGridProps) {
   // Only show up to MAX_VISIBLE_CARDS
   const visibleCards = deck.slice(0, MAX_VISIBLE_CARDS);
   const isMobile = useIsMobile();
@@ -23,7 +26,7 @@ export function StaticGrid({ deck, selectedCardIds, onSelectCard }: StaticGridPr
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="flex items-center justify-center w-full h-full"
+      className="flex flex-col items-center justify-center w-full h-full gap-4"
     >
       <div 
         className="grid gap-1 sm:gap-2 p-2 sm:p-4"
@@ -46,6 +49,18 @@ export function StaticGrid({ deck, selectedCardIds, onSelectCard }: StaticGridPr
           </motion.div>
         ))}
       </div>
+      
+      {onReshuffle && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onReshuffle}
+          className="gap-2"
+        >
+          <Shuffle className="w-4 h-4" />
+          Reshuffle
+        </Button>
+      )}
     </motion.div>
   );
 }

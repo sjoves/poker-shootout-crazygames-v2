@@ -26,7 +26,8 @@ export default function GameScreen() {
     usePowerUp, 
     pauseGame, 
     resetGame, 
-    nextLevel 
+    nextLevel,
+    reshuffleUnselected,
   } = useGameState();
   const [speed, setSpeed] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
@@ -134,6 +135,7 @@ export default function GameScreen() {
             deck={state.deck}
             selectedCardIds={selectedIds}
             onSelectCard={selectCard}
+            onReshuffle={reshuffleUnselected}
           />
         )}
         {isBonusRound && (
