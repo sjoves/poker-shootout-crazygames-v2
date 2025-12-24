@@ -20,7 +20,8 @@ export function StaticGrid({ deck, selectedCardIds, onSelectCard, onReshuffle }:
   // Only show up to MAX_VISIBLE_CARDS
   const visibleCards = deck.slice(0, MAX_VISIBLE_CARDS);
   const isMobile = useIsMobile();
-  const cardSize = isMobile ? 'xs' : 'sm';
+  // Use 'ssc' size (20% larger than sm) for SSC Static mode
+  const cardSize = isMobile ? 'sm' : 'ssc';
   
   return (
     <motion.div

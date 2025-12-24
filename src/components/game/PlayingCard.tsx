@@ -7,7 +7,7 @@ interface PlayingCardProps {
   onClick?: () => void;
   isSelected?: boolean;
   isDisabled?: boolean;
-  size?: 'xs' | 'sm' | 'md' | 'lg';
+  size?: 'xs' | 'sm' | 'ssc' | 'md' | 'lg';
   animate?: boolean;
   className?: string;
 }
@@ -24,6 +24,7 @@ const isRedSuit = (suit: Suit) => suit === 'hearts' || suit === 'diamonds';
 const SIZE_CONFIG = {
   xs: { card: 'w-12 h-[67px]', rank: 'text-xs', corner: 'text-[8px]', center: 'text-base', pip: 'text-[6px]', gap: 'gap-0' },
   sm: { card: 'w-14 h-[79px]', rank: 'text-sm', corner: 'text-[10px]', center: 'text-lg', pip: 'text-[7px]', gap: 'gap-0' },
+  ssc: { card: 'w-[68px] h-[95px]', rank: 'text-sm', corner: 'text-[10px]', center: 'text-xl', pip: 'text-[8px]', gap: 'gap-0' }, // 20% larger than sm
   md: { card: 'w-[76px] h-[106px]', rank: 'text-base', corner: 'text-xs', center: 'text-2xl', pip: 'text-[10px]', gap: 'gap-0.5' },
   lg: { card: 'w-[115px] h-[158px]', rank: 'text-xl', corner: 'text-sm', center: 'text-4xl', pip: 'text-xs', gap: 'gap-1' },
 };
@@ -33,7 +34,7 @@ const PIP_LAYOUTS: Record<string, number> = {
   'A': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10,
 };
 
-function CenterPips({ rank, suit, size }: { rank: string; suit: Suit; size: 'xs' | 'sm' | 'md' | 'lg' }) {
+function CenterPips({ rank, suit, size }: { rank: string; suit: Suit; size: 'xs' | 'sm' | 'ssc' | 'md' | 'lg' }) {
   const symbol = SUIT_SYMBOLS[suit];
   const count = PIP_LAYOUTS[rank];
   const config = SIZE_CONFIG[size];
@@ -117,11 +118,12 @@ export function PlayingCard({
 const EMPTY_SLOT_SIZES = {
   xs: 'w-12 h-[67px]',
   sm: 'w-14 h-[79px]',
+  ssc: 'w-[68px] h-[95px]',
   md: 'w-[76px] h-[106px]',
   lg: 'w-[115px] h-[158px]',
 };
 
-export function EmptyCardSlot({ size = 'md' }: { size?: 'xs' | 'sm' | 'md' | 'lg' }) {
+export function EmptyCardSlot({ size = 'md' }: { size?: 'xs' | 'sm' | 'ssc' | 'md' | 'lg' }) {
   return (
     <div
       className={cn(
