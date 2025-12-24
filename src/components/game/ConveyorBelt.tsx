@@ -128,18 +128,39 @@ export function ConveyorBelt({
       });
       
       setConveyorCards(prev => {
-        return prev.map(card => {
-          let newX = card.x + card.speed;
+        const updatedCards = prev
+          .map(card => ({ ...card, x: card.x + card.speed }))
+          .filter(card => !selectedCardIds.includes(card.id.split('-row')[0]))
+          // Remove cards that are fully off-screen
+          .filter(card => {
+            if (card.speed > 0) return card.x < containerWidth + cardWidth;
+            return card.x > -cardWidth * 2;
+          });
+        
+        // Count cards per row and add new ones at entry points
+        for (let row = 0; row < rows; row++) {
+          const rowCards = updatedCards.filter(c => c.row === row);
+          const isLeftToRight = row % 2 === 0;
+          const minCardsPerRow = Math.floor(containerWidth / (cardWidth + 20)) + 2;
           
-          // Wrap around
-          if (card.speed > 0 && newX > containerWidth) {
-            newX = -cardWidth;
-          } else if (card.speed < 0 && newX < -cardWidth) {
-            newX = containerWidth;
+          if (rowCards.length < minCardsPerRow) {
+            // Find appropriate entry position
+            const entryX = isLeftToRight ? -cardWidth : containerWidth;
+            const deckCard = deck[Math.floor(Math.random() * deck.length)];
+            if (deckCard && !selectedCardIds.includes(deckCard.id)) {
+              updatedCards.push({
+                ...deckCard,
+                id: `${deckCard.id}-row${row}-t${now}`,
+                x: entryX,
+                y: 0,
+                row,
+                speed: speed * (isLeftToRight ? 1 : -1) * 0.5,
+              });
+            }
           }
-          
-          return { ...card, x: newX };
-        }).filter(card => !selectedCardIds.includes(card.id.split('-row')[0]));
+        }
+        
+        return updatedCards;
       });
       
       animationRef.current = requestAnimationFrame(animate);
