@@ -68,7 +68,7 @@ export function FlippableCard({ card, isKept, onKeep, onUnkeep, disabled }: Flip
     <div className="relative perspective-1000">
       <motion.div
         className={cn(
-          'w-14 h-[79px] cursor-pointer relative',
+          'w-[50px] h-[71px] cursor-pointer relative',
           'transform-style-preserve-3d transition-transform duration-500',
           disabled && !isKept && 'opacity-50 cursor-not-allowed'
         )}
