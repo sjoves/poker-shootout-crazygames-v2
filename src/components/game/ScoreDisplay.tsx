@@ -105,18 +105,28 @@ export function ScorePanel({
         {/* Divider */}
         <div className="w-px h-5 bg-border" />
 
-        {/* Level (if applicable) */}
+        {/* Level (SSC mode only) */}
         {level !== undefined && (
-          <>
-            <div className="flex items-center gap-2">
-              <svg className="w-5 h-5 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="3" />
-                <circle cx="12" cy="12" r="7" />
-                <circle cx="12" cy="12" r="11" />
-              </svg>
-              <span className="text-lg font-semibold text-foreground">Lvl {level}</span>
-            </div>
-          </>
+          <div className="flex items-center gap-2">
+            <svg className="w-5 h-5 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="3" />
+              <circle cx="12" cy="12" r="7" />
+              <circle cx="12" cy="12" r="11" />
+            </svg>
+            <span className="text-lg font-semibold text-foreground">Lvl {level}</span>
+          </div>
+        )}
+
+        {/* Progress - cards/hands (Classic & Blitz modes only) */}
+        {level === undefined && (
+          <div className="flex items-center gap-2">
+            <svg className="w-5 h-5 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="4" y="4" width="16" height="4" rx="1" />
+              <rect x="4" y="10" width="16" height="4" rx="1" />
+              <rect x="4" y="16" width="16" height="4" rx="1" />
+            </svg>
+            <span className="text-lg font-semibold text-foreground tabular-nums">{progressValue}</span>
+          </div>
         )}
       </div>
 
