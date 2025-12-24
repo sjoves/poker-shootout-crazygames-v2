@@ -85,7 +85,7 @@ export function BonusRound({ deck, onSubmitHand, onSkip, timeRemaining, pointMul
       {/* Cards Grid */}
       <div className="flex-1 overflow-auto p-4">
         <div className="grid grid-cols-7 gap-1.5 max-w-md mx-auto">
-          {deck.slice(0, 26).map((card) => (
+          {deck.slice(0, 35).map((card) => (
             <FlippableCard
               key={card.id}
               card={card}
