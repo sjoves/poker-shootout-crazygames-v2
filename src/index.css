@@ -6,120 +6,120 @@
 
 @layer base {
   :root {
-    /* 49ers Red & Gold Theme */
-    --background: 0 0% 8%;
-    --background-gradient-start: 0 0% 5%;
-    --background-gradient-end: 0 0% 12%;
-    --foreground: 0 0% 98%;
+    /* Emerald & Mint Casino Theme */
+    --background: 150 20% 6%;
+    --background-gradient-start: 150 25% 4%;
+    --background-gradient-end: 150 15% 10%;
+    --foreground: 150 10% 95%;
 
-    --card: 0 0% 12%;
-    --card-foreground: 0 0% 98%;
+    --card: 150 20% 10%;
+    --card-foreground: 150 10% 95%;
 
-    --popover: 0 0% 10%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 150 20% 8%;
+    --popover-foreground: 150 10% 95%;
 
-    /* 49ers Red - Primary */
-    --primary: 0 85% 45%;
-    --primary-foreground: 0 0% 98%;
-    --primary-glow: 0 85% 55%;
+    /* Emerald Green - Primary */
+    --primary: 160 70% 40%;
+    --primary-foreground: 150 10% 98%;
+    --primary-glow: 160 75% 50%;
 
-    /* Dark accent */
-    --secondary: 0 0% 15%;
-    --secondary-foreground: 0 0% 98%;
+    /* Dark emerald accent */
+    --secondary: 150 25% 12%;
+    --secondary-foreground: 150 10% 95%;
 
     /* Muted tones */
-    --muted: 0 0% 18%;
-    --muted-foreground: 0 0% 60%;
+    --muted: 150 15% 15%;
+    --muted-foreground: 150 10% 55%;
 
-    /* 49ers Gold - Accent */
-    --accent: 43 85% 55%;
-    --accent-foreground: 0 0% 5%;
+    /* Mint - Accent */
+    --accent: 165 60% 55%;
+    --accent-foreground: 150 30% 8%;
 
     /* Destructive */
-    --destructive: 0 72% 55%;
+    --destructive: 0 72% 50%;
     --destructive-foreground: 0 0% 98%;
 
     /* Borders and inputs */
-    --border: 0 0% 22%;
-    --input: 0 0% 15%;
-    --ring: 0 85% 45%;
+    --border: 150 15% 20%;
+    --input: 150 20% 12%;
+    --ring: 160 70% 40%;
 
     --radius: 0.75rem;
 
     /* Card suit colors */
-    --suit-hearts: 0 85% 50%;
-    --suit-diamonds: 0 85% 50%;
-    --suit-clubs: 0 0% 15%;
-    --suit-spades: 0 0% 15%;
+    --suit-hearts: 0 75% 50%;
+    --suit-diamonds: 0 75% 50%;
+    --suit-clubs: 150 15% 15%;
+    --suit-spades: 150 15% 15%;
 
-    /* Game specific - 49ers Gold */
-    --gold: 43 85% 55%;
-    --gold-glow: 43 90% 65%;
-    --bronze: 30 60% 45%;
-    --silver: 0 0% 75%;
+    /* Game specific - Mint/Gold accents */
+    --gold: 165 60% 55%;
+    --gold-glow: 165 70% 65%;
+    --bronze: 160 50% 35%;
+    --silver: 150 10% 70%;
 
     /* Shadows */
-    --shadow-glow: 0 0 30px hsl(0 85% 45% / 0.4);
-    --shadow-card: 0 4px 24px hsl(0 0% 0% / 0.6);
+    --shadow-glow: 0 0 30px hsl(160 70% 40% / 0.4);
+    --shadow-card: 0 4px 24px hsl(150 30% 0% / 0.6);
 
     /* Game specific gradients */
-    --game-field-start: 0 0% 14%;
-    --game-field-end: 0 0% 6%;
+    --game-field-start: 150 20% 12%;
+    --game-field-end: 150 25% 5%;
 
-    /* Title color - Gold */
-    --title-gold: 43 85% 55%;
+    /* Title color - Mint */
+    --title-gold: 165 60% 55%;
 
     /* Sidebar */
-    --sidebar-background: 0 0% 10%;
-    --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 0 85% 45%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 43 85% 55%;
-    --sidebar-accent-foreground: 0 0% 5%;
-    --sidebar-border: 0 0% 22%;
-    --sidebar-ring: 0 85% 45%;
+    --sidebar-background: 150 20% 8%;
+    --sidebar-foreground: 150 10% 95%;
+    --sidebar-primary: 160 70% 40%;
+    --sidebar-primary-foreground: 150 10% 98%;
+    --sidebar-accent: 165 60% 55%;
+    --sidebar-accent-foreground: 150 30% 8%;
+    --sidebar-border: 150 15% 20%;
+    --sidebar-ring: 160 70% 40%;
   }
 
   .dark {
-    --background: 0 0% 8%;
-    --background-gradient-start: 0 0% 5%;
-    --background-gradient-end: 0 0% 12%;
-    --foreground: 0 0% 98%;
+    --background: 150 20% 6%;
+    --background-gradient-start: 150 25% 4%;
+    --background-gradient-end: 150 15% 10%;
+    --foreground: 150 10% 95%;
 
-    --card: 0 0% 12%;
-    --card-foreground: 0 0% 98%;
+    --card: 150 20% 10%;
+    --card-foreground: 150 10% 95%;
 
-    --popover: 0 0% 10%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 150 20% 8%;
+    --popover-foreground: 150 10% 95%;
 
-    --primary: 0 85% 45%;
-    --primary-foreground: 0 0% 98%;
-    --primary-glow: 0 85% 55%;
+    --primary: 160 70% 40%;
+    --primary-foreground: 150 10% 98%;
+    --primary-glow: 160 75% 50%;
 
-    --secondary: 0 0% 15%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 150 25% 12%;
+    --secondary-foreground: 150 10% 95%;
 
-    --muted: 0 0% 18%;
-    --muted-foreground: 0 0% 60%;
+    --muted: 150 15% 15%;
+    --muted-foreground: 150 10% 55%;
 
-    --accent: 43 85% 55%;
-    --accent-foreground: 0 0% 5%;
+    --accent: 165 60% 55%;
+    --accent-foreground: 150 30% 8%;
 
     --destructive: 0 62% 30%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 22%;
-    --input: 0 0% 15%;
-    --ring: 0 85% 45%;
+    --border: 150 15% 20%;
+    --input: 150 20% 12%;
+    --ring: 160 70% 40%;
 
-    --sidebar-background: 0 0% 10%;
-    --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 0 85% 45%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 43 85% 55%;
-    --sidebar-accent-foreground: 0 0% 5%;
-    --sidebar-border: 0 0% 22%;
-    --sidebar-ring: 0 85% 45%;
+    --sidebar-background: 150 20% 8%;
+    --sidebar-foreground: 150 10% 95%;
+    --sidebar-primary: 160 70% 40%;
+    --sidebar-primary-foreground: 150 10% 98%;
+    --sidebar-accent: 165 60% 55%;
+    --sidebar-accent-foreground: 150 30% 8%;
+    --sidebar-border: 150 15% 20%;
+    --sidebar-ring: 160 70% 40%;
   }
 }
 
