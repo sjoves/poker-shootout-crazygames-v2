@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameState } from '@/hooks/useGameState';
 import { GameHeader } from '@/components/game/GameHeader';
@@ -15,6 +15,7 @@ import { Trophy, Star, Zap } from 'lucide-react';
 
 export default function GameScreen() {
   const { mode } = useParams<{ mode: GameMode }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { 
     state, 
@@ -30,12 +31,16 @@ export default function GameScreen() {
   const [speed, setSpeed] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
   const [showUsedCards, setShowUsedCards] = useState(false);
+  
+  const isTestBonus = searchParams.get('testBonus') === 'true';
 
   useEffect(() => {
-    if (mode && !state.isPlaying && !state.isGameOver && !state.isLevelComplete) {
+    if (isTestBonus && !state.isPlaying && !state.isGameOver && !state.isLevelComplete) {
+      startGame('ssc', true); // Start in bonus mode
+    } else if (mode && !state.isPlaying && !state.isGameOver && !state.isLevelComplete) {
       startGame(mode as GameMode);
     }
-  }, [mode, state.isPlaying, state.isGameOver, state.isLevelComplete, startGame]);
+  }, [mode, isTestBonus, state.isPlaying, state.isGameOver, state.isLevelComplete, startGame]);
 
   // Auto-advance to next level after showing congratulations
   useEffect(() => {

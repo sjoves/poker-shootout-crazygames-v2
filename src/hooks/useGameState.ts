@@ -44,7 +44,7 @@ export function useGameState() {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const handResultsRef = useRef<HandResult[]>([]);
 
-  const startGame = useCallback((mode: GameMode) => {
+  const startGame = useCallback((mode: GameMode, forceBonus: boolean = false) => {
     const deck = shuffleDeck(createDeck());
     const isBlitz = mode === 'blitz_fc' || mode === 'blitz_cb';
     const isSSC = mode === 'ssc';
@@ -64,8 +64,8 @@ export function useGameState() {
       sscLevel: 1,
       sscPhase: levelInfo?.phase || 'static',
       sscRound: levelInfo?.round || 1,
-      pointMultiplier: levelInfo?.pointMultiplier || 1,
-      isBonusLevel: levelInfo?.isBonus || false,
+      pointMultiplier: forceBonus ? 2 : (levelInfo?.pointMultiplier || 1),
+      isBonusLevel: forceBonus || (levelInfo?.isBonus || false),
       levelGoal: isSSC ? calculateLevelGoal(1) : 0,
       unlockedPowerUps,
       activePowerUps: [...unlockedPowerUps],
