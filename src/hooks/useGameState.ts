@@ -37,6 +37,7 @@ const INITIAL_STATE: GameState = {
   rawScore: 0,
   timeBonus: 0,
   leftoverPenalty: 0,
+  bonusTimePoints: 0,
 };
 
 export function useGameState() {
@@ -168,10 +169,13 @@ export function useGameState() {
     });
   }, []);
 
-  const submitBonusHand = useCallback((cards: Card[], result: HandResult) => {
+  const submitBonusHand = useCallback((cards: Card[], result: HandResult, timeRemaining: number) => {
     setState(prev => {
       // Apply point multiplier for bonus round
       const multipliedPoints = Math.floor(result.totalPoints * prev.pointMultiplier);
+      
+      // Calculate time bonus: 10 points per second remaining
+      const timeBonusPoints = timeRemaining * 10;
       
       const modifiedResult = {
         ...result,
@@ -180,8 +184,9 @@ export function useGameState() {
       
       handResultsRef.current.push(modifiedResult);
 
-      const newScore = prev.score + multipliedPoints;
-      const newRawScore = prev.rawScore + multipliedPoints;
+      const totalPoints = multipliedPoints + timeBonusPoints;
+      const newScore = prev.score + totalPoints;
+      const newRawScore = prev.rawScore + totalPoints;
 
       // Bonus round completes after one hand submission
       return {
@@ -192,6 +197,7 @@ export function useGameState() {
         selectedCards: [],
         currentHand: modifiedResult,
         isLevelComplete: true,
+        bonusTimePoints: timeBonusPoints, // Store for display
       };
     });
   }, []);
