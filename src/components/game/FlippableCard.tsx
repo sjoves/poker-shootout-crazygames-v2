@@ -69,11 +69,11 @@ export function FlippableCard({ card, isKept, onKeep, onUnkeep, disabled }: Flip
       <motion.div
         className={cn(
           'w-[50px] h-[71px] cursor-pointer relative',
-          'transform-style-preserve-3d transition-transform duration-500',
+          'transform-style-preserve-3d transition-transform duration-300',
           disabled && !isKept && 'opacity-50 cursor-not-allowed'
         )}
         animate={{ rotateY: isFlipped || isKept ? 180 : 0 }}
-        transition={{ duration: 0.4 }}
+        transition={{ duration: 0.2 }}
       >
         {/* Card Back */}
         <div
