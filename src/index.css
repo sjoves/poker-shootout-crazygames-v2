@@ -135,10 +135,10 @@
     --popover: 0 0% 10%;
     --popover-foreground: 0 0% 95%;
 
-    /* Silver - Primary */
-    --primary: 0 0% 65%;
+    /* Raiders Green - Primary */
+    --primary: 140 65% 55%;
     --primary-foreground: 0 0% 5%;
-    --primary-glow: 0 0% 75%;
+    --primary-glow: 140 70% 65%;
 
     /* Dark gray accent */
     --secondary: 0 0% 18%;
@@ -148,8 +148,8 @@
     --muted: 0 0% 20%;
     --muted-foreground: 0 0% 55%;
 
-    /* Silver - Accent */
-    --accent: 0 0% 75%;
+    /* Raiders Green - Accent */
+    --accent: 140 65% 55%;
     --accent-foreground: 0 0% 8%;
 
     /* Destructive */
@@ -157,9 +157,9 @@
     --destructive-foreground: 0 0% 98%;
 
     /* Borders and inputs */
-    --border: 0 0% 25%;
+    --border: 140 30% 30%;
     --input: 0 0% 15%;
-    --ring: 0 0% 65%;
+    --ring: 140 65% 55%;
 
     /* Card suit colors - silver theme */
     --suit-hearts: 0 75% 50%;
@@ -167,32 +167,32 @@
     --suit-clubs: 0 0% 20%;
     --suit-spades: 0 0% 20%;
 
-    /* Game specific - Silver accents */
-    --gold: 0 0% 75%;
-    --gold-glow: 0 0% 85%;
-    --bronze: 0 0% 50%;
+    /* Game specific - Green accents */
+    --gold: 140 65% 55%;
+    --gold-glow: 140 70% 65%;
+    --bronze: 140 50% 40%;
     --silver: 0 0% 70%;
 
     /* Shadows */
-    --shadow-glow: 0 0 30px hsl(0 0% 65% / 0.3);
+    --shadow-glow: 0 0 30px hsl(140 65% 55% / 0.4);
     --shadow-card: 0 4px 24px hsl(0 0% 0% / 0.7);
 
     /* Game specific gradients */
     --game-field-start: 0 0% 15%;
     --game-field-end: 0 0% 8%;
 
-    /* Title color - Silver */
-    --title-gold: 0 0% 80%;
+    /* Title color - Green */
+    --title-gold: 140 65% 55%;
 
     /* Sidebar */
     --sidebar-background: 0 0% 10%;
     --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 0 0% 65%;
+    --sidebar-primary: 140 65% 55%;
     --sidebar-primary-foreground: 0 0% 5%;
-    --sidebar-accent: 0 0% 75%;
+    --sidebar-accent: 140 65% 55%;
     --sidebar-accent-foreground: 0 0% 8%;
-    --sidebar-border: 0 0% 25%;
-    --sidebar-ring: 0 0% 65%;
+    --sidebar-border: 140 30% 30%;
+    --sidebar-ring: 140 65% 55%;
   }
 }
 
