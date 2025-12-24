@@ -88,22 +88,26 @@ export default function GameScreen() {
 
   return (
     <div className="h-screen max-h-screen game-field-bg flex flex-col overflow-hidden">
-      <GameHeader
-        isPaused={state.isPaused}
-        onHome={() => { resetGame(); navigate('/'); }}
-        onRestart={() => { resetGame(); startGame(mode as GameMode); }}
-        onHelp={() => {}}
-        onPause={pauseGame}
-      />
+      {!isBonusRound && (
+        <>
+          <GameHeader
+            isPaused={state.isPaused}
+            onHome={() => { resetGame(); navigate('/'); }}
+            onRestart={() => { resetGame(); startGame(mode as GameMode); }}
+            onHelp={() => {}}
+            onPause={pauseGame}
+          />
 
-      <ScorePanel
-        score={state.score}
-        timeDisplay={timeDisplay}
-        progressLabel={progress.label}
-        progressValue={progress.value}
-        currentHand={state.currentHand}
-        goalScore={isSSC ? state.levelGoal : undefined}
-      />
+          <ScorePanel
+            score={state.score}
+            timeDisplay={timeDisplay}
+            progressLabel={progress.label}
+            progressValue={progress.value}
+            currentHand={state.currentHand}
+            goalScore={isSSC ? state.levelGoal : undefined}
+          />
+        </>
+      )}
 
       <div className="flex-1 min-h-0 relative overflow-hidden p-2 sm:p-4">
         {isFalling && (
