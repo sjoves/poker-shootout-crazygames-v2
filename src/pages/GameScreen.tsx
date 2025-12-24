@@ -13,7 +13,7 @@ import { PowerUpBar } from '@/components/game/PowerUpBar';
 import { BonusRound } from '@/components/game/BonusRound';
 import { GameMode } from '@/types/game';
 import { TrophyIcon, StarIcon, BoltIcon } from '@heroicons/react/24/outline';
-import gameBackground from '@/assets/game-background.png';
+
 
 export default function GameScreen() {
   const { mode } = useParams<{ mode: GameMode }>();
@@ -91,7 +91,7 @@ export default function GameScreen() {
   const selectedIds = state.selectedCards.map(c => c.id);
 
   return (
-    <div className="h-screen max-h-screen flex flex-col overflow-hidden" style={{ backgroundImage: `url(${gameBackground})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+    <div className="h-screen max-h-screen flex flex-col overflow-hidden modern-bg">
       {!isBonusRound && (
         <>
           <GameHeader
