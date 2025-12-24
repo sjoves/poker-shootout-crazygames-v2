@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameState } from '@/hooks/useGameState';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { GameHeader } from '@/components/game/GameHeader';
 import { ScorePanel } from '@/components/game/ScoreDisplay';
 import { HandDisplay } from '@/components/game/HandDisplay';
@@ -29,7 +30,8 @@ export default function GameScreen() {
     nextLevel,
     reshuffleUnselected,
   } = useGameState();
-  const [speed, setSpeed] = useState(1);
+  const isMobile = useIsMobile();
+  const baseSpeed = isMobile ? 0.6 : 1; // Slower speed on mobile
   const [isMuted, setIsMuted] = useState(false);
   const [showUsedCards, setShowUsedCards] = useState(false);
   
@@ -116,7 +118,7 @@ export default function GameScreen() {
             deck={state.deck}
             selectedCardIds={selectedIds}
             onSelectCard={selectCard}
-            speed={speed * (isBlitz ? 1.2 : 1)}
+            speed={baseSpeed * (isBlitz ? 1.2 : 1)}
             isPaused={state.isPaused || state.isLevelComplete}
             isRecycling={isBlitz}
           />
@@ -126,7 +128,7 @@ export default function GameScreen() {
             deck={state.deck}
             selectedCardIds={selectedIds}
             onSelectCard={selectCard}
-            speed={speed * (isBlitz ? 1.5 : 1)}
+            speed={baseSpeed * (isBlitz ? 1.5 : 1)}
             isPaused={state.isPaused || state.isLevelComplete}
           />
         )}
