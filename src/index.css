@@ -123,7 +123,7 @@
   }
 
   /* Raiders Theme - Black & Silver */
-  .theme-raiders {
+  html.theme-raiders, html.theme-raiders:root {
     --background: 0 0% 8%;
     --background-gradient-start: 0 0% 5%;
     --background-gradient-end: 0 0% 12%;
