@@ -56,7 +56,7 @@ export default function SplashScreen() {
         animate={{ opacity: 1, y: 0 }}
         className="text-center mb-12"
       >
-        <img src={logo} alt="Poker Shootout" className="w-48 md:w-64 mx-auto mb-4" />
+        <img src={logo} alt="Poker Shootout" className="w-96 md:w-[32rem] mx-auto mb-4" />
         <p className="text-lg text-muted-foreground">
           Collect cards. Build hands. Beat the clock.
         </p>
