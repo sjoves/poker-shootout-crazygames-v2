@@ -8,7 +8,7 @@ import { Target, Timer } from 'lucide-react';
 
 interface BonusRoundProps {
   deck: Card[];
-  onSubmitHand: (cards: Card[], result: HandResult) => void;
+  onSubmitHand: (cards: Card[], result: HandResult, timeRemaining: number) => void;
   onSkip: () => void;
   timeRemaining: number;
   pointMultiplier: number;
@@ -45,7 +45,7 @@ export function BonusRound({ deck, onSubmitHand, onSkip, timeRemaining, pointMul
 
   const handleSubmit = () => {
     if (keptCards.length === 5 && handResult) {
-      onSubmitHand(keptCards, handResult);
+      onSubmitHand(keptCards, handResult, timeRemaining);
     }
   };
 
@@ -110,12 +110,20 @@ export function BonusRound({ deck, onSubmitHand, onSkip, timeRemaining, pointMul
           <p className="text-lg font-display text-primary">
             {handResult.hand.name}
           </p>
-          <p className="text-sm text-muted-foreground">
-            {handResult.totalPoints * pointMultiplier} points
-            {pointMultiplier > 1 && (
-              <span className="text-accent ml-1">({pointMultiplier}x bonus)</span>
-            )}
-          </p>
+          <div className="text-sm text-muted-foreground space-y-1">
+            <p>
+              Hand: {handResult.totalPoints * pointMultiplier} pts
+              {pointMultiplier > 1 && (
+                <span className="text-accent ml-1">({pointMultiplier}x)</span>
+              )}
+            </p>
+            <p className="text-accent">
+              + Time Bonus: {timeRemaining * 10} pts ({timeRemaining}s × 10)
+            </p>
+            <p className="text-foreground font-bold border-t border-border pt-1 mt-1">
+              Total: {(handResult.totalPoints * pointMultiplier) + (timeRemaining * 10)} pts
+            </p>
+          </div>
         </motion.div>
       )}
 

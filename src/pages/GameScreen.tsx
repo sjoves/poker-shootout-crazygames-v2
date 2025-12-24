@@ -189,9 +189,19 @@ export default function GameScreen() {
                 <h2 className="text-3xl font-display text-foreground mb-2">
                   {state.isBonusLevel ? 'Bonus Round Complete!' : `Level ${state.sscLevel} Complete!`}
                 </h2>
-                <p className="text-lg text-muted-foreground mb-2">
-                  Score: {state.score.toLocaleString()}
-                </p>
+                {state.isBonusLevel && state.bonusTimePoints ? (
+                  <div className="text-sm text-muted-foreground mb-2 space-y-1">
+                    <p>Hand Score: {(state.score - state.bonusTimePoints).toLocaleString()}</p>
+                    <p className="text-accent">+ Time Bonus: {state.bonusTimePoints.toLocaleString()}</p>
+                    <p className="text-lg text-foreground font-bold border-t border-border pt-1 mt-1">
+                      Total: {state.score.toLocaleString()}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-lg text-muted-foreground mb-2">
+                    Score: {state.score.toLocaleString()}
+                  </p>
+                )}
                 {state.pointMultiplier > 1 && (
                   <p className="text-sm text-accent flex items-center justify-center gap-1 mb-4">
                     <Zap className="w-4 h-4" />
