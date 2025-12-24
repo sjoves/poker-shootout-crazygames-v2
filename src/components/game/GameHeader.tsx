@@ -1,4 +1,4 @@
-import { Home, RotateCcw, HelpCircle, Trophy, Pause, Play } from 'lucide-react';
+import { HomeIcon, ArrowPathIcon, QuestionMarkCircleIcon, TrophyIcon, PauseIcon, PlayIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -31,29 +31,29 @@ export function GameHeader({
       </h1>
       
       <div className="flex items-center gap-2">
-        {highScore > 0 && (
+      {highScore > 0 && (
           <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-gold/20 border border-gold/30">
-            <Trophy className="w-4 h-4 text-gold" />
+            <TrophyIcon className="w-4 h-4 text-gold" />
             <span className="text-sm font-bold text-gold">{highScore.toLocaleString()}</span>
           </div>
         )}
         
         {onPause && (
           <Button variant="ghost" size="icon" onClick={onPause}>
-            {isPaused ? <Play className="w-5 h-5" /> : <Pause className="w-5 h-5" />}
+            {isPaused ? <PlayIcon className="w-5 h-5" /> : <PauseIcon className="w-5 h-5" />}
           </Button>
         )}
         
         <Button variant="ghost" size="icon" onClick={onHome}>
-          <Home className="w-5 h-5" />
+          <HomeIcon className="w-5 h-5" />
         </Button>
         
         <Button variant="ghost" size="icon" onClick={onRestart}>
-          <RotateCcw className="w-5 h-5" />
+          <ArrowPathIcon className="w-5 h-5" />
         </Button>
         
         <Button variant="ghost" size="icon" onClick={onHelp}>
-          <HelpCircle className="w-5 h-5" />
+          <QuestionMarkCircleIcon className="w-5 h-5" />
         </Button>
       </div>
     </header>

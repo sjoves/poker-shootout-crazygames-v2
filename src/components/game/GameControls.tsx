@@ -1,4 +1,4 @@
-import { Minus, Plus, Volume2, VolumeX, Archive } from 'lucide-react';
+import { MinusIcon, PlusIcon, SpeakerWaveIcon, SpeakerXMarkIcon, ArchiveBoxIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -31,7 +31,7 @@ export function GameControls({
           onClick={() => onSpeedChange(-0.25)}
           disabled={speed <= 0.5}
         >
-          <Minus className="w-4 h-4" />
+          <MinusIcon className="w-4 h-4" />
         </Button>
         <span className="text-sm font-medium min-w-[60px] text-center">
           Speed: {speed.toFixed(2)}x
@@ -43,7 +43,7 @@ export function GameControls({
           onClick={() => onSpeedChange(0.25)}
           disabled={speed >= 2}
         >
-          <Plus className="w-4 h-4" />
+          <PlusIcon className="w-4 h-4" />
         </Button>
       </div>
       
@@ -53,7 +53,7 @@ export function GameControls({
         onClick={onUsedCardsToggle}
         className="gap-2"
       >
-        <Archive className="w-4 h-4" />
+        <ArchiveBoxIcon className="w-4 h-4" />
         Used Cards
       </Button>
       
@@ -62,7 +62,7 @@ export function GameControls({
         size="icon"
         onClick={onMuteToggle}
       >
-        {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+        {isMuted ? <SpeakerXMarkIcon className="w-5 h-5" /> : <SpeakerWaveIcon className="w-5 h-5" />}
       </Button>
     </div>
   );
