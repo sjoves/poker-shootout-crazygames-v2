@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { Card } from '@/types/game';
 import { PlayingCard } from './PlayingCard';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface StaticGridProps {
   deck: Card[];
@@ -15,6 +16,8 @@ const GRID_COLUMNS = 5;
 export function StaticGrid({ deck, selectedCardIds, onSelectCard }: StaticGridProps) {
   // Only show up to MAX_VISIBLE_CARDS
   const visibleCards = deck.slice(0, MAX_VISIBLE_CARDS);
+  const isMobile = useIsMobile();
+  const cardSize = isMobile ? 'xs' : 'sm';
   
   return (
     <motion.div
@@ -23,7 +26,7 @@ export function StaticGrid({ deck, selectedCardIds, onSelectCard }: StaticGridPr
       className="flex items-center justify-center w-full h-full"
     >
       <div 
-        className="grid gap-2 p-4"
+        className="grid gap-1 sm:gap-2 p-2 sm:p-4"
         style={{ gridTemplateColumns: `repeat(${GRID_COLUMNS}, minmax(0, 1fr))` }}
       >
         {visibleCards.map((card, index) => (
@@ -37,7 +40,7 @@ export function StaticGrid({ deck, selectedCardIds, onSelectCard }: StaticGridPr
               card={card}
               onClick={() => onSelectCard(card)}
               isSelected={selectedCardIds.includes(card.id)}
-              size="sm"
+              size={cardSize}
               animate={false}
             />
           </motion.div>

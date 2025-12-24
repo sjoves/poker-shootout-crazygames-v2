@@ -29,7 +29,7 @@ export function HandDisplay({ cards, maxCards = 5, currentHand, className }: Han
   }, [currentHand]);
 
   // Use smaller cards on mobile
-  const cardSize = isMobile ? 'md' : 'lg';
+  const cardSize = isMobile ? 'sm' : 'lg';
 
   return (
     <div className={cn('relative flex flex-col items-center gap-2 sm:gap-3', className)}>
