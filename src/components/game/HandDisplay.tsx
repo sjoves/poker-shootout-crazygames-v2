@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Card, HandResult } from '@/types/game';
 import { PlayingCard, EmptyCardSlot } from './PlayingCard';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface HandDisplayProps {
   cards: Card[];
@@ -14,6 +15,7 @@ interface HandDisplayProps {
 export function HandDisplay({ cards, maxCards = 5, currentHand, className }: HandDisplayProps) {
   const slots = Array(maxCards).fill(null);
   const [visibleHand, setVisibleHand] = useState<HandResult | null>(null);
+  const isMobile = useIsMobile();
 
   // Show overlay for 0.75 seconds when a new hand result comes in
   useEffect(() => {
@@ -26,9 +28,12 @@ export function HandDisplay({ cards, maxCards = 5, currentHand, className }: Han
     }
   }, [currentHand]);
 
+  // Use smaller cards on mobile
+  const cardSize = isMobile ? 'md' : 'lg';
+
   return (
-    <div className={cn('relative flex flex-col items-center gap-3', className)}>
-      <div className="flex gap-2 justify-center">
+    <div className={cn('relative flex flex-col items-center gap-2 sm:gap-3', className)}>
+      <div className="flex gap-1 sm:gap-2 justify-center">
         <AnimatePresence mode="popLayout">
           {slots.map((_, index) => {
             const card = cards[index];
@@ -42,9 +47,9 @@ export function HandDisplay({ cards, maxCards = 5, currentHand, className }: Han
                 transition={{ type: 'spring', stiffness: 300, damping: 25 }}
               >
                 {card ? (
-                  <PlayingCard card={card} size="lg" isDisabled animate={false} />
+                  <PlayingCard card={card} size={cardSize} isDisabled animate={false} />
                 ) : (
-                  <EmptyCardSlot size="lg" />
+                  <EmptyCardSlot size={cardSize} />
                 )}
               </motion.div>
             );
@@ -66,16 +71,16 @@ export function HandDisplay({ cards, maxCards = 5, currentHand, className }: Han
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.1, type: "spring", stiffness: 300 }}
-              className="text-center"
+              className="text-center px-2"
             >
-              <div className="text-2xl font-bold text-primary-foreground tracking-wide uppercase drop-shadow-lg">
+              <div className="text-lg sm:text-2xl font-bold text-primary-foreground tracking-wide uppercase drop-shadow-lg">
                 {visibleHand.hand.name}
               </div>
               <motion.div 
                 initial={{ scale: 0.5, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 0.15, type: "spring", stiffness: 400 }}
-                className="text-4xl font-bold text-gold drop-shadow-[0_0_12px_hsl(var(--gold)/0.8)]"
+                className="text-2xl sm:text-4xl font-bold text-gold drop-shadow-[0_0_12px_hsl(var(--gold)/0.8)]"
               >
                 +{visibleHand.totalPoints}
               </motion.div>
