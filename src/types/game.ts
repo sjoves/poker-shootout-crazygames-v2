@@ -53,12 +53,15 @@ export interface GameState {
   isPaused: boolean;
   isGameOver: boolean;
   isLevelComplete: boolean;
+  isBonusLevel: boolean;
   selectedCards: Card[];
   deck: Card[];
   usedCards: Card[];
   currentHand: HandResult | null;
   sscLevel: number;
   sscPhase: SSCPhase;
+  sscRound: number;
+  pointMultiplier: number;
   levelGoal: number;
   unlockedPowerUps: string[];
   activePowerUps: string[];

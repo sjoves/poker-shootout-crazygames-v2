@@ -149,33 +149,117 @@ export function calculateLeftoverPenalty(cards: Card[]): number {
   return cards.reduce((sum, card) => sum + card.value * 10, 0);
 }
 
-export function calculateLevelGoal(level: number): number {
-  if (level <= 1) return 1000;
-  if (level <= 2) return 1500;
-  if (level <= 3) return 2000;
-  if (level <= 15) return 2000 + (level - 3) * 300;
-  return 2000 + 12 * 300 + (level - 15) * 200;
+// SSC Level structure:
+// Round 1: Levels 1-3 (Static) + Level 4 (Bonus)
+// Round 2: Levels 5-7 (Conveyor) + Level 8 (Bonus)
+// Round 3: Levels 9-11 (Falling) + Level 12 (Bonus)
+// Pattern repeats with 5% difficulty increase and double points per round
+
+export interface SSCLevelInfo {
+  phase: 'static' | 'conveyor' | 'falling';
+  isBonus: boolean;
+  round: number; // 1-indexed round number (each round = 4 levels)
+  pointMultiplier: number;
+  difficultyMultiplier: number;
+}
+
+export function getSSCLevelInfo(level: number): SSCLevelInfo {
+  // Each "super round" is 12 levels (3 phases × 4 levels each with bonus)
+  const superRound = Math.floor((level - 1) / 12);
+  const positionInSuperRound = ((level - 1) % 12) + 1; // 1-12
+  
+  // Determine phase and bonus status
+  let phase: 'static' | 'conveyor' | 'falling';
+  let isBonus: boolean;
+  let phaseInSuperRound: number;
+  
+  if (positionInSuperRound <= 4) {
+    phase = 'static';
+    isBonus = positionInSuperRound === 4;
+    phaseInSuperRound = 0;
+  } else if (positionInSuperRound <= 8) {
+    phase = 'conveyor';
+    isBonus = positionInSuperRound === 8;
+    phaseInSuperRound = 1;
+  } else {
+    phase = 'falling';
+    isBonus = positionInSuperRound === 12;
+    phaseInSuperRound = 2;
+  }
+  
+  // Overall round number (for point doubling)
+  const round = superRound * 3 + phaseInSuperRound + 1;
+  
+  // Points double each round (1x, 2x, 4x, 8x, ...)
+  const pointMultiplier = Math.pow(2, round - 1);
+  
+  // Difficulty increases 5% per round
+  const difficultyMultiplier = 1 + (round - 1) * 0.05;
+  
+  return {
+    phase,
+    isBonus,
+    round,
+    pointMultiplier,
+    difficultyMultiplier,
+  };
 }
 
 export function getSSCPhase(level: number): 'static' | 'conveyor' | 'falling' {
-  const cyclePosition = ((level - 1) % 15) + 1;
-  if (cyclePosition <= 5) return 'static';
-  if (cyclePosition <= 10) return 'conveyor';
-  return 'falling';
+  return getSSCLevelInfo(level).phase;
+}
+
+export function isSSCBonusLevel(level: number): boolean {
+  return getSSCLevelInfo(level).isBonus;
+}
+
+export function getSSCPointMultiplier(level: number): number {
+  return getSSCLevelInfo(level).pointMultiplier;
+}
+
+export function calculateLevelGoal(level: number): number {
+  const info = getSSCLevelInfo(level);
+  
+  // Base goals: Level 1 = 1000, then increase
+  let baseGoal: number;
+  if (level === 1) baseGoal = 1000;
+  else if (level <= 3) baseGoal = 1000 + (level - 1) * 500; // 1500, 2000
+  else baseGoal = 2000 + (level - 3) * 300;
+  
+  // Apply difficulty multiplier
+  baseGoal = Math.floor(baseGoal * info.difficultyMultiplier);
+  
+  // Bonus levels have higher goals
+  if (info.isBonus) {
+    baseGoal = Math.floor(baseGoal * 1.5);
+  }
+  
+  return baseGoal;
 }
 
 export function getSSCSpeed(level: number): number {
-  const phase = getSSCPhase(level);
-  const cyclePosition = ((level - 1) % 15) + 1;
+  const info = getSSCLevelInfo(level);
   
-  if (phase === 'static') return 0;
-  if (phase === 'conveyor') {
-    const phaseLevel = cyclePosition - 5;
-    return 0.4 + (phaseLevel - 1) * 0.1;
+  if (info.phase === 'static') return 0;
+  
+  // Position within phase (1-3 for regular levels, 4 for bonus)
+  const superRound = Math.floor((level - 1) / 12);
+  const positionInSuperRound = ((level - 1) % 12) + 1;
+  
+  let phasePosition: number;
+  if (info.phase === 'conveyor') {
+    phasePosition = positionInSuperRound - 4;
+  } else {
+    phasePosition = positionInSuperRound - 8;
   }
-  // falling
-  const phaseLevel = cyclePosition - 10;
-  return 0.6 + (phaseLevel - 1) * 0.15;
+  
+  // Base speed + increase per level in phase + difficulty scaling
+  const baseSpeed = info.phase === 'conveyor' ? 0.4 : 0.6;
+  const speedIncrement = info.phase === 'conveyor' ? 0.1 : 0.15;
+  const speed = baseSpeed + (phasePosition - 1) * speedIncrement;
+  
+  // Apply difficulty multiplier for higher rounds
+  return speed * info.difficultyMultiplier;
 }
 
 // Generate a hand of a specific type for power-ups

@@ -10,7 +10,7 @@ import { ConveyorBelt } from '@/components/game/ConveyorBelt';
 import { StaticGrid } from '@/components/game/StaticGrid';
 import { PowerUpBar } from '@/components/game/PowerUpBar';
 import { GameMode } from '@/types/game';
-import { Trophy } from 'lucide-react';
+import { Trophy, Star, Zap } from 'lucide-react';
 
 export default function GameScreen() {
   const { mode } = useParams<{ mode: GameMode }>();
@@ -146,14 +146,24 @@ export default function GameScreen() {
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
                 >
-                  <Trophy className="w-16 h-16 text-primary mx-auto mb-4" />
+                  {state.isBonusLevel ? (
+                    <Star className="w-16 h-16 text-accent mx-auto mb-4" />
+                  ) : (
+                    <Trophy className="w-16 h-16 text-primary mx-auto mb-4" />
+                  )}
                 </motion.div>
                 <h2 className="text-3xl font-display text-foreground mb-2">
-                  Level {state.sscLevel} Complete!
+                  {state.isBonusLevel ? 'Bonus Round Complete!' : `Level ${state.sscLevel} Complete!`}
                 </h2>
-                <p className="text-lg text-muted-foreground mb-4">
+                <p className="text-lg text-muted-foreground mb-2">
                   Score: {state.score.toLocaleString()}
                 </p>
+                {state.pointMultiplier > 1 && (
+                  <p className="text-sm text-accent flex items-center justify-center gap-1 mb-4">
+                    <Zap className="w-4 h-4" />
+                    {state.pointMultiplier}x Points Active
+                  </p>
+                )}
                 <p className="text-sm text-primary animate-pulse">
                   Next level starting...
                 </p>
@@ -161,6 +171,31 @@ export default function GameScreen() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Bonus Level Indicator */}
+        {isSSC && state.isBonusLevel && !state.isLevelComplete && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="absolute top-4 left-1/2 -translate-x-1/2 bg-accent text-accent-foreground px-4 py-2 rounded-full flex items-center gap-2 font-display text-sm"
+          >
+            <Star className="w-4 h-4" />
+            BONUS ROUND
+            <Star className="w-4 h-4" />
+          </motion.div>
+        )}
+
+        {/* Point Multiplier Indicator */}
+        {isSSC && state.pointMultiplier > 1 && !state.isLevelComplete && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="absolute top-4 right-4 bg-primary/20 text-primary px-3 py-1 rounded-full flex items-center gap-1 font-display text-xs"
+          >
+            <Zap className="w-3 h-3" />
+            {state.pointMultiplier}x
+          </motion.div>
+        )}
       </div>
 
       <div className="p-4 bg-card/80 backdrop-blur-sm border-t border-border">

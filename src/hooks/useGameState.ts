@@ -7,7 +7,7 @@ import {
   calculateTimeBonus, 
   calculateLeftoverPenalty,
   calculateLevelGoal,
-  getSSCPhase,
+  getSSCLevelInfo,
   generateSpecificHand
 } from '@/lib/pokerEngine';
 
@@ -22,12 +22,15 @@ const INITIAL_STATE: GameState = {
   isPaused: false,
   isGameOver: false,
   isLevelComplete: false,
+  isBonusLevel: false,
   selectedCards: [],
   deck: [],
   usedCards: [],
   currentHand: null,
   sscLevel: 1,
   sscPhase: 'static',
+  sscRound: 1,
+  pointMultiplier: 1,
   levelGoal: 1000,
   unlockedPowerUps: [],
   activePowerUps: [],
@@ -46,6 +49,8 @@ export function useGameState() {
     const unlockedPowerUps = isSSC 
       ? POWER_UPS.filter(p => p.unlockedAtLevel <= 1).map(p => p.id)
       : [];
+    
+    const levelInfo = isSSC ? getSSCLevelInfo(1) : null;
 
     setState({
       ...INITIAL_STATE,
@@ -54,7 +59,10 @@ export function useGameState() {
       isPlaying: true,
       timeRemaining: isBlitz ? 60 : (isSSC ? 60 : 9999),
       sscLevel: 1,
-      sscPhase: 'static',
+      sscPhase: levelInfo?.phase || 'static',
+      sscRound: levelInfo?.round || 1,
+      pointMultiplier: levelInfo?.pointMultiplier || 1,
+      isBonusLevel: levelInfo?.isBonus || false,
       levelGoal: isSSC ? calculateLevelGoal(1) : 0,
       unlockedPowerUps,
       activePowerUps: [...unlockedPowerUps],
@@ -92,10 +100,21 @@ export function useGameState() {
       if (prev.selectedCards.length !== 5) return prev;
 
       const result = evaluateHand(prev.selectedCards);
-      handResultsRef.current.push(result);
+      
+      // Apply point multiplier for SSC mode
+      const multipliedPoints = prev.mode === 'ssc' 
+        ? Math.floor(result.totalPoints * prev.pointMultiplier)
+        : result.totalPoints;
+      
+      const modifiedResult = {
+        ...result,
+        totalPoints: multipliedPoints,
+      };
+      
+      handResultsRef.current.push(modifiedResult);
 
       const newHandsPlayed = prev.handsPlayed + 1;
-      const newScore = prev.score + result.totalPoints;
+      const newScore = prev.score + multipliedPoints;
 
       // Check if game ends for Classic modes (after 10 hands = 50 cards used, 2 remaining)
       const isClassic = prev.mode === 'classic_fc' || prev.mode === 'classic_cb';
@@ -108,7 +127,7 @@ export function useGameState() {
           score: newScore,
           handsPlayed: newHandsPlayed,
           selectedCards: [],
-          currentHand: result,
+          currentHand: modifiedResult,
           isLevelComplete: true,
         };
       }
@@ -123,7 +142,7 @@ export function useGameState() {
           score: finalScore,
           handsPlayed: newHandsPlayed,
           selectedCards: [],
-          currentHand: result,
+          currentHand: modifiedResult,
           isGameOver: true,
         };
       }
@@ -133,11 +152,12 @@ export function useGameState() {
         score: newScore,
         handsPlayed: newHandsPlayed,
         selectedCards: [],
-        currentHand: result,
+        currentHand: modifiedResult,
         isGameOver: false,
       };
     });
   }, []);
+
 
   const usePowerUp = useCallback((powerUpId: string) => {
     setState(prev => {
@@ -176,13 +196,16 @@ export function useGameState() {
     setState(prev => {
       const newLevel = prev.sscLevel + 1;
       const deck = shuffleDeck(createDeck());
-      const newPhase = getSSCPhase(newLevel);
+      const levelInfo = getSSCLevelInfo(newLevel);
       const newUnlocked = POWER_UPS.filter(p => p.unlockedAtLevel <= newLevel).map(p => p.id);
 
       return {
         ...prev,
         sscLevel: newLevel,
-        sscPhase: newPhase,
+        sscPhase: levelInfo.phase,
+        sscRound: levelInfo.round,
+        pointMultiplier: levelInfo.pointMultiplier,
+        isBonusLevel: levelInfo.isBonus,
         levelGoal: calculateLevelGoal(newLevel),
         score: 0,
         handsPlayed: 0,
