@@ -87,7 +87,7 @@ export default function GameScreen() {
   const selectedIds = state.selectedCards.map(c => c.id);
 
   return (
-    <div className="min-h-screen game-field-bg flex flex-col">
+    <div className="h-screen max-h-screen game-field-bg flex flex-col overflow-hidden">
       <GameHeader
         isPaused={state.isPaused}
         onHome={() => { resetGame(); navigate('/'); }}
@@ -105,7 +105,7 @@ export default function GameScreen() {
         goalScore={isSSC ? state.levelGoal : undefined}
       />
 
-      <div className="flex-1 relative overflow-hidden p-4">
+      <div className="flex-1 min-h-0 relative overflow-hidden p-2 sm:p-4">
         {isFalling && (
           <FallingCards
             deck={state.deck}
@@ -213,7 +213,7 @@ export default function GameScreen() {
 
       {/* Hand display - hide during bonus round */}
       {!isBonusRound && (
-        <div className="p-4 bg-card/80 backdrop-blur-sm border-t border-border">
+        <div className="flex-shrink-0 p-2 sm:p-4 bg-card/80 backdrop-blur-sm border-t border-border">
           <HandDisplay cards={state.selectedCards} currentHand={state.currentHand} />
         </div>
       )}
