@@ -1,8 +1,9 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameState } from '@/hooks/useGameState';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAudio } from '@/contexts/AudioContext';
 import { ScorePanel } from '@/components/game/ScoreDisplay';
 import { HandDisplay } from '@/components/game/HandDisplay';
 import { FallingCards } from '@/components/game/FallingCards';
@@ -30,10 +31,12 @@ export default function GameScreen() {
     nextLevel,
     reshuffleUnselected,
   } = useGameState();
+  const { playSound } = useAudio();
   const isMobile = useIsMobile();
   const baseSpeed = isMobile ? 0.6 : 1; // Slower speed on mobile
   const [isMuted, setIsMuted] = useState(false);
   const [showUsedCards, setShowUsedCards] = useState(false);
+  const prevHandsPlayed = useRef(state.handsPlayed);
   
   const isTestBonus = searchParams.get('testBonus') === 'true';
 
@@ -44,6 +47,31 @@ export default function GameScreen() {
       startGame(mode as GameMode);
     }
   }, [mode, isTestBonus, state.isPlaying, state.isGameOver, state.isLevelComplete, startGame]);
+
+  // Play sound when hand is submitted
+  useEffect(() => {
+    if (state.handsPlayed > prevHandsPlayed.current) {
+      playSound('handSubmit');
+      if (state.currentHand && state.currentHand.totalPoints >= 100) {
+        setTimeout(() => playSound('handWin'), 200);
+      }
+    }
+    prevHandsPlayed.current = state.handsPlayed;
+  }, [state.handsPlayed, state.currentHand, playSound]);
+
+  // Play sound on level complete
+  useEffect(() => {
+    if (state.isLevelComplete) {
+      playSound('levelComplete');
+    }
+  }, [state.isLevelComplete, playSound]);
+
+  // Play sound on game over
+  useEffect(() => {
+    if (state.isGameOver) {
+      playSound('gameOver');
+    }
+  }, [state.isGameOver, playSound]);
 
   // Auto-advance to next level after showing congratulations
   useEffect(() => {
