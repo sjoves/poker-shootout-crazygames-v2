@@ -3,7 +3,6 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameState } from '@/hooks/useGameState';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { GameHeader } from '@/components/game/GameHeader';
 import { ScorePanel } from '@/components/game/ScoreDisplay';
 import { HandDisplay } from '@/components/game/HandDisplay';
 import { FallingCards } from '@/components/game/FallingCards';
@@ -93,24 +92,19 @@ export default function GameScreen() {
   return (
     <div className="h-screen max-h-screen flex flex-col overflow-hidden modern-bg">
       {!isBonusRound && (
-        <>
-          <GameHeader
-            isPaused={state.isPaused}
-            onHome={() => { resetGame(); navigate('/'); }}
-            onRestart={() => { resetGame(); startGame(mode as GameMode); }}
-            onHelp={() => {}}
-            onPause={pauseGame}
-          />
-
-          <ScorePanel
-            score={state.score}
-            timeDisplay={timeDisplay}
-            progressLabel={progress.label}
-            progressValue={progress.value}
-            currentHand={state.currentHand}
-            goalScore={isSSC ? state.levelGoal : undefined}
-          />
-        </>
+        <ScorePanel
+          score={state.score}
+          timeDisplay={timeDisplay}
+          progressLabel={progress.label}
+          progressValue={progress.value}
+          currentHand={state.currentHand}
+          goalScore={isSSC ? state.levelGoal : undefined}
+          level={isSSC ? state.sscLevel : undefined}
+          onHome={() => { resetGame(); navigate('/'); }}
+          onRestart={() => { resetGame(); startGame(mode as GameMode); }}
+          onPause={pauseGame}
+          isPaused={state.isPaused}
+        />
       )}
 
       <div className="flex-1 min-h-0 relative overflow-hidden p-2 sm:p-4">
