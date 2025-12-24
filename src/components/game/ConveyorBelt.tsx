@@ -137,6 +137,10 @@ export function ConveyorBelt({
             return card.x > -cardWidth * 2;
           });
         
+        // Get IDs of cards currently on the belt (base card IDs, not unique instance IDs)
+        const cardsOnBelt = new Set(updatedCards.map(c => c.id.split('-row')[0]));
+        const cardsPending = new Set(pendingReturns.map(p => p.card.id));
+        
         // Count cards per row and add new ones at entry points
         for (let row = 0; row < rows; row++) {
           const rowCards = updatedCards.filter(c => c.row === row);
@@ -144,10 +148,16 @@ export function ConveyorBelt({
           const minCardsPerRow = Math.floor(containerWidth / (cardWidth + 20)) + 2;
           
           if (rowCards.length < minCardsPerRow) {
-            // Find appropriate entry position
-            const entryX = isLeftToRight ? -cardWidth : containerWidth;
-            const deckCard = deck[Math.floor(Math.random() * deck.length)];
-            if (deckCard && !selectedCardIds.includes(deckCard.id)) {
+            // Find a card that's not already on the belt, not selected, and not pending return
+            const availableCards = deck.filter(c => 
+              !cardsOnBelt.has(c.id) && 
+              !selectedCardIds.includes(c.id) &&
+              !cardsPending.has(c.id)
+            );
+            
+            if (availableCards.length > 0) {
+              const entryX = isLeftToRight ? -cardWidth : containerWidth;
+              const deckCard = availableCards[Math.floor(Math.random() * availableCards.length)];
               updatedCards.push({
                 ...deckCard,
                 id: `${deckCard.id}-row${row}-t${now}`,
@@ -156,6 +166,7 @@ export function ConveyorBelt({
                 row,
                 speed: speed * (isLeftToRight ? 1 : -1) * 0.5,
               });
+              cardsOnBelt.add(deckCard.id); // Mark as used for subsequent row checks
             }
           }
         }
@@ -173,7 +184,7 @@ export function ConveyorBelt({
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [isPaused, selectedCardIds, speed, rows]);
+  }, [isPaused, selectedCardIds, speed, rows, pendingReturns]);
 
   const handleCardClick = useCallback((card: ConveyorCard) => {
     const originalCard: Card = {
