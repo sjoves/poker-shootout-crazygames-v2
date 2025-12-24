@@ -168,7 +168,40 @@ export function useGameState() {
     });
   }, []);
 
+  const submitBonusHand = useCallback((cards: Card[], result: HandResult) => {
+    setState(prev => {
+      // Apply point multiplier for bonus round
+      const multipliedPoints = Math.floor(result.totalPoints * prev.pointMultiplier);
+      
+      const modifiedResult = {
+        ...result,
+        totalPoints: multipliedPoints,
+      };
+      
+      handResultsRef.current.push(modifiedResult);
 
+      const newScore = prev.score + multipliedPoints;
+      const newRawScore = prev.rawScore + multipliedPoints;
+
+      // Bonus round completes after one hand submission
+      return {
+        ...prev,
+        score: newScore,
+        rawScore: newRawScore,
+        handsPlayed: prev.handsPlayed + 1,
+        selectedCards: [],
+        currentHand: modifiedResult,
+        isLevelComplete: true,
+      };
+    });
+  }, []);
+
+  const skipBonusRound = useCallback(() => {
+    setState(prev => ({
+      ...prev,
+      isLevelComplete: true,
+    }));
+  }, []);
   const usePowerUp = useCallback((powerUpId: string) => {
     setState(prev => {
       if (!prev.activePowerUps.includes(powerUpId)) return prev;
@@ -312,6 +345,8 @@ export function useGameState() {
     startGame,
     selectCard,
     submitHand,
+    submitBonusHand,
+    skipBonusRound,
     usePowerUp,
     nextLevel,
     pauseGame,

@@ -9,13 +9,24 @@ import { FallingCards } from '@/components/game/FallingCards';
 import { ConveyorBelt } from '@/components/game/ConveyorBelt';
 import { StaticGrid } from '@/components/game/StaticGrid';
 import { PowerUpBar } from '@/components/game/PowerUpBar';
+import { BonusRound } from '@/components/game/BonusRound';
 import { GameMode } from '@/types/game';
 import { Trophy, Star, Zap } from 'lucide-react';
 
 export default function GameScreen() {
   const { mode } = useParams<{ mode: GameMode }>();
   const navigate = useNavigate();
-  const { state, startGame, selectCard, usePowerUp, pauseGame, resetGame, nextLevel } = useGameState();
+  const { 
+    state, 
+    startGame, 
+    selectCard, 
+    submitBonusHand, 
+    skipBonusRound, 
+    usePowerUp, 
+    pauseGame, 
+    resetGame, 
+    nextLevel 
+  } = useGameState();
   const [speed, setSpeed] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
   const [showUsedCards, setShowUsedCards] = useState(false);
@@ -56,9 +67,10 @@ export default function GameScreen() {
 
   const isBlitz = state.mode === 'blitz_fc' || state.mode === 'blitz_cb';
   const isSSC = state.mode === 'ssc';
-  const isFalling = state.mode === 'classic_fc' || state.mode === 'blitz_fc' || (isSSC && state.sscPhase === 'falling');
-  const isConveyor = state.mode === 'classic_cb' || state.mode === 'blitz_cb' || (isSSC && state.sscPhase === 'conveyor');
-  const isStatic = isSSC && state.sscPhase === 'static';
+  const isBonusRound = isSSC && state.isBonusLevel && !state.isLevelComplete;
+  const isFalling = !isBonusRound && (state.mode === 'classic_fc' || state.mode === 'blitz_fc' || (isSSC && state.sscPhase === 'falling'));
+  const isConveyor = !isBonusRound && (state.mode === 'classic_cb' || state.mode === 'blitz_cb' || (isSSC && state.sscPhase === 'conveyor'));
+  const isStatic = !isBonusRound && isSSC && state.sscPhase === 'static';
 
   const timeDisplay = isBlitz || isSSC ? formatTime(state.timeRemaining) : formatTime(state.timeElapsed);
   const progress = getProgressInfo();
@@ -115,8 +127,17 @@ export default function GameScreen() {
             onSelectCard={selectCard}
           />
         )}
+        {isBonusRound && (
+          <BonusRound
+            deck={state.deck}
+            onSubmitHand={submitBonusHand}
+            onSkip={skipBonusRound}
+            timeRemaining={state.timeRemaining}
+            pointMultiplier={state.pointMultiplier}
+          />
+        )}
 
-        {isSSC && !state.isLevelComplete && (
+        {isSSC && !state.isLevelComplete && !isBonusRound && (
           <div className="absolute right-4 top-1/2 -translate-y-1/2">
             <PowerUpBar
               unlockedPowerUps={state.unlockedPowerUps}
@@ -172,21 +193,8 @@ export default function GameScreen() {
           )}
         </AnimatePresence>
 
-        {/* Bonus Level Indicator */}
-        {isSSC && state.isBonusLevel && !state.isLevelComplete && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="absolute top-4 left-1/2 -translate-x-1/2 bg-accent text-accent-foreground px-4 py-2 rounded-full flex items-center gap-2 font-display text-sm"
-          >
-            <Star className="w-4 h-4" />
-            BONUS ROUND
-            <Star className="w-4 h-4" />
-          </motion.div>
-        )}
-
-        {/* Point Multiplier Indicator */}
-        {isSSC && state.pointMultiplier > 1 && !state.isLevelComplete && (
+        {/* Point Multiplier Indicator - only show when not in bonus round */}
+        {isSSC && state.pointMultiplier > 1 && !state.isLevelComplete && !isBonusRound && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -198,9 +206,12 @@ export default function GameScreen() {
         )}
       </div>
 
-      <div className="p-4 bg-card/80 backdrop-blur-sm border-t border-border">
-        <HandDisplay cards={state.selectedCards} currentHand={state.currentHand} />
-      </div>
+      {/* Hand display - hide during bonus round */}
+      {!isBonusRound && (
+        <div className="p-4 bg-card/80 backdrop-blur-sm border-t border-border">
+          <HandDisplay cards={state.selectedCards} currentHand={state.currentHand} />
+        </div>
+      )}
     </div>
   );
 }
