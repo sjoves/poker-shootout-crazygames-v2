@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { POWER_UPS } from '@/types/game';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface PowerUpBarProps {
   unlockedPowerUps: string[];
@@ -16,8 +17,10 @@ export function PowerUpBar({
   currentLevel, 
   onUsePowerUp 
 }: PowerUpBarProps) {
+  const isMobile = useIsMobile();
+  
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-1 sm:gap-2">
       {POWER_UPS.map(powerUp => {
         const isUnlocked = powerUp.unlockedAtLevel <= currentLevel;
         const isActive = activePowerUps.includes(powerUp.id);
@@ -32,7 +35,7 @@ export function PowerUpBar({
                 onClick={() => isActive && onUsePowerUp(powerUp.id)}
                 disabled={!isActive}
                 className={cn(
-                  'w-12 h-12 rounded-full flex items-center justify-center text-xl',
+                  'w-9 h-9 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-base sm:text-xl',
                   'border-2 transition-all',
                   isActive && 'bg-primary/20 border-primary cursor-pointer hover:bg-primary/30 animate-pulse-glow',
                   !isUnlocked && 'bg-muted/50 border-muted-foreground/30 opacity-40 cursor-not-allowed',
