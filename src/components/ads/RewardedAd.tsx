@@ -104,7 +104,7 @@ export function RewardedAd({ isOpen, onClose, onAdComplete, adType, modeName }: 
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
-          className="relative w-full max-w-md mx-4 bg-card border border-border rounded-xl p-6 shadow-2xl"
+          className="relative w-full max-w-md mx-4 bg-background border border-primary/40 rounded-xl p-6 shadow-2xl"
         >
           {adState !== 'playing' && (
             <button
