@@ -137,12 +137,13 @@ export function BonusRound({
       )}
 
       {/* Action Buttons */}
-      <div className="p-4 bg-card/80 backdrop-blur-sm border-t border-border">
+      <div className="p-4">
         <div className="flex gap-3 max-w-md mx-auto">
           <Button
             onClick={handleSubmit}
             disabled={!canSubmit}
-            className="flex-1"
+            variant="outline"
+            className="flex-1 h-14 text-lg font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground disabled:opacity-50 disabled:border-muted"
             size="lg"
           >
             Submit Hand
@@ -150,6 +151,7 @@ export function BonusRound({
           <Button
             onClick={onSkip}
             variant="outline"
+            className="border-primary bg-transparent hover:bg-primary/10 hover:text-foreground"
             size="lg"
           >
             Skip
