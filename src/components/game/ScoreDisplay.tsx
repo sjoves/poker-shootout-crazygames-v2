@@ -97,7 +97,7 @@ export function ScorePanel({
   return (
     <div className="flex items-center justify-center gap-3 p-3">
       {/* Main stats pill */}
-      <div className="flex items-center gap-4 bg-card/90 backdrop-blur-sm rounded-full px-5 py-2.5 border-2 border-primary/40">
+      <div className="flex items-center gap-4 bg-transparent rounded-full px-5 py-2.5 border border-primary">
         {/* Score */}
         <div className="flex items-center gap-2">
           <TrophyIcon className="w-5 h-5 text-primary" />

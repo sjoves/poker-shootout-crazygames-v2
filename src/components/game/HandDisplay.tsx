@@ -33,7 +33,7 @@ export function HandDisplay({ cards, maxCards = 5, currentHand, className }: Han
 
   return (
     <div className={cn('relative flex flex-col items-center gap-2 sm:gap-3', className)}>
-      <div className="bg-card/90 backdrop-blur-sm rounded-2xl px-4 py-4 sm:px-6 sm:py-5 border-2 border-primary/40">
+      <div className="bg-transparent rounded-2xl px-4 py-4 sm:px-6 sm:py-5 border border-primary">
         <div className="relative">
           <div className="flex gap-1 sm:gap-2 justify-center">
             <AnimatePresence mode="popLayout">
