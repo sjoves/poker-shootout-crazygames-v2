@@ -1,8 +1,9 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { TrophyIcon, ClockIcon, Cog6ToothIcon } from '@heroicons/react/24/outline';
+import { TrophyIcon, ClockIcon, Cog6ToothIcon, SpeakerWaveIcon, SpeakerXMarkIcon } from '@heroicons/react/24/outline';
 import { HandResult } from '@/types/game';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { useAudio } from '@/contexts/AudioContext';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -76,6 +77,7 @@ export function ScorePanel({
   onPause,
   isPaused
 }: ScorePanelProps) {
+  const { isMusicPlaying, startMusic, stopMusic, musicEnabled } = useAudio();
   return (
     <div className="flex items-center justify-center gap-3 p-3">
       {/* Main stats pill */}
@@ -129,6 +131,26 @@ export function ScorePanel({
           </div>
         )}
       </div>
+
+      {/* Sound toggle button */}
+      <Button
+        variant="outline"
+        size="icon"
+        className="rounded-full w-11 h-11 border-2 border-primary/40 bg-card/90 hover:bg-card"
+        onClick={() => {
+          if (isMusicPlaying) {
+            stopMusic();
+          } else {
+            startMusic();
+          }
+        }}
+      >
+        {isMusicPlaying ? (
+          <SpeakerWaveIcon className="w-5 h-5 text-primary" />
+        ) : (
+          <SpeakerXMarkIcon className="w-5 h-5 text-muted-foreground" />
+        )}
+      </Button>
 
       {/* Settings button */}
       <DropdownMenu>
