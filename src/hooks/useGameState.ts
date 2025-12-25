@@ -138,6 +138,20 @@ export function useGameState() {
         };
       }
 
+      // For SSC Static phase: if all 52 cards used and goal not reached, game over
+      if (prev.mode === 'ssc' && prev.sscPhase === 'static' && (prev.usedCards.length + 5) >= 52 && newScore < prev.levelGoal) {
+        return {
+          ...prev,
+          score: newScore,
+          rawScore: newRawScore,
+          handsPlayed: newHandsPlayed,
+          selectedCards: [],
+          currentHand: modifiedResult,
+          isGameOver: true,
+          isPlaying: false,
+        };
+      }
+
       // If classic game is over, calculate bonuses and penalties
       if (classicGameOver) {
         const leftoverPenalty = calculateLeftoverPenalty(prev.deck);
