@@ -4,6 +4,7 @@ import { Card, Suit } from '@/types/game';
 import { cn } from '@/lib/utils';
 import { Check } from 'lucide-react';
 import { useAudio } from '@/contexts/AudioContext';
+import cardBack from '@/assets/card-back.png';
 
 interface FlippableCardProps {
   card: Card;
@@ -92,16 +93,17 @@ export function FlippableCard({ card, isKept, isFlippedExternal, onFlip, onKeep,
         {/* Card Back */}
         <div
           className={cn(
-            'absolute inset-0 rounded-lg backface-hidden',
-            'bg-gradient-to-br from-red-700 to-red-900 border-2 border-red-600',
-            'flex items-center justify-center',
+            'absolute inset-0 rounded-lg backface-hidden overflow-hidden',
+            'border-2 border-gray-600',
             'shadow-lg'
           )}
           onClick={handleCardClick}
         >
-          <div className="w-10 h-14 border border-red-500/50 rounded bg-red-800/50 flex items-center justify-center">
-            <div className="w-8 h-12 border border-red-400/30 rounded bg-gradient-to-br from-red-600/50 to-red-800/50" />
-          </div>
+          <img 
+            src={cardBack} 
+            alt="Card back" 
+            className="w-full h-full object-cover"
+          />
         </div>
 
         {/* Card Front */}
