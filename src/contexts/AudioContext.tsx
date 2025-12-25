@@ -81,7 +81,7 @@ function playCardSelect(audioCtx: AudioContext, volume: number): void {
   noiseFilter.frequency.value = 2000;
   
   const noiseGain = audioCtx.createGain();
-  noiseGain.gain.setValueAtTime(volume * 0.5, now);
+  noiseGain.gain.setValueAtTime(volume * 1.5, now);
   noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
   
   noiseSource.connect(noiseFilter);
@@ -95,7 +95,7 @@ function playCardSelect(audioCtx: AudioContext, volume: number): void {
   ping.type = 'sine';
   ping.frequency.setValueAtTime(1800, now);
   ping.frequency.exponentialRampToValueAtTime(800, now + 0.08);
-  pingGain.gain.setValueAtTime(volume * 0.35, now);
+  pingGain.gain.setValueAtTime(volume * 1.0, now);
   pingGain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
   ping.connect(pingGain);
   pingGain.connect(audioCtx.destination);
@@ -108,7 +108,7 @@ function playCardSelect(audioCtx: AudioContext, volume: number): void {
   overtone.type = 'triangle';
   overtone.frequency.setValueAtTime(3200, now);
   overtone.frequency.exponentialRampToValueAtTime(1200, now + 0.06);
-  overtoneGain.gain.setValueAtTime(volume * 0.15, now);
+  overtoneGain.gain.setValueAtTime(volume * 0.5, now);
   overtoneGain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
   overtone.connect(overtoneGain);
   overtoneGain.connect(audioCtx.destination);
