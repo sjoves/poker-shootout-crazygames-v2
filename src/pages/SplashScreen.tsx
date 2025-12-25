@@ -83,13 +83,13 @@ export default function SplashScreen() {
         {/* Classic Mode - Always Free */}
         <div className="space-y-2">
           <Button
-            variant={selectedMode === 'classic' ? 'default' : 'outline'}
+            variant="outline"
             size="lg"
-            className="w-full h-16 text-lg font-display"
+            className="w-full h-16 text-lg font-display border-primary bg-transparent hover:bg-primary/10"
             onClick={() => setSelectedMode(selectedMode === 'classic' ? null : 'classic')}
           >
             🎯 Classic Mode
-            <span className="ml-2 text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">
+            <span className="ml-2 text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">
               Free
             </span>
           </Button>
@@ -108,9 +108,9 @@ export default function SplashScreen() {
         {/* Blitz Mode - Premium or Ad */}
         <div className="space-y-2">
           <Button
-            variant={selectedMode === 'blitz' ? 'default' : 'outline'}
+            variant="outline"
             size="lg"
-            className="w-full h-16 text-lg font-display"
+            className="w-full h-16 text-lg font-display border-primary bg-transparent hover:bg-primary/10"
             onClick={() => setSelectedMode(selectedMode === 'blitz' ? null : 'blitz')}
           >
             ⚡ 52-Card Blitz
