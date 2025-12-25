@@ -158,6 +158,7 @@ export default function SplashScreen() {
               </div>
             </div>
             <Button
+              variant="outline"
               onClick={async () => {
                 if (!user) {
                   navigate('/auth');
@@ -165,7 +166,7 @@ export default function SplashScreen() {
                   await openCheckout();
                 }
               }}
-              className="w-full"
+              className="w-full border-primary bg-transparent hover:bg-primary/10 hover:text-foreground"
               size="lg"
             >
               <StarIcon className="w-4 h-4 mr-2" />
