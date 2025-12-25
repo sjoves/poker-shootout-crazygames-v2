@@ -254,7 +254,7 @@ export default function GameScreen() {
 
       {/* Hand display - hide during bonus round */}
       {!isBonusRound && (
-        <div className="flex-shrink-0 p-2 sm:p-4 bg-card/80 backdrop-blur-sm border-t border-border">
+        <div className="flex-shrink-0 p-2 sm:p-4">
           <HandDisplay cards={state.selectedCards} currentHand={state.currentHand} />
         </div>
       )}
