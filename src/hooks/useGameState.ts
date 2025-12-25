@@ -263,6 +263,9 @@ export function useGameState() {
       const levelInfo = getSSCLevelInfo(newLevel);
       const newUnlocked = POWER_UPS.filter(p => p.unlockedAtLevel <= newLevel).map(p => p.id);
 
+      // Reset hand results for new level
+      handResultsRef.current = [];
+
       return {
         ...prev,
         sscLevel: newLevel,
@@ -271,10 +274,16 @@ export function useGameState() {
         pointMultiplier: levelInfo.pointMultiplier,
         isBonusLevel: levelInfo.isBonus,
         levelGoal: calculateLevelGoal(newLevel),
+        // Full gameplay reset
         score: 0,
+        rawScore: 0,
         handsPlayed: 0,
+        cardsSelected: 0,
         timeRemaining: 60,
         timeElapsed: 0,
+        timeBonus: 0,
+        leftoverPenalty: 0,
+        bonusTimePoints: 0,
         selectedCards: [],
         deck,
         usedCards: [],
