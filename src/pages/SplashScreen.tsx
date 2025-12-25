@@ -132,7 +132,7 @@ export default function SplashScreen() {
 
         {/* SSC Mode - Premium or Ad */}
         <Button
-          variant="outline"
+          variant="default"
           size="lg"
           className="w-full h-16 text-lg font-display gap-2"
           onClick={() => handleModeSelect('ssc')}
