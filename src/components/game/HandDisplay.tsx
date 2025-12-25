@@ -82,7 +82,7 @@ export function HandDisplay({ cards, maxCards = 5, currentHand, className }: Han
                     initial={{ scale: 0.5, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ delay: 0.15, type: "spring", stiffness: 400 }}
-                    className="text-2xl sm:text-4xl font-bold text-gold drop-shadow-[0_0_12px_hsl(var(--gold)/0.8)]"
+                    className="text-2xl sm:text-4xl font-bold text-black drop-shadow-lg"
                   >
                     +{visibleHand.totalPoints}
                   </motion.div>
