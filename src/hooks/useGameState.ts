@@ -142,7 +142,8 @@ export function useGameState() {
       if (classicGameOver) {
         const leftoverPenalty = calculateLeftoverPenalty(prev.deck);
         const timeBonus = calculateTimeBonus(prev.timeElapsed);
-        const finalScore = Math.max(0, newRawScore + timeBonus - leftoverPenalty);
+        // Allow negative scores
+        const finalScore = newRawScore + timeBonus - leftoverPenalty;
         
         return {
           ...prev,
@@ -289,19 +290,16 @@ export function useGameState() {
     setState(prev => {
       let finalScore = prev.score;
 
-      // Apply time bonus for Classic modes
+      // Apply time bonus/penalty for Classic modes
       if (prev.mode === 'classic_fc' || prev.mode === 'classic_cb') {
         finalScore += calculateTimeBonus(prev.timeElapsed);
-      }
-
-      // Apply leftover penalty for Classic FC
-      if (prev.mode === 'classic_fc') {
+        // Apply leftover penalty for all Classic modes
         finalScore -= calculateLeftoverPenalty(prev.deck);
       }
 
       return {
         ...prev,
-        score: Math.max(0, finalScore),
+        score: finalScore, // Allow negative scores
         isPlaying: false,
         isGameOver: true,
       };
@@ -334,7 +332,27 @@ export function useGameState() {
             return { ...prev, timeRemaining: newTimeRemaining, timeElapsed: prev.timeElapsed + 1 };
           }
           
-          return { ...prev, timeElapsed: prev.timeElapsed + 1 };
+          // Classic mode: end game if time exceeds 10 minutes (600 seconds)
+          const isClassic = prev.mode === 'classic_fc' || prev.mode === 'classic_cb';
+          const newTimeElapsed = prev.timeElapsed + 1;
+          
+          if (isClassic && newTimeElapsed >= 600) {
+            const leftoverPenalty = calculateLeftoverPenalty(prev.deck);
+            const timeBonus = calculateTimeBonus(600);
+            const finalScore = prev.rawScore + timeBonus - leftoverPenalty;
+            
+            return { 
+              ...prev, 
+              timeElapsed: 600,
+              isGameOver: true, 
+              isPlaying: false,
+              score: finalScore,
+              timeBonus,
+              leftoverPenalty,
+            };
+          }
+          
+          return { ...prev, timeElapsed: newTimeElapsed };
         });
       }, 1000);
     }

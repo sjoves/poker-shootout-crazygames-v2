@@ -139,10 +139,13 @@ export function shuffleDeck(deck: Card[]): Card[] {
 }
 
 export function calculateTimeBonus(seconds: number): number {
-  if (seconds < 60) return 200;
-  if (seconds < 90) return 100;
-  if (seconds < 120) return 50;
-  return 0;
+  // Classic Mode: 1000 bonus points for 1 minute or under
+  // After 1 minute, deduct 1 point per second
+  if (seconds <= 60) {
+    return 1000;
+  }
+  // Deduct 1 point per second over 60 seconds (can go negative)
+  return -(seconds - 60);
 }
 
 export function calculateLeftoverPenalty(cards: Card[]): number {
