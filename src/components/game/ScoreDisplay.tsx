@@ -156,7 +156,7 @@ export function ScorePanel({
       <Button
         variant="outline"
         size="icon"
-        className="rounded-full w-11 h-11 border-2 border-primary/40 bg-card/90 hover:bg-card"
+        className="w-11 h-11 border-primary bg-transparent hover:bg-primary/10 hover:text-foreground"
         onClick={toggleAllSounds}
       >
         {isSoundOn ? (
@@ -172,9 +172,9 @@ export function ScorePanel({
           <Button 
             variant="outline" 
             size="icon" 
-            className="rounded-full w-11 h-11 border-2 border-primary/40 bg-card/90 hover:bg-card"
+            className="w-11 h-11 border-primary bg-transparent hover:bg-primary/10 hover:text-foreground"
           >
-            <Cog6ToothIcon className="w-5 h-5 text-accent" />
+            <Cog6ToothIcon className="w-5 h-5 text-primary" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="bg-card border-border">
