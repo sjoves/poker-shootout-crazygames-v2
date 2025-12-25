@@ -105,7 +105,7 @@ export function BonusRound({ deck, onSubmitHand, onSkip, timeRemaining, pointMul
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-card/80 backdrop-blur-sm border-t border-border p-3 text-center"
+          className="bg-card/80 backdrop-blur-sm border-t border-border p-3 text-center max-w-md mx-auto w-full"
         >
           <p className="text-lg font-display text-primary">
             {handResult.hand.name}
@@ -128,22 +128,24 @@ export function BonusRound({ deck, onSubmitHand, onSkip, timeRemaining, pointMul
       )}
 
       {/* Action Buttons */}
-      <div className="p-4 bg-card/80 backdrop-blur-sm border-t border-border flex gap-3">
-        <Button
-          onClick={handleSubmit}
-          disabled={!canSubmit}
-          className="flex-1"
-          size="lg"
-        >
-          Submit Hand
-        </Button>
-        <Button
-          onClick={onSkip}
-          variant="outline"
-          size="lg"
-        >
-          Skip
-        </Button>
+      <div className="p-4 bg-card/80 backdrop-blur-sm border-t border-border">
+        <div className="flex gap-3 max-w-md mx-auto">
+          <Button
+            onClick={handleSubmit}
+            disabled={!canSubmit}
+            className="flex-1"
+            size="lg"
+          >
+            Submit Hand
+          </Button>
+          <Button
+            onClick={onSkip}
+            variant="outline"
+            size="lg"
+          >
+            Skip
+          </Button>
+        </div>
       </div>
     </div>
   );
