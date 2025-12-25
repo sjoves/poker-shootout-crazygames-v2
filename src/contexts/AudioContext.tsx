@@ -62,7 +62,58 @@ function createOscillatorSound(
 }
 
 function playCardSelect(audioCtx: AudioContext, volume: number): void {
-  createOscillatorSound(audioCtx, 800, 0.08, 'sine', volume * 0.3);
+  // Bullet hitting tin can sound - sharp attack with metallic resonance
+  const now = audioCtx.currentTime;
+  
+  // Impact noise burst
+  const bufferSize = audioCtx.sampleRate * 0.05;
+  const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const noiseData = noiseBuffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) {
+    noiseData[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.1));
+  }
+  
+  const noiseSource = audioCtx.createBufferSource();
+  noiseSource.buffer = noiseBuffer;
+  
+  const noiseFilter = audioCtx.createBiquadFilter();
+  noiseFilter.type = 'highpass';
+  noiseFilter.frequency.value = 2000;
+  
+  const noiseGain = audioCtx.createGain();
+  noiseGain.gain.setValueAtTime(volume * 0.5, now);
+  noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+  
+  noiseSource.connect(noiseFilter);
+  noiseFilter.connect(noiseGain);
+  noiseGain.connect(audioCtx.destination);
+  noiseSource.start(now);
+  
+  // Metallic ping (tin can resonance)
+  const ping = audioCtx.createOscillator();
+  const pingGain = audioCtx.createGain();
+  ping.type = 'sine';
+  ping.frequency.setValueAtTime(1800, now);
+  ping.frequency.exponentialRampToValueAtTime(800, now + 0.08);
+  pingGain.gain.setValueAtTime(volume * 0.35, now);
+  pingGain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+  ping.connect(pingGain);
+  pingGain.connect(audioCtx.destination);
+  ping.start(now);
+  ping.stop(now + 0.15);
+  
+  // Secondary metallic overtone
+  const overtone = audioCtx.createOscillator();
+  const overtoneGain = audioCtx.createGain();
+  overtone.type = 'triangle';
+  overtone.frequency.setValueAtTime(3200, now);
+  overtone.frequency.exponentialRampToValueAtTime(1200, now + 0.06);
+  overtoneGain.gain.setValueAtTime(volume * 0.15, now);
+  overtoneGain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+  overtone.connect(overtoneGain);
+  overtoneGain.connect(audioCtx.destination);
+  overtone.start(now);
+  overtone.stop(now + 0.1);
 }
 
 function playCardFlip(audioCtx: AudioContext, volume: number): void {
