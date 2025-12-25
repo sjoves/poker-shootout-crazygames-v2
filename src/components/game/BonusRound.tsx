@@ -84,7 +84,7 @@ export function BonusRound({
         timeDisplay={formatTime(timeRemaining)}
         progressLabel="Selected"
         progressValue={`${keptCards.length}/5`}
-        level={level}
+        isBonusRound={true}
         onHome={onHome}
         onRestart={onRestart}
         onPause={onPause}
