@@ -170,6 +170,12 @@ export default function GameScreen() {
             onSkip={skipBonusRound}
             timeRemaining={state.timeRemaining}
             pointMultiplier={state.pointMultiplier}
+            score={state.score}
+            level={state.sscLevel}
+            onHome={() => { resetGame(); navigate('/'); }}
+            onRestart={() => { resetGame(); startGame(mode as GameMode); }}
+            onPause={pauseGame}
+            isPaused={state.isPaused}
           />
         )}
 

@@ -4,7 +4,7 @@ import { Card, HandResult } from '@/types/game';
 import { FlippableCard } from './FlippableCard';
 import { Button } from '@/components/ui/button';
 import { evaluateHand } from '@/lib/pokerEngine';
-import { Target, Timer } from 'lucide-react';
+import { ScorePanel } from './ScoreDisplay';
 
 interface BonusRoundProps {
   deck: Card[];
@@ -12,9 +12,27 @@ interface BonusRoundProps {
   onSkip: () => void;
   timeRemaining: number;
   pointMultiplier: number;
+  score?: number;
+  level?: number;
+  onHome?: () => void;
+  onRestart?: () => void;
+  onPause?: () => void;
+  isPaused?: boolean;
 }
 
-export function BonusRound({ deck, onSubmitHand, onSkip, timeRemaining, pointMultiplier }: BonusRoundProps) {
+export function BonusRound({ 
+  deck, 
+  onSubmitHand, 
+  onSkip, 
+  timeRemaining, 
+  pointMultiplier,
+  score = 0,
+  level,
+  onHome,
+  onRestart,
+  onPause,
+  isPaused
+}: BonusRoundProps) {
   const [keptCards, setKeptCards] = useState<Card[]>([]);
   const [handResult, setHandResult] = useState<HandResult | null>(null);
   const [currentFlippedId, setCurrentFlippedId] = useState<string | null>(null);
@@ -36,7 +54,7 @@ export function BonusRound({ deck, onSubmitHand, onSkip, timeRemaining, pointMul
   const handleKeep = useCallback((card: Card) => {
     if (keptCards.length >= 5) return;
     setKeptCards(prev => [...prev, card]);
-    setCurrentFlippedId(null); // Clear flipped state when card is kept
+    setCurrentFlippedId(null);
   }, [keptCards.length]);
 
   const handleUnkeep = useCallback((card: Card) => {
@@ -60,27 +78,18 @@ export function BonusRound({ deck, onSubmitHand, onSkip, timeRemaining, pointMul
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="text-center py-4">
-        <div className="flex items-center justify-center gap-2 text-accent mb-2">
-          <Target className="w-6 h-6" />
-          <h2 className="text-2xl font-display">Bonus Round</h2>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          Flip cards to find the best poker hand
-        </p>
-      </div>
-
-      {/* Timer and Selected Count */}
-      <div className="flex justify-between items-center px-4 py-2">
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <Timer className="w-4 h-4" />
-          <span className="font-mono text-lg">{formatTime(timeRemaining)}</span>
-        </div>
-        <div className="text-muted-foreground">
-          Selected: <span className="text-foreground font-bold">{keptCards.length}/5</span>
-        </div>
-      </div>
+      {/* Score Panel - same as regular gameplay */}
+      <ScorePanel
+        score={score}
+        timeDisplay={formatTime(timeRemaining)}
+        progressLabel="Selected"
+        progressValue={`${keptCards.length}/5`}
+        level={level}
+        onHome={onHome}
+        onRestart={onRestart}
+        onPause={onPause}
+        isPaused={isPaused}
+      />
 
       {/* Cards Grid */}
       <div className="flex-1 overflow-auto p-4">
