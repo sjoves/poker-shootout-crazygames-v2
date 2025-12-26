@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { GameState } from '@/types/game';
-import { Star, Trophy, Crown, Play } from 'lucide-react';
+import { Star, Trophy, Crown, Play, Award, Clapperboard, Home } from 'lucide-react';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/hooks/useAuth';
 import { RewardedAd, useRewardedAd } from '@/components/ads/RewardedAd';
@@ -99,8 +99,9 @@ export default function GameOverScreen() {
         </div>
 
         <div className="flex flex-col gap-3 w-full max-w-xs mx-auto">
-          <Button onClick={() => navigate('/leaderboard')} variant="outline" size="lg">
-            🏅 View Leaderboard
+          <Button onClick={() => navigate('/leaderboard')} variant="outline" size="lg" className="gap-2">
+            <Award className="w-5 h-5" />
+            View Leaderboard
           </Button>
           
           <Button onClick={handlePlayAgain} size="lg" className="gap-2">
@@ -111,7 +112,8 @@ export default function GameOverScreen() {
               </>
             ) : (
               <>
-                🎬 Watch Ad to Play Again
+                <Clapperboard className="w-5 h-5" />
+                Watch Ad to Play Again
               </>
             )}
           </Button>
@@ -134,8 +136,9 @@ export default function GameOverScreen() {
             </Button>
           )}
           
-          <Button onClick={() => navigate('/')} variant="ghost">
-            🏠 Back to Menu
+          <Button onClick={() => navigate('/')} variant="ghost" className="gap-2">
+            <Home className="w-5 h-5" />
+            Back to Menu
           </Button>
         </div>
       </motion.div>
