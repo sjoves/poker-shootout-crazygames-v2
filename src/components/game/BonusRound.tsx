@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { evaluateHand } from '@/lib/pokerEngine';
 import { ScorePanel } from './ScoreDisplay';
 import { StarIcon } from '@heroicons/react/24/outline';
+import { cn } from '@/lib/utils';
 
 type IntroPhase = 'instructions' | 'ready' | 'begin' | 'playing';
 
@@ -17,6 +18,7 @@ interface BonusRoundProps {
   pointMultiplier: number;
   score?: number;
   level?: number;
+  bonusRoundNumber?: number;
   onHome?: () => void;
   onRestart?: () => void;
   onPause?: () => void;
@@ -32,6 +34,7 @@ export function BonusRound({
   pointMultiplier,
   score = 0,
   level,
+  bonusRoundNumber = 1,
   onHome,
   onRestart,
   onPause,
@@ -42,6 +45,11 @@ export function BonusRound({
   const [handResult, setHandResult] = useState<HandResult | null>(null);
   const [currentFlippedId, setCurrentFlippedId] = useState<string | null>(null);
   const [introPhase, setIntroPhase] = useState<IntroPhase>('instructions');
+
+  // Calculate number of cards based on bonus round number (10, 20, 30, 40, 50, max 52)
+  const cardCount = Math.min(bonusRoundNumber * 10, 52);
+  // Calculate grid columns based on card count
+  const gridCols = cardCount <= 10 ? 5 : cardCount <= 20 ? 5 : 7;
 
   // Intro sequence timing
   useEffect(() => {
@@ -218,8 +226,11 @@ export function BonusRound({
 
       {/* Cards Grid */}
       <div className="flex-1 overflow-auto p-4">
-        <div className="grid grid-cols-7 gap-1.5 max-w-md mx-auto">
-          {deck.slice(0, 35).map((card) => (
+        <div className={cn(
+          "gap-1.5 max-w-md mx-auto grid",
+          gridCols === 5 ? "grid-cols-5" : "grid-cols-7"
+        )}>
+          {deck.slice(0, cardCount).map((card) => (
             <FlippableCard
               key={card.id}
               card={card}

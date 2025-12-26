@@ -69,6 +69,8 @@ export interface GameState {
   rawScore: number;
   timeBonus: number;
   leftoverPenalty: number;
+  // Bonus round tracking
+  bonusRoundCount: number;
   // Bonus round time bonus
   bonusTimePoints?: number;
 }

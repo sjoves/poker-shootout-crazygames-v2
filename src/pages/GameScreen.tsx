@@ -241,6 +241,7 @@ export default function GameScreen() {
             pointMultiplier={state.pointMultiplier}
             score={state.score}
             level={state.sscLevel}
+            bonusRoundNumber={state.bonusRoundCount}
             onHome={() => { resetGame(); navigate('/'); }}
             onRestart={() => { resetGame(); startGame(mode as GameMode); }}
             onPause={pauseGame}

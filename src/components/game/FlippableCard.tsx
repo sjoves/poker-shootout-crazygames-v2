@@ -88,17 +88,14 @@ export function FlippableCard({ card, isKept, isFlippedExternal, onFlip, onKeep,
         animate={{ rotateY: isFlipped || isKept ? 180 : 0 }}
         transition={{ duration: 0.2 }}
       >
-        {/* Card Back - Theme color with white inset border */}
+        {/* Card Back - Theme color */}
         <div
           className={cn(
             'absolute inset-0 rounded-lg backface-hidden overflow-hidden',
             'shadow-lg bg-accent'
           )}
           onClick={handleCardClick}
-        >
-          {/* White inset border */}
-          <div className="absolute inset-[3px] rounded border-2 border-white pointer-events-none" />
-        </div>
+        />
 
         {/* Card Front */}
         <div

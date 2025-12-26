@@ -37,6 +37,7 @@ const INITIAL_STATE: GameState = {
   rawScore: 0,
   timeBonus: 0,
   leftoverPenalty: 0,
+  bonusRoundCount: 0,
   bonusTimePoints: 0,
 };
 
@@ -58,6 +59,7 @@ export function useGameState() {
       : [];
     
     const levelInfo = isSSC ? getSSCLevelInfo(level) : null;
+    const isBonusLevel = forceBonus || (levelInfo?.isBonus || false);
 
     setState({
       ...INITIAL_STATE,
@@ -69,10 +71,11 @@ export function useGameState() {
       sscPhase: levelInfo?.phase || 'static',
       sscRound: levelInfo?.round || 1,
       pointMultiplier: forceBonus ? 2 : (levelInfo?.pointMultiplier || 1),
-      isBonusLevel: forceBonus || (levelInfo?.isBonus || false),
+      isBonusLevel,
       levelGoal: isSSC ? calculateLevelGoal(level) : 0,
       unlockedPowerUps,
       activePowerUps: [...unlockedPowerUps],
+      bonusRoundCount: isBonusLevel ? 1 : 0,
     });
     handResultsRef.current = [];
   }, []);
@@ -276,6 +279,9 @@ export function useGameState() {
       const levelInfo = getSSCLevelInfo(newLevel);
       const newUnlocked = POWER_UPS.filter(p => p.unlockedAtLevel <= newLevel).map(p => p.id);
 
+      // Increment bonus round count if entering a bonus level
+      const newBonusRoundCount = levelInfo.isBonus ? prev.bonusRoundCount + 1 : prev.bonusRoundCount;
+
       // Reset hand results for new level
       handResultsRef.current = [];
 
@@ -287,6 +293,7 @@ export function useGameState() {
         pointMultiplier: levelInfo.pointMultiplier,
         isBonusLevel: levelInfo.isBonus,
         levelGoal: calculateLevelGoal(newLevel),
+        bonusRoundCount: newBonusRoundCount,
         // Full gameplay reset
         score: 0,
         rawScore: 0,
