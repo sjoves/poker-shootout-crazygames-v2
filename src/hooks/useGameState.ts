@@ -108,10 +108,20 @@ export function useGameState() {
 
       const result = evaluateHand(prev.selectedCards);
       
-      // Apply point multiplier for SSC mode
-      const multipliedPoints = prev.mode === 'ssc' 
-        ? Math.floor(result.totalPoints * prev.pointMultiplier)
-        : result.totalPoints;
+      // Check if in final stretch (last 10 seconds for Blitz/SSC)
+      const isBlitz = prev.mode === 'blitz_fc' || prev.mode === 'blitz_cb';
+      const isSSC = prev.mode === 'ssc';
+      const inFinalStretch = (isBlitz || isSSC) && prev.timeRemaining <= 10 && prev.timeRemaining > 0;
+      const finalStretchMultiplier = inFinalStretch ? 2 : 1;
+      
+      // Apply point multiplier for SSC mode + final stretch bonus
+      let multipliedPoints = result.totalPoints;
+      if (isSSC) {
+        multipliedPoints = Math.floor(multipliedPoints * prev.pointMultiplier);
+      }
+      if (inFinalStretch) {
+        multipliedPoints = Math.floor(multipliedPoints * finalStretchMultiplier);
+      }
       
       const modifiedResult = {
         ...result,

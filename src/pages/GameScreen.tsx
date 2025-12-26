@@ -112,6 +112,9 @@ export default function GameScreen() {
   const isFalling = !isBonusRound && (state.mode === 'classic_fc' || state.mode === 'blitz_fc' || (isSSC && state.sscPhase === 'falling'));
   const isConveyor = !isBonusRound && (state.mode === 'classic_cb' || state.mode === 'blitz_cb' || (isSSC && state.sscPhase === 'conveyor'));
   const isStatic = !isBonusRound && isSSC && state.sscPhase === 'static';
+  
+  // Final stretch bonus (last 10 seconds in Blitz/SSC)
+  const inFinalStretch = (isBlitz || isSSC) && state.timeRemaining <= 10 && state.timeRemaining > 0 && !state.isLevelComplete && !state.isGameOver;
 
   const timeDisplay = isBlitz || isSSC ? formatTime(state.timeRemaining) : formatTime(state.timeElapsed);
   const progress = getProgressInfo();
@@ -261,6 +264,37 @@ export default function GameScreen() {
             {state.pointMultiplier}x
           </motion.div>
         )}
+
+        {/* Final Stretch 2x Bonus Indicator */}
+        <AnimatePresence>
+          {inFinalStretch && !isBonusRound && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8, y: -20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={{ duration: 0.5, ease: 'easeOut' }}
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-40"
+            >
+              <motion.div
+                animate={{ 
+                  scale: [1, 1.05, 1],
+                }}
+                transition={{ 
+                  duration: 1,
+                  repeat: Infinity,
+                  ease: 'easeInOut'
+                }}
+                className="bg-accent/90 text-accent-foreground px-6 py-3 rounded-xl shadow-2xl border-2 border-accent"
+              >
+                <div className="flex items-center gap-2 font-display text-2xl sm:text-3xl font-bold">
+                  <BoltIcon className="w-6 h-6 sm:w-8 sm:h-8" />
+                  BONUS x2
+                  <BoltIcon className="w-6 h-6 sm:w-8 sm:h-8" />
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Hand display - hide during bonus round */}
