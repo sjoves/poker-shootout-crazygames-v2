@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, HandResult } from '@/types/game';
 import { FlippableCard } from './FlippableCard';
@@ -7,6 +7,7 @@ import { evaluateHand } from '@/lib/pokerEngine';
 import { ScorePanel } from './ScoreDisplay';
 import { StarIcon } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
+import { useAudio } from '@/contexts/AudioContext';
 
 type IntroPhase = 'instructions' | 'ready' | 'begin' | 'playing';
 
@@ -45,6 +46,22 @@ export function BonusRound({
   const [handResult, setHandResult] = useState<HandResult | null>(null);
   const [currentFlippedId, setCurrentFlippedId] = useState<string | null>(null);
   const [introPhase, setIntroPhase] = useState<IntroPhase>('instructions');
+  const { playSound } = useAudio();
+  const lastPlayedSecondRef = useRef<number | null>(null);
+
+  // Play countdown sound on each second in the last 10 seconds
+  useEffect(() => {
+    if (introPhase !== 'playing') return;
+    
+    // Only play when time is 10 or less, and greater than 0
+    if (timeRemaining <= 10 && timeRemaining > 0) {
+      // Avoid playing the same second twice
+      if (lastPlayedSecondRef.current !== timeRemaining) {
+        lastPlayedSecondRef.current = timeRemaining;
+        playSound('bonusCountdown');
+      }
+    }
+  }, [timeRemaining, introPhase, playSound]);
 
   // Calculate number of cards based on bonus round number (10, 20, 30, 40, 50, max 52)
   // Ensure at least 1 for the multiplier (handles bonusRoundNumber being 0)

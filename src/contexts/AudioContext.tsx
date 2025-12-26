@@ -30,7 +30,8 @@ export type SoundType =
   | 'buttonClick'
   | 'timer'
   | 'countdownTick'
-  | 'countdownUrgent';
+  | 'countdownUrgent'
+  | 'bonusCountdown';
 
 const DEFAULT_SETTINGS: AudioSettings = {
   masterVolume: 0.7,
@@ -194,6 +195,23 @@ function playCountdownUrgent(audioCtx: AudioContext, volume: number): void {
   tick2Gain.connect(audioCtx.destination);
   tick2.start(now + 0.1);
   tick2.stop(now + 0.2);
+}
+
+function playBonusCountdown(audioCtx: AudioContext, volume: number): void {
+  // Play the uploaded pulsed 808 bass drum sound
+  loadAudioBuffer(audioCtx, '/sounds/countdown-tick.wav').then((buffer) => {
+    const source = audioCtx.createBufferSource();
+    const gainNode = audioCtx.createGain();
+    
+    source.buffer = buffer;
+    gainNode.gain.setValueAtTime(volume * 0.8, audioCtx.currentTime);
+    
+    source.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    source.start();
+  }).catch((err) => {
+    console.error('Failed to play bonus countdown sound:', err);
+  });
 }
 
 // Background music player using audio file
@@ -372,6 +390,9 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         break;
       case 'countdownUrgent':
         playCountdownUrgent(ctx, volume);
+        break;
+      case 'bonusCountdown':
+        playBonusCountdown(ctx, volume);
         break;
     }
   }, [settings.sfxEnabled, settings.masterVolume, settings.sfxVolume]);
