@@ -73,7 +73,7 @@ export default function SplashScreen() {
   };
 
   return (
-    <div className="min-h-screen modern-bg flex flex-col items-center p-6 overflow-y-auto">
+    <div className="min-h-screen modern-bg flex flex-col items-center justify-center p-6 overflow-y-auto">
       {/* Achievement notification */}
       {newAchievements.length > 0 && (
         <AchievementNotification 
@@ -87,7 +87,7 @@ export default function SplashScreen() {
         animate={{ opacity: 1, y: 0 }}
         className="text-center mb-6"
       >
-        <img src={currentLogo} alt="Poker Shootout" className="w-80 md:w-96 mx-auto mb-4" />
+        <img src={currentLogo} alt="Poker Shootout" className="w-[22rem] md:w-[26.4rem] mx-auto mb-4" />
         <p className="text-lg text-muted-foreground">
           Collect cards. Build hands. Beat the clock.
         </p>
