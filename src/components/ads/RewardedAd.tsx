@@ -138,7 +138,8 @@ export function RewardedAd({ isOpen, onClose, onAdComplete, adType, modeName }: 
               <Button
                 onClick={startAd}
                 size="lg"
-                className="w-full gap-2"
+                className="w-full h-14 text-lg font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground gap-2"
+                variant="outline"
               >
                 <Play size={20} />
                 Watch Ad
@@ -167,7 +168,12 @@ export function RewardedAd({ isOpen, onClose, onAdComplete, adType, modeName }: 
                   <span className="text-3xl">🎉</span>
                 </div>
                 <p className="text-lg font-semibold text-foreground">Ad Complete!</p>
-                <Button onClick={handleComplete} size="lg" className="w-full">
+                <Button 
+                  onClick={handleComplete} 
+                  size="lg" 
+                  variant="outline"
+                  className="w-full h-14 text-lg font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground"
+                >
                   Continue
                 </Button>
               </div>
@@ -176,7 +182,11 @@ export function RewardedAd({ isOpen, onClose, onAdComplete, adType, modeName }: 
             {adState === 'error' && (
               <div className="flex flex-col items-center gap-4">
                 <p className="text-destructive">Failed to load ad. Please try again.</p>
-                <Button onClick={() => setAdState('loading')} variant="outline">
+                <Button 
+                  onClick={() => setAdState('loading')} 
+                  variant="outline"
+                  className="w-full h-14 text-lg font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground"
+                >
                   Retry
                 </Button>
               </div>
