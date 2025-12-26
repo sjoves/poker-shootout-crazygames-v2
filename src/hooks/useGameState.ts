@@ -97,12 +97,20 @@ export function useGameState() {
 
       const newSelectedCards = [...prev.selectedCards, card];
       const newUsedCards = [...prev.usedCards, card];
+      
+      // For Blitz and SSC (non-static phase), cards should cycle back into the deck
+      // For Classic and SSC static, cards are removed from deck
+      const isBlitz = prev.mode === 'blitz_fc' || prev.mode === 'blitz_cb';
+      const isSSCNonStatic = prev.mode === 'ssc' && prev.sscPhase !== 'static';
+      const shouldRecycle = isBlitz || isSSCNonStatic;
+      
+      // Remove from deck for now (recycling happens after hand submission)
       const newDeck = prev.deck.filter(c => c.id !== card.id);
 
       return {
         ...prev,
         selectedCards: newSelectedCards,
-        usedCards: newUsedCards,
+        usedCards: shouldRecycle ? prev.usedCards : newUsedCards, // Only track used cards for non-recycling modes
         deck: newDeck,
         cardsSelected: prev.cardsSelected + 1,
       };
@@ -141,6 +149,15 @@ export function useGameState() {
       const newRawScore = prev.rawScore + multipliedPoints;
       const newScore = prev.score + multipliedPoints;
 
+      // Determine if cards should be recycled back into deck
+      const isSSCNonStatic = isSSC && prev.sscPhase !== 'static';
+      const shouldRecycle = isBlitz || isSSCNonStatic;
+      
+      // Recycle cards back into deck for Blitz and SSC non-static modes
+      const recycledDeck = shouldRecycle 
+        ? [...prev.deck, ...prev.selectedCards] 
+        : prev.deck;
+
       // Check if game ends for Classic modes (after 10 hands = 50 cards used, 2 remaining)
       const isClassic = prev.mode === 'classic_fc' || prev.mode === 'classic_cb';
       const classicGameOver = isClassic && newHandsPlayed >= 10;
@@ -155,6 +172,7 @@ export function useGameState() {
           selectedCards: [],
           currentHand: modifiedResult,
           isLevelComplete: true,
+          deck: recycledDeck,
         };
       }
 
@@ -199,6 +217,7 @@ export function useGameState() {
         handsPlayed: newHandsPlayed,
         selectedCards: [],
         currentHand: modifiedResult,
+        deck: recycledDeck,
         isGameOver: false,
       };
     });

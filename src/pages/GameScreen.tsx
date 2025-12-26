@@ -217,7 +217,7 @@ export default function GameScreen() {
             onSelectCard={selectCard}
             speed={baseSpeed * (isBlitz ? 1.2 : 1)}
             isPaused={state.isPaused || state.isLevelComplete}
-            isRecycling={isBlitz}
+            isRecycling={isBlitz || (isSSC && state.sscPhase !== 'static')}
           />
         )}
         {isConveyor && (
@@ -227,6 +227,7 @@ export default function GameScreen() {
             onSelectCard={selectCard}
             speed={baseSpeed * (isBlitz ? 1.5 : 1)}
             isPaused={state.isPaused || state.isLevelComplete}
+            isRecycling={isBlitz || (isSSC && state.sscPhase !== 'static')}
           />
         )}
         {isStatic && (

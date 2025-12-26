@@ -16,6 +16,7 @@ interface ConveyorBeltProps {
   speed?: number;
   isPaused?: boolean;
   rows?: number;
+  isRecycling?: boolean;
 }
 
 export function ConveyorBelt({
@@ -25,6 +26,7 @@ export function ConveyorBelt({
   speed = 1,
   isPaused = false,
   rows = 4,
+  isRecycling = false,
 }: ConveyorBeltProps) {
   const [conveyorCards, setConveyorCards] = useState<ConveyorCard[]>([]);
   const [pendingReturns, setPendingReturns] = useState<PendingReturn[]>([]);
