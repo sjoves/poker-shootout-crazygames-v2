@@ -322,6 +322,10 @@ export function useGameState() {
     setState(prev => ({ ...prev, isPaused: !prev.isPaused }));
   }, []);
 
+  const setPaused = useCallback((paused: boolean) => {
+    setState(prev => ({ ...prev, isPaused: paused }));
+  }, []);
+
   const endGame = useCallback(() => {
     setState(prev => {
       let finalScore = prev.score;
@@ -429,6 +433,7 @@ export function useGameState() {
     nextLevel,
     reshuffleUnselected,
     pauseGame,
+    setPaused,
     endGame,
     resetGame,
     getHandResults,

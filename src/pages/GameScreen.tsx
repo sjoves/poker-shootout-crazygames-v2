@@ -26,7 +26,8 @@ export default function GameScreen() {
     submitBonusHand, 
     skipBonusRound, 
     usePowerUp, 
-    pauseGame, 
+    pauseGame,
+    setPaused,
     resetGame, 
     nextLevel,
     reshuffleUnselected,
@@ -36,6 +37,7 @@ export default function GameScreen() {
   const baseSpeed = isMobile ? 0.6 : 1; // Slower speed on mobile
   const [isMuted, setIsMuted] = useState(false);
   const [showUsedCards, setShowUsedCards] = useState(false);
+  const [bonusIntroActive, setBonusIntroActive] = useState(false);
   const prevHandsPlayed = useRef(state.handsPlayed);
   
   const isTestBonus = searchParams.get('testBonus') === 'true';
@@ -101,11 +103,27 @@ export default function GameScreen() {
   useEffect(() => {
     if (state.isLevelComplete) {
       const timer = setTimeout(() => {
+        // If next level is bonus, set intro active
+        const nextLevelInfo = state.mode === 'ssc' ? true : false; // Will be bonus if applicable
         nextLevel();
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [state.isLevelComplete, nextLevel]);
+  }, [state.isLevelComplete, nextLevel, state.mode]);
+
+  // Activate bonus intro when entering bonus round - pause timer during intro
+  useEffect(() => {
+    if (state.isBonusLevel && state.isPlaying && !state.isLevelComplete && !state.isGameOver) {
+      setBonusIntroActive(true);
+      setPaused(true); // Pause the timer during intro
+    }
+  }, [state.isBonusLevel, state.isPlaying, state.isLevelComplete, state.isGameOver, setPaused]);
+
+  // Handle bonus intro completion
+  const handleBonusIntroComplete = useCallback(() => {
+    setBonusIntroActive(false);
+    setPaused(false); // Resume the timer
+  }, [setPaused]);
 
   const formatTime = useCallback((seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -227,6 +245,7 @@ export default function GameScreen() {
             onRestart={() => { resetGame(); startGame(mode as GameMode); }}
             onPause={pauseGame}
             isPaused={state.isPaused}
+            onIntroComplete={handleBonusIntroComplete}
           />
         )}
 

@@ -1,10 +1,13 @@
 import { useState, useCallback, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Card, HandResult } from '@/types/game';
 import { FlippableCard } from './FlippableCard';
 import { Button } from '@/components/ui/button';
 import { evaluateHand } from '@/lib/pokerEngine';
 import { ScorePanel } from './ScoreDisplay';
+import { StarIcon } from '@heroicons/react/24/outline';
+
+type IntroPhase = 'instructions' | 'ready' | 'begin' | 'playing';
 
 interface BonusRoundProps {
   deck: Card[];
@@ -18,6 +21,7 @@ interface BonusRoundProps {
   onRestart?: () => void;
   onPause?: () => void;
   isPaused?: boolean;
+  onIntroComplete?: () => void;
 }
 
 export function BonusRound({ 
@@ -31,11 +35,32 @@ export function BonusRound({
   onHome,
   onRestart,
   onPause,
-  isPaused
+  isPaused,
+  onIntroComplete
 }: BonusRoundProps) {
   const [keptCards, setKeptCards] = useState<Card[]>([]);
   const [handResult, setHandResult] = useState<HandResult | null>(null);
   const [currentFlippedId, setCurrentFlippedId] = useState<string | null>(null);
+  const [introPhase, setIntroPhase] = useState<IntroPhase>('instructions');
+
+  // Intro sequence timing
+  useEffect(() => {
+    if (introPhase === 'instructions') {
+      const timer = setTimeout(() => setIntroPhase('ready'), 2500);
+      return () => clearTimeout(timer);
+    }
+    if (introPhase === 'ready') {
+      const timer = setTimeout(() => setIntroPhase('begin'), 1200);
+      return () => clearTimeout(timer);
+    }
+    if (introPhase === 'begin') {
+      const timer = setTimeout(() => {
+        setIntroPhase('playing');
+        onIntroComplete?.();
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [introPhase, onIntroComplete]);
 
   // Evaluate hand when 5 cards are kept
   useEffect(() => {
@@ -75,6 +100,106 @@ export function BonusRound({
 
   const keptCardIds = keptCards.map(c => c.id);
   const canSubmit = keptCards.length === 5;
+
+  // Show intro overlays before gameplay
+  if (introPhase !== 'playing') {
+    return (
+      <div className="flex flex-col h-full items-center justify-center">
+        <AnimatePresence mode="wait">
+          {introPhase === 'instructions' && (
+            <motion.div
+              key="instructions"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9, y: -30 }}
+              transition={{ duration: 0.4, ease: 'easeOut' }}
+              className="text-center p-8 bg-card/95 backdrop-blur-md border-2 border-accent rounded-2xl shadow-2xl max-w-sm mx-4"
+            >
+              <motion.div
+                initial={{ rotate: -10, scale: 0 }}
+                animate={{ rotate: 0, scale: 1 }}
+                transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
+              >
+                <StarIcon className="w-16 h-16 text-accent mx-auto mb-4" />
+              </motion.div>
+              <motion.h2
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="text-3xl font-display text-accent mb-3"
+              >
+                BONUS ROUND!
+              </motion.h2>
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+                className="text-lg text-foreground mb-2"
+              >
+                Flip cards to build your best hand!
+              </motion.p>
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.7 }}
+                className="text-sm text-muted-foreground"
+              >
+                Earn points + time bonus for speed!
+              </motion.p>
+              {pointMultiplier > 1 && (
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.9 }}
+                  className="text-sm text-primary mt-2 font-bold"
+                >
+                  {pointMultiplier}x Points Active!
+                </motion.p>
+              )}
+            </motion.div>
+          )}
+
+          {introPhase === 'ready' && (
+            <motion.div
+              key="ready"
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.5 }}
+              transition={{ duration: 0.3, ease: 'easeOut' }}
+              className="text-center"
+            >
+              <motion.h1
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 0.6, repeat: Infinity }}
+                className="text-6xl font-display text-accent drop-shadow-lg"
+              >
+                Ready?
+              </motion.h1>
+            </motion.div>
+          )}
+
+          {introPhase === 'begin' && (
+            <motion.div
+              key="begin"
+              initial={{ opacity: 0, scale: 0.3, rotate: -10 }}
+              animate={{ opacity: 1, scale: 1, rotate: 0 }}
+              exit={{ opacity: 0, scale: 2 }}
+              transition={{ duration: 0.3, type: 'spring', stiffness: 300 }}
+              className="text-center"
+            >
+              <motion.h1
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 0.4 }}
+                className="text-7xl font-display text-primary drop-shadow-lg"
+              >
+                BEGIN!
+              </motion.h1>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full">
