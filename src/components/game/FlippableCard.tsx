@@ -89,39 +89,16 @@ export function FlippableCard({ card, isKept, isFlippedExternal, onFlip, onKeep,
         animate={{ rotateY: isFlipped || isKept ? 180 : 0 }}
         transition={{ duration: 0.2 }}
       >
-        {/* Card Back - Black and white diamond pattern */}
+        {/* Card Back - Solid black with white inset border */}
         <div
           className={cn(
             'absolute inset-0 rounded-lg backface-hidden overflow-hidden',
-            'border-2 border-gray-300',
-            'shadow-lg bg-white'
+            'shadow-lg bg-black'
           )}
           onClick={handleCardClick}
         >
-          {/* Outer border */}
-          <div className="absolute inset-1 border border-gray-800 rounded">
-            {/* Inner pattern container */}
-            <div className="absolute inset-1 bg-gray-900 rounded-sm overflow-hidden">
-              {/* Diamond pattern using CSS */}
-              <div 
-                className="w-full h-full"
-                style={{
-                  backgroundImage: `
-                    linear-gradient(45deg, white 25%, transparent 25%),
-                    linear-gradient(-45deg, white 25%, transparent 25%),
-                    linear-gradient(45deg, transparent 75%, white 75%),
-                    linear-gradient(-45deg, transparent 75%, white 75%)
-                  `,
-                  backgroundSize: '8px 8px',
-                  backgroundPosition: '0 0, 0 4px, 4px -4px, -4px 0px'
-                }}
-              />
-            </div>
-          </div>
-          {/* Center diamond accent */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="w-6 h-6 bg-white border-2 border-gray-800 rotate-45" />
-          </div>
+          {/* White inset border */}
+          <div className="absolute inset-[3px] rounded border-2 border-white pointer-events-none" />
         </div>
 
         {/* Card Front */}

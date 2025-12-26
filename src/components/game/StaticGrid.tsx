@@ -30,10 +30,10 @@ export function StaticGrid({ deck, selectedCardIds, onSelectCard, onReshuffle }:
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="flex flex-col items-center justify-center w-full h-full gap-4"
+      className="flex flex-col items-center justify-center w-full flex-1 gap-4"
     >
       <div 
-        className="grid gap-1 sm:gap-2 p-2 sm:p-4"
+        className="grid gap-1 sm:gap-2 p-2 sm:p-4 place-content-center"
         style={{ gridTemplateColumns: `repeat(${GRID_COLUMNS}, minmax(0, 1fr))` }}
       >
         {visibleCards.map((card, index) => (
