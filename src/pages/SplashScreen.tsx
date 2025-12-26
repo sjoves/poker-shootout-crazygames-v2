@@ -9,6 +9,7 @@ import { RewardedAd, useRewardedAd } from '@/components/ads/RewardedAd';
 import { TutorialModal } from '@/components/tutorial/TutorialModal';
 import { SettingsModal } from '@/components/settings/SettingsModal';
 import { StarIcon } from '@heroicons/react/24/solid';
+import { Target, Zap, Trophy } from 'lucide-react';
 import logo from '@/assets/raiders-logo.svg';
 
 export default function SplashScreen() {
@@ -84,10 +85,11 @@ export default function SplashScreen() {
           <Button
             variant="outline"
             size="lg"
-            className="w-full h-16 text-lg font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground"
+            className="w-full h-16 text-lg font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground gap-2"
             onClick={() => setSelectedMode(selectedMode === 'classic' ? null : 'classic')}
           >
-            🎯 Classic Mode
+            <Target className="w-5 h-5" />
+            Classic Mode
             <span className="ml-2 text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">
               Free
             </span>
@@ -109,10 +111,11 @@ export default function SplashScreen() {
           <Button
             variant="outline"
             size="lg"
-            className="w-full h-16 text-lg font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground"
+            className="w-full h-16 text-lg font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground gap-2"
             onClick={() => setSelectedMode(selectedMode === 'blitz' ? null : 'blitz')}
           >
-            ⚡ 52-Card Blitz
+            <Zap className="w-5 h-5" />
+            52-Card Blitz
             {getModeLabel('blitz')}
           </Button>
           {selectedMode === 'blitz' && (
@@ -131,10 +134,11 @@ export default function SplashScreen() {
         <Button
           variant="outline"
           size="lg"
-          className="w-full h-16 text-lg font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground"
+          className="w-full h-16 text-lg font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground gap-2"
           onClick={() => handleModeSelect('ssc')}
         >
-          🏆 Sharp Shooter Challenge
+          <Trophy className="w-5 h-5" />
+          Sharp Shooter Challenge
           {getModeLabel('ssc')}
         </Button>
 
