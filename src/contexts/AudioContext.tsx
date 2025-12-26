@@ -241,12 +241,15 @@ class BackgroundMusic {
   }
 
   async start(volume: number) {
+    console.log('BackgroundMusic.start called, isPlaying:', this.isPlaying, 'volume:', volume);
     if (this.isPlaying) return;
     
     try {
       // Load the audio buffer if not already loaded
       if (!this.audioBuffer) {
+        console.log('Loading background music audio buffer...');
         this.audioBuffer = await loadAudioBuffer(this.audioCtx, '/sounds/background-music.wav');
+        console.log('Audio buffer loaded, duration:', this.audioBuffer.duration);
       }
       
       this.source = this.audioCtx.createBufferSource();
@@ -257,8 +260,10 @@ class BackgroundMusic {
       this.setVolume(volume);
       this.source.start();
       this.isPlaying = true;
+      console.log('Background music playback started');
     } catch (err) {
       console.error('Failed to start background music:', err);
+      throw err;
     }
   }
 
@@ -329,24 +334,34 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   }, [settings.musicEnabled, isMusicPlaying]);
 
   const startMusic = useCallback(async (): Promise<void> => {
+    console.log('startMusic called, musicEnabled:', settings.musicEnabled);
     if (!settings.musicEnabled) return;
     
     // Ensure AudioContext is created
     if (!audioCtxRef.current) {
+      console.log('Creating new AudioContext');
       audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
       musicRef.current = new BackgroundMusic(audioCtxRef.current);
     }
     
+    console.log('AudioContext state:', audioCtxRef.current.state);
+    
     // Resume if suspended
     if (audioCtxRef.current.state === 'suspended') {
+      console.log('Resuming suspended AudioContext');
       await audioCtxRef.current.resume();
+      console.log('AudioContext resumed, new state:', audioCtxRef.current.state);
     }
 
     setIsMusicLoading(true);
     try {
       const volume = settings.masterVolume * settings.musicVolume;
+      console.log('Starting music with volume:', volume);
       await musicRef.current?.start(volume);
+      console.log('Music started successfully');
       setIsMusicPlaying(true);
+    } catch (err) {
+      console.error('Failed to start music:', err);
     } finally {
       setIsMusicLoading(false);
     }
