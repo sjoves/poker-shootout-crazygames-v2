@@ -83,11 +83,8 @@ export default function GameScreen() {
     // Only trigger on time change, not on initial render
     if (prevTimeRef.current !== state.timeRemaining && (isBlitz || isSSC)) {
       if (state.timeRemaining <= 10 && state.timeRemaining > 0 && !state.isGameOver && !state.isLevelComplete) {
-        if (state.timeRemaining <= 3) {
-          playSound('countdownUrgent');
-        } else {
-          playSound('countdownTick');
-        }
+        // Play the pulsed 808 countdown sound each second
+        playSound('bonusCountdown');
       }
     }
     prevTimeRef.current = state.timeRemaining;
