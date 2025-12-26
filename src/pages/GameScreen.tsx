@@ -32,36 +32,50 @@ export default function GameScreen() {
     nextLevel,
     reshuffleUnselected,
   } = useGameState();
-  const { playSound, startMusic, stopMusic } = useAudio();
+  const { playSound, startMusic, stopMusic, isMusicLoading } = useAudio();
   const isMobile = useIsMobile();
   const baseSpeed = isMobile ? 0.6 : 1; // Slower speed on mobile
   const [isMuted, setIsMuted] = useState(false);
   const [showUsedCards, setShowUsedCards] = useState(false);
   const [bonusIntroActive, setBonusIntroActive] = useState(false);
+  const [isLoadingMusic, setIsLoadingMusic] = useState(true);
   const prevHandsPlayed = useRef(state.handsPlayed);
+  const gameInitializedRef = useRef(false);
   
   const isTestBonus = searchParams.get('testBonus') === 'true';
   const startLevelParam = searchParams.get('startLevel');
   const startLevel = startLevelParam ? parseInt(startLevelParam, 10) : undefined;
 
-  // Start background music and game
+  // Start background music first, then start game
   useEffect(() => {
-    console.log('Game init effect:', { mode, isTestBonus, startLevel, isPlaying: state.isPlaying, isGameOver: state.isGameOver, isLevelComplete: state.isLevelComplete });
-    if (isTestBonus && !state.isPlaying && !state.isGameOver && !state.isLevelComplete) {
-      console.log('Starting bonus game');
-      startGame('ssc', true); // Start in bonus mode
-      startMusic();
-    } else if (mode && !state.isPlaying && !state.isGameOver && !state.isLevelComplete) {
-      console.log('Starting game with mode:', mode, 'startLevel:', startLevel);
-      startGame(mode as GameMode, false, startLevel);
-      startMusic();
-    }
+    if (gameInitializedRef.current) return;
+    
+    const initGame = async () => {
+      console.log('Game init effect:', { mode, isTestBonus, startLevel });
+      setIsLoadingMusic(true);
+      
+      // Wait for music to load
+      await startMusic();
+      setIsLoadingMusic(false);
+      
+      if (isTestBonus) {
+        console.log('Starting bonus game');
+        startGame('ssc', true);
+      } else if (mode) {
+        console.log('Starting game with mode:', mode, 'startLevel:', startLevel);
+        startGame(mode as GameMode, false, startLevel);
+      }
+      
+      gameInitializedRef.current = true;
+    };
+    
+    initGame();
     
     // Stop music when component unmounts
     return () => {
       stopMusic();
     };
-  }, [mode, isTestBonus, startLevel, state.isPlaying, state.isGameOver, state.isLevelComplete, startGame, startMusic, stopMusic]);
+  }, [mode, isTestBonus, startLevel, startGame, startMusic, stopMusic]);
 
   // Play sound when hand is submitted
   useEffect(() => {
@@ -166,6 +180,26 @@ export default function GameScreen() {
   }
 
   const selectedIds = state.selectedCards.map(c => c.id);
+
+  // Show loading screen while music is loading
+  if (isLoadingMusic) {
+    return (
+      <div className="h-screen max-h-screen flex flex-col items-center justify-center overflow-hidden modern-bg">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center"
+        >
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+            className="w-16 h-16 border-4 border-primary/30 border-t-primary rounded-full mx-auto mb-4"
+          />
+          <p className="text-lg font-display text-foreground">Loading...</p>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen max-h-screen flex flex-col overflow-hidden modern-bg">

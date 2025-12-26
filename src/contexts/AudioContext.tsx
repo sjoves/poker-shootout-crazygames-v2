@@ -15,9 +15,10 @@ interface AudioContextValue extends AudioSettings {
   setMusicEnabled: (enabled: boolean) => void;
   setMusicVolume: (volume: number) => void;
   playSound: (soundType: SoundType) => void;
-  startMusic: () => void;
+  startMusic: () => Promise<void>;
   stopMusic: () => void;
   isMusicPlaying: boolean;
+  isMusicLoading: boolean;
 }
 
 export type SoundType = 
@@ -278,6 +279,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   });
 
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
+  const [isMusicLoading, setIsMusicLoading] = useState(false);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const musicRef = useRef<BackgroundMusic | null>(null);
 
@@ -319,7 +321,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     }
   }, [settings.musicEnabled, isMusicPlaying]);
 
-  const startMusic = useCallback(() => {
+  const startMusic = useCallback(async (): Promise<void> => {
     if (!settings.musicEnabled) return;
     
     // Ensure AudioContext is created
@@ -330,12 +332,17 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     
     // Resume if suspended
     if (audioCtxRef.current.state === 'suspended') {
-      audioCtxRef.current.resume();
+      await audioCtxRef.current.resume();
     }
 
-    const volume = settings.masterVolume * settings.musicVolume;
-    musicRef.current?.start(volume);
-    setIsMusicPlaying(true);
+    setIsMusicLoading(true);
+    try {
+      const volume = settings.masterVolume * settings.musicVolume;
+      await musicRef.current?.start(volume);
+      setIsMusicPlaying(true);
+    } finally {
+      setIsMusicLoading(false);
+    }
   }, [settings.musicEnabled, settings.masterVolume, settings.musicVolume]);
 
   const stopMusic = useCallback(() => {
@@ -408,6 +415,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     startMusic,
     stopMusic,
     isMusicPlaying,
+    isMusicLoading,
   };
 
   return (
