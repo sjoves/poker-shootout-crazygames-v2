@@ -60,6 +60,7 @@ interface ScorePanelProps {
   goalScore?: number;
   level?: number;
   isBonusRound?: boolean;
+  isUrgent?: boolean;
   onHome?: () => void;
   onRestart?: () => void;
   onPause?: () => void;
@@ -74,6 +75,7 @@ export function ScorePanel({
   goalScore,
   level,
   isBonusRound,
+  isUrgent,
   onHome,
   onRestart,
   onPause,
@@ -115,10 +117,25 @@ export function ScorePanel({
         <div className="w-px h-5 bg-border" />
 
         {/* Time */}
-        <div className="flex items-center gap-2">
-          <ClockIcon className="w-5 h-5 text-accent" />
-          <span className="text-lg font-mono text-foreground tabular-nums">{timeDisplay}</span>
-        </div>
+        <motion.div 
+          className="flex items-center gap-2"
+          animate={isUrgent ? { 
+            scale: [1, 1.1, 1],
+          } : {}}
+          transition={isUrgent ? { 
+            duration: 0.5, 
+            repeat: Infinity,
+            ease: 'easeInOut'
+          } : {}}
+        >
+          <ClockIcon className={cn("w-5 h-5", isUrgent ? "text-destructive" : "text-accent")} />
+          <span className={cn(
+            "text-lg font-mono tabular-nums",
+            isUrgent ? "text-destructive font-bold" : "text-foreground"
+          )}>
+            {timeDisplay}
+          </span>
+        </motion.div>
 
         {/* Divider */}
         <div className="w-px h-5 bg-border" />

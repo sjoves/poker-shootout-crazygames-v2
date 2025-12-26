@@ -64,6 +64,25 @@ export default function GameScreen() {
     prevHandsPlayed.current = state.handsPlayed;
   }, [state.handsPlayed, state.currentHand, playSound]);
 
+  // Play countdown sounds during final 10 seconds
+  const prevTimeRef = useRef(state.timeRemaining);
+  useEffect(() => {
+    const isBlitz = state.mode === 'blitz_fc' || state.mode === 'blitz_cb';
+    const isSSC = state.mode === 'ssc';
+    
+    // Only trigger on time change, not on initial render
+    if (prevTimeRef.current !== state.timeRemaining && (isBlitz || isSSC)) {
+      if (state.timeRemaining <= 10 && state.timeRemaining > 0 && !state.isGameOver && !state.isLevelComplete) {
+        if (state.timeRemaining <= 3) {
+          playSound('countdownUrgent');
+        } else {
+          playSound('countdownTick');
+        }
+      }
+    }
+    prevTimeRef.current = state.timeRemaining;
+  }, [state.timeRemaining, state.mode, state.isGameOver, state.isLevelComplete, playSound]);
+
   // Play sound on level complete
   useEffect(() => {
     if (state.isLevelComplete) {
@@ -136,6 +155,7 @@ export default function GameScreen() {
           currentHand={state.currentHand}
           goalScore={isSSC ? state.levelGoal : undefined}
           level={isSSC ? state.sscLevel : undefined}
+          isUrgent={inFinalStretch}
           onHome={() => { resetGame(); navigate('/'); }}
           onRestart={() => { resetGame(); startGame(mode as GameMode); }}
           onPause={pauseGame}

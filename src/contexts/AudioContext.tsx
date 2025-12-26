@@ -28,7 +28,9 @@ export type SoundType =
   | 'levelComplete' 
   | 'gameOver' 
   | 'buttonClick'
-  | 'timer';
+  | 'timer'
+  | 'countdownTick'
+  | 'countdownUrgent';
 
 const DEFAULT_SETTINGS: AudioSettings = {
   masterVolume: 0.7,
@@ -167,6 +169,55 @@ function playButtonClick(audioCtx: AudioContext, volume: number): void {
 
 function playTimer(audioCtx: AudioContext, volume: number): void {
   createOscillatorSound(audioCtx, 440, 0.1, 'sine', volume * 0.2);
+}
+
+function playCountdownTick(audioCtx: AudioContext, volume: number): void {
+  // Sharp, urgent tick sound
+  const now = audioCtx.currentTime;
+  
+  // High-pitched tick
+  const tick = audioCtx.createOscillator();
+  const tickGain = audioCtx.createGain();
+  tick.type = 'square';
+  tick.frequency.setValueAtTime(880, now);
+  tick.frequency.exponentialRampToValueAtTime(440, now + 0.08);
+  tickGain.gain.setValueAtTime(volume * 0.4, now);
+  tickGain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+  tick.connect(tickGain);
+  tickGain.connect(audioCtx.destination);
+  tick.start(now);
+  tick.stop(now + 0.12);
+}
+
+function playCountdownUrgent(audioCtx: AudioContext, volume: number): void {
+  // More urgent double-tick for last 3 seconds
+  const now = audioCtx.currentTime;
+  
+  // First tick
+  const tick1 = audioCtx.createOscillator();
+  const tick1Gain = audioCtx.createGain();
+  tick1.type = 'square';
+  tick1.frequency.setValueAtTime(1200, now);
+  tick1.frequency.exponentialRampToValueAtTime(600, now + 0.06);
+  tick1Gain.gain.setValueAtTime(volume * 0.5, now);
+  tick1Gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+  tick1.connect(tick1Gain);
+  tick1Gain.connect(audioCtx.destination);
+  tick1.start(now);
+  tick1.stop(now + 0.1);
+  
+  // Second tick (echo)
+  const tick2 = audioCtx.createOscillator();
+  const tick2Gain = audioCtx.createGain();
+  tick2.type = 'square';
+  tick2.frequency.setValueAtTime(1000, now + 0.1);
+  tick2.frequency.exponentialRampToValueAtTime(500, now + 0.16);
+  tick2Gain.gain.setValueAtTime(volume * 0.3, now + 0.1);
+  tick2Gain.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
+  tick2.connect(tick2Gain);
+  tick2Gain.connect(audioCtx.destination);
+  tick2.start(now + 0.1);
+  tick2.stop(now + 0.2);
 }
 
 // 8-bit style music generator
@@ -425,6 +476,12 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         break;
       case 'timer':
         playTimer(ctx, volume);
+        break;
+      case 'countdownTick':
+        playCountdownTick(ctx, volume);
+        break;
+      case 'countdownUrgent':
+        playCountdownUrgent(ctx, volume);
         break;
     }
   }, [settings.sfxEnabled, settings.masterVolume, settings.sfxVolume]);
