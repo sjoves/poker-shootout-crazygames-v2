@@ -104,13 +104,7 @@ export default function GameOverScreen() {
   ];
 
   const handlePlayAgain = () => {
-    if (isPremium) {
-      navigate(`/play/${gameState.mode}`);
-    } else {
-      rewardedAd.showAd('play_again', () => {
-        navigate(`/play/${gameState.mode}`);
-      });
-    }
+    navigate(`/play/${gameState.mode}`);
   };
 
   const handleReplayLevel = () => {
@@ -196,17 +190,8 @@ export default function GameOverScreen() {
           )}
           
           <Button onClick={handlePlayAgain} size="lg" className="gap-2">
-            {isPremium ? (
-              <>
-                <Play className="w-4 h-4" />
-                {isSSC ? 'Start From Level 1' : 'Play Again'}
-              </>
-            ) : (
-              <>
-                <Clapperboard className="w-5 h-5" />
-                {isSSC ? 'Watch Ad to Start Over' : 'Watch Ad to Play Again'}
-              </>
-            )}
+            <Play className="w-4 h-4" />
+            {isSSC ? 'Start From Level 1' : 'Play Again'}
           </Button>
           
           {!isPremium && (
