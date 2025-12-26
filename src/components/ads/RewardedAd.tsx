@@ -149,11 +149,11 @@ export function RewardedAd({ isOpen, onClose, onAdComplete, adType, modeName }: 
             {adState === 'playing' && (
               <div className="flex flex-col items-center gap-4">
                 {/* Simulated ad placeholder - replace with actual AdMob component */}
-                <div className="w-full aspect-video bg-gradient-to-br from-primary/20 to-accent/20 rounded-lg flex items-center justify-center border border-border">
+                <div className="w-full aspect-video bg-card rounded-xl flex items-center justify-center border border-primary/30 shadow-lg shadow-primary/10">
                   <div className="text-center">
-                    <p className="text-lg font-semibold text-foreground">Ad Playing</p>
-                    <p className="text-4xl font-bold text-primary mt-2">{countdown}</p>
-                    <p className="text-sm text-muted-foreground mt-1">seconds remaining</p>
+                    <p className="text-lg font-display font-semibold text-primary">Ad Playing</p>
+                    <p className="text-5xl font-bold text-foreground mt-3">{countdown}</p>
+                    <p className="text-sm text-muted-foreground mt-2">seconds remaining</p>
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground">
