@@ -199,15 +199,16 @@ export function getSSCLevelInfo(level: number): SSCLevelInfo {
   // Count bonus rounds completed (every 4 levels is a bonus)
   const bonusRoundsCompleted = Math.floor((level - 1) / 4);
   
-  // First 20 levels are easier (lower base difficulty)
-  // After level 20, difficulty increases by 2% per bonus round completed
+  // Difficulty increases by 1% per bonus round completed after the first
+  // First 4 levels (before first bonus): 0.7x base
+  // After first bonus (level 5+): 0.7x + 1% per additional bonus round
   let difficultyMultiplier: number;
-  if (level <= 20) {
-    // Easy mode for first 20 levels - start at 0.7x difficulty, slight increase
-    difficultyMultiplier = 0.7 + (bonusRoundsCompleted * 0.02);
+  if (bonusRoundsCompleted <= 1) {
+    // No increase until after the first bonus round
+    difficultyMultiplier = 0.7;
   } else {
-    // After level 20, continue increasing by 2% per bonus round
-    difficultyMultiplier = 0.7 + (bonusRoundsCompleted * 0.02);
+    // 1% increase for each bonus round after the first
+    difficultyMultiplier = 0.7 + ((bonusRoundsCompleted - 1) * 0.01);
   }
   
   return {
