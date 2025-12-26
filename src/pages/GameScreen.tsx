@@ -314,7 +314,7 @@ export default function GameScreen() {
         </>
       )}
 
-      <div className="flex-1 min-h-0 relative overflow-hidden p-2 sm:p-4">
+      <div className="flex-1 min-h-0 relative overflow-hidden">
         {isFalling && (
           <FallingCards
             deck={state.deck}
@@ -369,6 +369,13 @@ export default function GameScreen() {
               currentLevel={state.sscLevel}
               onUsePowerUp={usePowerUp}
             />
+          </div>
+        )}
+
+        {/* Hand display overlay - positioned at bottom */}
+        {!isBonusRound && (
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-40">
+            <HandDisplay cards={state.selectedCards} currentHand={state.currentHand} />
           </div>
         )}
 
@@ -438,15 +445,7 @@ export default function GameScreen() {
             {state.pointMultiplier}x
           </motion.div>
         )}
-
       </div>
-
-      {/* Hand display - hide during bonus round */}
-      {!isBonusRound && (
-        <div className="flex-shrink-0 p-2 sm:p-4">
-          <HandDisplay cards={state.selectedCards} currentHand={state.currentHand} />
-        </div>
-      )}
     </div>
   );
 }
