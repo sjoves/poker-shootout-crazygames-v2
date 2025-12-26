@@ -166,18 +166,27 @@ export default function GameOverScreen() {
           )}
         </div>
 
-        <div className="flex flex-col gap-3 w-full max-w-xs mx-auto">
-          <Button onClick={() => navigate('/leaderboard')} variant="outline" size="lg" className="gap-2">
-            <Award className="w-5 h-5" />
+        <div className="flex flex-col gap-3 w-full max-w-md mx-auto">
+          <Button 
+            onClick={() => navigate('/leaderboard')} 
+            variant="outline" 
+            size="lg" 
+            className="w-full h-14 text-lg font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground gap-2"
+          >
+            <Award className="w-5 h-5 text-primary" />
             View Leaderboard
           </Button>
           
           {/* SSC Mode: Replay This Level option */}
           {isSSC && gameState.sscLevel > 1 && (
-            <Button onClick={handleReplayLevel} size="lg" className="gap-2 bg-accent hover:bg-accent/90">
+            <Button 
+              onClick={handleReplayLevel} 
+              size="lg" 
+              className="w-full h-14 text-lg font-display bg-accent hover:bg-accent/90 text-accent-foreground gap-2"
+            >
               {isPremium ? (
                 <>
-                  <RotateCcw className="w-4 h-4" />
+                  <RotateCcw className="w-5 h-5" />
                   Replay Level {gameState.sscLevel}
                 </>
               ) : (
@@ -189,8 +198,12 @@ export default function GameOverScreen() {
             </Button>
           )}
           
-          <Button onClick={handlePlayAgain} size="lg" className="gap-2">
-            <Play className="w-4 h-4" />
+          <Button 
+            onClick={handlePlayAgain} 
+            size="lg" 
+            className="w-full h-14 text-lg font-display bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
+          >
+            <Play className="w-5 h-5" />
             {isSSC ? 'Start From Level 1' : 'Play Again'}
           </Button>
           
@@ -203,16 +216,20 @@ export default function GameOverScreen() {
                   await openCheckout();
                 }
               }}
-              variant="secondary"
+              variant="outline"
               size="lg"
-              className="gap-2"
+              className="w-full h-14 text-lg font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground gap-2"
             >
-              <Crown className="w-4 h-4" />
+              <Crown className="w-5 h-5 text-primary" />
               Go Premium - No Ads
             </Button>
           )}
           
-          <Button onClick={() => navigate('/')} variant="ghost" className="gap-2">
+          <Button 
+            onClick={() => navigate('/')} 
+            variant="ghost" 
+            className="w-full h-12 font-display gap-2"
+          >
             <Home className="w-5 h-5" />
             Back to Menu
           </Button>
