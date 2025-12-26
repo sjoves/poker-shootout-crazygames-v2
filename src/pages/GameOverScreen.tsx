@@ -181,17 +181,18 @@ export default function GameOverScreen() {
           {isSSC && gameState.sscLevel > 1 && (
             <Button 
               onClick={handleReplayLevel} 
+              variant="outline"
               size="lg" 
-              className="w-full h-14 text-lg font-display bg-accent hover:bg-accent/90 text-accent-foreground gap-2"
+              className="w-full h-14 text-lg font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground gap-2"
             >
               {isPremium ? (
                 <>
-                  <RotateCcw className="w-5 h-5" />
+                  <RotateCcw className="w-5 h-5 text-primary" />
                   Replay Level {gameState.sscLevel}
                 </>
               ) : (
                 <>
-                  <Clapperboard className="w-5 h-5" />
+                  <Clapperboard className="w-5 h-5 text-primary" />
                   Watch Ad to Retry Level {gameState.sscLevel}
                 </>
               )}
@@ -200,10 +201,11 @@ export default function GameOverScreen() {
           
           <Button 
             onClick={handlePlayAgain} 
+            variant="outline"
             size="lg" 
-            className="w-full h-14 text-lg font-display bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
+            className="w-full h-14 text-lg font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground gap-2"
           >
-            <Play className="w-5 h-5" />
+            <Play className="w-5 h-5 text-primary" />
             {isSSC ? 'Start From Level 1' : 'Play Again'}
           </Button>
           
