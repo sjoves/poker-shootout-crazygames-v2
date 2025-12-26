@@ -88,7 +88,7 @@ export default function SplashScreen() {
             className="w-full h-16 text-lg font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground gap-2"
             onClick={() => setSelectedMode(selectedMode === 'classic' ? null : 'classic')}
           >
-            <Target className="w-5 h-5" />
+            <Target className="w-5 h-5 text-primary" />
             Classic Mode
             <span className="ml-2 text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">
               Free
@@ -114,7 +114,7 @@ export default function SplashScreen() {
             className="w-full h-16 text-lg font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground gap-2"
             onClick={() => setSelectedMode(selectedMode === 'blitz' ? null : 'blitz')}
           >
-            <Zap className="w-5 h-5" />
+            <Zap className="w-5 h-5 text-primary" />
             52-Card Blitz
             {getModeLabel('blitz')}
           </Button>
@@ -137,7 +137,7 @@ export default function SplashScreen() {
           className="w-full h-16 text-lg font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground gap-2"
           onClick={() => handleModeSelect('ssc')}
         >
-          <Trophy className="w-5 h-5" />
+          <Trophy className="w-5 h-5 text-primary" />
           Sharp Shooter Challenge
           {getModeLabel('ssc')}
         </Button>
