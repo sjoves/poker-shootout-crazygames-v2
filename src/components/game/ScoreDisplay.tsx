@@ -143,7 +143,7 @@ export function ScorePanel({
         {/* Level or Bonus Round indicator */}
         {isBonusRound ? (
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-accent uppercase tracking-wide">BONUS ROUND</span>
+            <span className="text-[10px] font-semibold text-accent uppercase tracking-wide whitespace-nowrap">BONUS ROUND</span>
           </div>
         ) : level !== undefined && (
           <div className="flex items-center justify-center w-8 h-8 rounded-full border-2 border-accent bg-transparent">
