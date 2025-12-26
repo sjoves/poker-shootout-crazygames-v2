@@ -147,20 +147,43 @@ export default function GameScreen() {
   return (
     <div className="h-screen max-h-screen flex flex-col overflow-hidden modern-bg">
       {!isBonusRound && (
-        <ScorePanel
-          score={state.score}
-          timeDisplay={timeDisplay}
-          progressLabel={progress.label}
-          progressValue={progress.value}
-          currentHand={state.currentHand}
-          goalScore={isSSC ? state.levelGoal : undefined}
-          level={isSSC ? state.sscLevel : undefined}
-          isUrgent={inFinalStretch}
-          onHome={() => { resetGame(); navigate('/'); }}
-          onRestart={() => { resetGame(); startGame(mode as GameMode); }}
-          onPause={pauseGame}
-          isPaused={state.isPaused}
-        />
+        <>
+          <ScorePanel
+            score={state.score}
+            timeDisplay={timeDisplay}
+            progressLabel={progress.label}
+            progressValue={progress.value}
+            currentHand={state.currentHand}
+            goalScore={isSSC ? state.levelGoal : undefined}
+            level={isSSC ? state.sscLevel : undefined}
+            isUrgent={inFinalStretch}
+            onHome={() => { resetGame(); navigate('/'); }}
+            onRestart={() => { resetGame(); startGame(mode as GameMode); }}
+            onPause={pauseGame}
+            isPaused={state.isPaused}
+          />
+          <AnimatePresence>
+            {inFinalStretch && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+                className="flex justify-center py-1"
+              >
+                <motion.div
+                  animate={{ scale: [1, 1.05, 1] }}
+                  transition={{ duration: 1, repeat: Infinity, ease: 'easeInOut' }}
+                  className="flex items-center gap-2 font-display text-lg font-bold text-primary"
+                >
+                  <BoltIcon className="w-5 h-5" />
+                  BONUS x2
+                  <BoltIcon className="w-5 h-5" />
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </>
       )}
 
       <div className="flex-1 min-h-0 relative overflow-hidden p-2 sm:p-4">
@@ -285,36 +308,6 @@ export default function GameScreen() {
           </motion.div>
         )}
 
-        {/* Final Stretch 2x Bonus Indicator */}
-        <AnimatePresence>
-          {inFinalStretch && !isBonusRound && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8, y: -20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ duration: 0.5, ease: 'easeOut' }}
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-40"
-            >
-              <motion.div
-                animate={{ 
-                  scale: [1, 1.05, 1],
-                }}
-                transition={{ 
-                  duration: 1,
-                  repeat: Infinity,
-                  ease: 'easeInOut'
-                }}
-                className="bg-accent/90 text-accent-foreground px-6 py-3 rounded-xl shadow-2xl border-2 border-accent"
-              >
-                <div className="flex items-center gap-2 font-display text-2xl sm:text-3xl font-bold">
-                  <BoltIcon className="w-6 h-6 sm:w-8 sm:h-8" />
-                  BONUS x2
-                  <BoltIcon className="w-6 h-6 sm:w-8 sm:h-8" />
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
 
       {/* Hand display - hide during bonus round */}
