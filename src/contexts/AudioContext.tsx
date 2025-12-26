@@ -132,13 +132,20 @@ function playLevelComplete(audioCtx: AudioContext, volume: number): void {
 }
 
 function playGameOver(audioCtx: AudioContext, volume: number): void {
-  createOscillatorSound(audioCtx, 392, 0.3, 'sawtooth', volume * 0.2);
-  setTimeout(() => {
-    createOscillatorSound(audioCtx, 330, 0.3, 'sawtooth', volume * 0.2);
-  }, 200);
-  setTimeout(() => {
-    createOscillatorSound(audioCtx, 262, 0.5, 'sawtooth', volume * 0.15);
-  }, 400);
+  // Play the game-over.wav sound file
+  loadAudioBuffer(audioCtx, '/sounds/game-over.wav').then((buffer) => {
+    const source = audioCtx.createBufferSource();
+    const gainNode = audioCtx.createGain();
+    
+    source.buffer = buffer;
+    gainNode.gain.setValueAtTime(volume * 0.8, audioCtx.currentTime);
+    
+    source.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    source.start();
+  }).catch((err) => {
+    console.error('Failed to play game over sound:', err);
+  });
 }
 
 function playButtonClick(audioCtx: AudioContext, volume: number): void {
