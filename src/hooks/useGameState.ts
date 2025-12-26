@@ -341,11 +341,16 @@ export function useGameState() {
 
   // Timer effect
   useEffect(() => {
+    console.log('Timer effect running:', { isPlaying: state.isPlaying, isPaused: state.isPaused, isGameOver: state.isGameOver, mode: state.mode, timeRemaining: state.timeRemaining });
+    
     if (state.isPlaying && !state.isPaused && !state.isGameOver) {
+      console.log('Starting timer interval');
       timerRef.current = setInterval(() => {
         setState(prev => {
           const isBlitz = prev.mode === 'blitz_fc' || prev.mode === 'blitz_cb';
           const isSSC = prev.mode === 'ssc';
+          
+          console.log('Timer tick:', { isBlitz, isSSC, timeRemaining: prev.timeRemaining, mode: prev.mode });
           
           if (isBlitz || isSSC) {
             const newTimeRemaining = prev.timeRemaining - 1;
@@ -378,10 +383,13 @@ export function useGameState() {
           return { ...prev, timeElapsed: newTimeElapsed };
         });
       }, 1000);
+    } else {
+      console.log('Timer NOT starting - conditions not met');
     }
 
     return () => {
       if (timerRef.current) {
+        console.log('Clearing timer interval');
         clearInterval(timerRef.current);
       }
     };

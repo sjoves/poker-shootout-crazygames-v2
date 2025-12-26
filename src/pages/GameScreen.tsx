@@ -41,9 +41,12 @@ export default function GameScreen() {
   const isTestBonus = searchParams.get('testBonus') === 'true';
 
   useEffect(() => {
+    console.log('Game init effect:', { mode, isTestBonus, isPlaying: state.isPlaying, isGameOver: state.isGameOver, isLevelComplete: state.isLevelComplete });
     if (isTestBonus && !state.isPlaying && !state.isGameOver && !state.isLevelComplete) {
+      console.log('Starting bonus game');
       startGame('ssc', true); // Start in bonus mode
     } else if (mode && !state.isPlaying && !state.isGameOver && !state.isLevelComplete) {
+      console.log('Starting game with mode:', mode);
       startGame(mode as GameMode);
     }
   }, [mode, isTestBonus, state.isPlaying, state.isGameOver, state.isLevelComplete, startGame]);
