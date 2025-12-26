@@ -36,25 +36,31 @@ export function StaticGrid({ deck, selectedCardIds, onSelectCard, onReshuffle }:
         className="grid gap-1 sm:gap-2 p-2 sm:p-4 place-content-center my-auto"
         style={{ gridTemplateColumns: `repeat(${GRID_COLUMNS}, minmax(0, 1fr))` }}
       >
-        {visibleCards.map((card, index) => (
-          <motion.div
-            key={card.id}
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: index * 0.02 }}
-          >
-            <PlayingCard
-              card={card}
-              onClick={() => {
-                playSound('cardSelect');
-                onSelectCard(card);
-              }}
-              isSelected={selectedCardIds.includes(card.id)}
-              size={cardSize}
-              animate={false}
-            />
-          </motion.div>
-        ))}
+        {visibleCards.map((card, index) => {
+          const isSelected = selectedCardIds.includes(card.id);
+          return (
+            <motion.div
+              key={card.id}
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: index * 0.02 }}
+            >
+              <PlayingCard
+                card={card}
+                onClick={() => {
+                  if (!isSelected) {
+                    playSound('cardSelect');
+                    onSelectCard(card);
+                  }
+                }}
+                isSelected={isSelected}
+                isDisabled={isSelected}
+                size={cardSize}
+                animate={false}
+              />
+            </motion.div>
+          );
+        })}
       </div>
       
       {onReshuffle && (
