@@ -146,13 +146,8 @@ export function ScorePanel({
             <span className="text-lg font-semibold text-accent">Bonus Round</span>
           </div>
         ) : level !== undefined && (
-          <div className="flex items-center gap-2">
-            <svg className="w-5 h-5 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="3" />
-              <circle cx="12" cy="12" r="7" />
-              <circle cx="12" cy="12" r="11" />
-            </svg>
-            <span className="text-lg font-semibold text-foreground">Lvl {level}</span>
+          <div className="flex items-center justify-center w-8 h-8 rounded-full border-2 border-accent bg-transparent">
+            <span className="text-lg font-bold text-accent">{level}</span>
           </div>
         )}
 
