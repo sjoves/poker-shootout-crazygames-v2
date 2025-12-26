@@ -32,7 +32,7 @@ export default function GameScreen() {
     nextLevel,
     reshuffleUnselected,
   } = useGameState();
-  const { playSound } = useAudio();
+  const { playSound, startMusic, stopMusic } = useAudio();
   const isMobile = useIsMobile();
   const baseSpeed = isMobile ? 0.6 : 1; // Slower speed on mobile
   const [isMuted, setIsMuted] = useState(false);
@@ -44,16 +44,24 @@ export default function GameScreen() {
   const startLevelParam = searchParams.get('startLevel');
   const startLevel = startLevelParam ? parseInt(startLevelParam, 10) : undefined;
 
+  // Start background music and game
   useEffect(() => {
     console.log('Game init effect:', { mode, isTestBonus, startLevel, isPlaying: state.isPlaying, isGameOver: state.isGameOver, isLevelComplete: state.isLevelComplete });
     if (isTestBonus && !state.isPlaying && !state.isGameOver && !state.isLevelComplete) {
       console.log('Starting bonus game');
       startGame('ssc', true); // Start in bonus mode
+      startMusic();
     } else if (mode && !state.isPlaying && !state.isGameOver && !state.isLevelComplete) {
       console.log('Starting game with mode:', mode, 'startLevel:', startLevel);
       startGame(mode as GameMode, false, startLevel);
+      startMusic();
     }
-  }, [mode, isTestBonus, startLevel, state.isPlaying, state.isGameOver, state.isLevelComplete, startGame]);
+    
+    // Stop music when component unmounts
+    return () => {
+      stopMusic();
+    };
+  }, [mode, isTestBonus, startLevel, state.isPlaying, state.isGameOver, state.isLevelComplete, startGame, startMusic, stopMusic]);
 
   // Play sound when hand is submitted
   useEffect(() => {
