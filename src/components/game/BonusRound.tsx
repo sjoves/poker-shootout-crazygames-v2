@@ -47,7 +47,9 @@ export function BonusRound({
   const [introPhase, setIntroPhase] = useState<IntroPhase>('instructions');
 
   // Calculate number of cards based on bonus round number (10, 20, 30, 40, 50, max 52)
-  const cardCount = Math.min(bonusRoundNumber * 10, 52);
+  // Ensure at least 1 for the multiplier (handles bonusRoundNumber being 0)
+  const effectiveBonusRound = Math.max(bonusRoundNumber, 1);
+  const cardCount = Math.min(effectiveBonusRound * 10, 52);
   // Calculate grid columns based on card count
   const gridCols = cardCount <= 10 ? 5 : cardCount <= 20 ? 5 : 7;
 
