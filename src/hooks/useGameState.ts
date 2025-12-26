@@ -8,7 +8,8 @@ import {
   calculateLeftoverPenalty,
   calculateLevelGoal,
   getSSCLevelInfo,
-  generateSpecificHand
+  generateSpecificHand,
+  createBonusFriendlyDeck
 } from '@/lib/pokerEngine';
 
 const INITIAL_STATE: GameState = {
@@ -47,7 +48,6 @@ export function useGameState() {
   const handResultsRef = useRef<HandResult[]>([]);
 
   const startGame = useCallback((mode: GameMode, forceBonus: boolean = false, startLevel: number = 1) => {
-    const deck = shuffleDeck(createDeck());
     const isBlitz = mode === 'blitz_fc' || mode === 'blitz_cb';
     const isSSC = mode === 'ssc';
     
@@ -60,6 +60,10 @@ export function useGameState() {
     
     const levelInfo = isSSC ? getSSCLevelInfo(level) : null;
     const isBonusLevel = forceBonus || (levelInfo?.isBonus || false);
+    const initialBonusCount = isBonusLevel ? 1 : 0;
+    
+    // Use bonus-friendly deck for bonus rounds
+    const deck = isBonusLevel ? createBonusFriendlyDeck(initialBonusCount) : shuffleDeck(createDeck());
 
     setState({
       ...INITIAL_STATE,
@@ -75,7 +79,7 @@ export function useGameState() {
       levelGoal: isSSC ? calculateLevelGoal(level) : 0,
       unlockedPowerUps,
       activePowerUps: [...unlockedPowerUps],
-      bonusRoundCount: isBonusLevel ? 1 : 0,
+      bonusRoundCount: initialBonusCount,
     });
     handResultsRef.current = [];
   }, []);
@@ -275,12 +279,16 @@ export function useGameState() {
   const nextLevel = useCallback(() => {
     setState(prev => {
       const newLevel = prev.sscLevel + 1;
-      const deck = shuffleDeck(createDeck());
       const levelInfo = getSSCLevelInfo(newLevel);
       const newUnlocked = POWER_UPS.filter(p => p.unlockedAtLevel <= newLevel).map(p => p.id);
 
       // Increment bonus round count if entering a bonus level
       const newBonusRoundCount = levelInfo.isBonus ? prev.bonusRoundCount + 1 : prev.bonusRoundCount;
+      
+      // Use bonus-friendly deck for early bonus rounds
+      const deck = levelInfo.isBonus 
+        ? createBonusFriendlyDeck(newBonusRoundCount) 
+        : shuffleDeck(createDeck());
 
       // Reset hand results for new level
       handResultsRef.current = [];

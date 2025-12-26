@@ -376,3 +376,68 @@ export function generateSpecificHand(handType: string, availableCards: Card[]): 
       return null;
   }
 }
+
+// Create a deck that guarantees at least Two Pair can be achieved
+// Used for early bonus rounds to ensure players can get good hands
+export function createBonusFriendlyDeck(bonusRoundNumber: number): Card[] {
+  const deck = createDeck();
+  
+  // For early bonus rounds (1-3), ensure there are multiple pairs available
+  if (bonusRoundNumber <= 3) {
+    // Shuffle first
+    const shuffled = shuffleDeck(deck);
+    
+    // Find cards that form at least 2 pairs and put them at the front
+    const valueCounts = new Map<number, Card[]>();
+    for (const card of shuffled) {
+      const existing = valueCounts.get(card.value) || [];
+      existing.push(card);
+      valueCounts.set(card.value, existing);
+    }
+    
+    // Collect pairs (values with 2+ cards)
+    const pairCards: Card[] = [];
+    const otherCards: Card[] = [];
+    let pairsFound = 0;
+    
+    for (const [, cards] of valueCounts) {
+      if (cards.length >= 2 && pairsFound < 3) {
+        // Take 2 cards for the pair
+        pairCards.push(cards[0], cards[1]);
+        // Put remaining cards of this value in other
+        otherCards.push(...cards.slice(2));
+        pairsFound++;
+      } else {
+        otherCards.push(...cards);
+      }
+    }
+    
+    // Shuffle the other cards and combine
+    const shuffledOthers = shuffleDeck(otherCards);
+    
+    // Place pair cards within the first portion of cards that will be shown
+    // Interleave pair cards with some other cards for natural feel
+    const cardCount = Math.min(bonusRoundNumber * 10, 52);
+    const result: Card[] = [];
+    
+    // Distribute pair cards throughout the visible portion
+    const pairPositions = [0, 2, 4, 6, 8, cardCount - 1].slice(0, pairCards.length);
+    let pairIndex = 0;
+    let otherIndex = 0;
+    
+    for (let i = 0; i < 52; i++) {
+      if (pairPositions.includes(i) && pairIndex < pairCards.length) {
+        result.push(pairCards[pairIndex++]);
+      } else if (otherIndex < shuffledOthers.length) {
+        result.push(shuffledOthers[otherIndex++]);
+      } else if (pairIndex < pairCards.length) {
+        result.push(pairCards[pairIndex++]);
+      }
+    }
+    
+    return result;
+  }
+  
+  // For later bonus rounds, just use a regular shuffled deck
+  return shuffleDeck(deck);
+}
