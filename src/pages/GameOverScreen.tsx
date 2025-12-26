@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { GameState } from '@/types/game';
-import { Star, Spade, Crown, Play, Award, Clapperboard, Home } from 'lucide-react';
+import { Star, Shuffle, Crown, Play, Award, Clapperboard, Home } from 'lucide-react';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/hooks/useAuth';
 import { RewardedAd, useRewardedAd } from '@/components/ads/RewardedAd';
@@ -56,7 +56,7 @@ export default function GameOverScreen() {
         animate={{ scale: 1 }}
         className="text-center"
       >
-        <Spade className="w-20 h-20 text-gold mx-auto mb-4" />
+        <Shuffle className="w-20 h-20 text-gold mx-auto mb-4" />
         <h1 className="text-4xl font-display text-primary mb-2">Game Over</h1>
         
         <div className="flex justify-center gap-1 my-4">
