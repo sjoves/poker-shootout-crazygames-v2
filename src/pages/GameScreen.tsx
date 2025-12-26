@@ -39,6 +39,7 @@ export default function GameScreen() {
   const [showUsedCards, setShowUsedCards] = useState(false);
   const [bonusIntroActive, setBonusIntroActive] = useState(false);
   const [isLoadingMusic, setIsLoadingMusic] = useState(true);
+  const [introPhase, setIntroPhase] = useState<'loading' | 'ready' | 'begin' | 'playing'>('loading');
   const prevHandsPlayed = useRef(state.handsPlayed);
   const gameInitializedRef = useRef(false);
   
@@ -46,25 +47,21 @@ export default function GameScreen() {
   const startLevelParam = searchParams.get('startLevel');
   const startLevel = startLevelParam ? parseInt(startLevelParam, 10) : undefined;
 
-  // Start background music first, then start game
+  // Start background music first, then show intro sequence
   useEffect(() => {
     if (gameInitializedRef.current) return;
     
     const initGame = async () => {
       console.log('Game init effect:', { mode, isTestBonus, startLevel });
       setIsLoadingMusic(true);
+      setIntroPhase('loading');
       
       // Wait for music to load
       await startMusic();
       setIsLoadingMusic(false);
       
-      if (isTestBonus) {
-        console.log('Starting bonus game');
-        startGame('ssc', true);
-      } else if (mode) {
-        console.log('Starting game with mode:', mode, 'startLevel:', startLevel);
-        startGame(mode as GameMode, false, startLevel);
-      }
+      // Start intro sequence
+      setIntroPhase('ready');
       
       gameInitializedRef.current = true;
     };
@@ -75,7 +72,27 @@ export default function GameScreen() {
     return () => {
       stopMusic();
     };
-  }, [mode, isTestBonus, startLevel, startGame, startMusic, stopMusic]);
+  }, [mode, isTestBonus, startLevel, startMusic, stopMusic]);
+
+  // Intro sequence timing
+  useEffect(() => {
+    if (introPhase === 'ready') {
+      const timer = setTimeout(() => setIntroPhase('begin'), 1200);
+      return () => clearTimeout(timer);
+    }
+    if (introPhase === 'begin') {
+      const timer = setTimeout(() => {
+        setIntroPhase('playing');
+        // Start the actual game after intro completes
+        if (isTestBonus) {
+          startGame('ssc', true);
+        } else if (mode) {
+          startGame(mode as GameMode, false, startLevel);
+        }
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [introPhase, isTestBonus, mode, startLevel, startGame]);
 
   // Play sound when hand is submitted
   useEffect(() => {
@@ -182,7 +199,7 @@ export default function GameScreen() {
   const selectedIds = state.selectedCards.map(c => c.id);
 
   // Show loading screen while music is loading
-  if (isLoadingMusic) {
+  if (isLoadingMusic || introPhase === 'loading') {
     return (
       <div className="h-screen max-h-screen flex flex-col items-center justify-center overflow-hidden modern-bg">
         <motion.div
@@ -197,6 +214,53 @@ export default function GameScreen() {
           />
           <p className="text-lg font-display text-foreground">Loading...</p>
         </motion.div>
+      </div>
+    );
+  }
+
+  // Show intro sequence (Ready? / Begin!)
+  if (introPhase === 'ready' || introPhase === 'begin') {
+    return (
+      <div className="h-screen max-h-screen flex flex-col items-center justify-center overflow-hidden modern-bg">
+        <AnimatePresence mode="wait">
+          {introPhase === 'ready' && (
+            <motion.div
+              key="ready"
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.5 }}
+              transition={{ duration: 0.3, ease: 'easeOut' }}
+              className="text-center"
+            >
+              <motion.h1
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 0.6, repeat: Infinity }}
+                className="text-6xl font-display text-accent drop-shadow-lg"
+              >
+                Ready?
+              </motion.h1>
+            </motion.div>
+          )}
+
+          {introPhase === 'begin' && (
+            <motion.div
+              key="begin"
+              initial={{ opacity: 0, scale: 0.3, rotate: -10 }}
+              animate={{ opacity: 1, scale: 1, rotate: 0 }}
+              exit={{ opacity: 0, scale: 2 }}
+              transition={{ duration: 0.3, type: 'spring', stiffness: 300 }}
+              className="text-center"
+            >
+              <motion.h1
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 0.4 }}
+                className="text-7xl font-display text-primary drop-shadow-lg"
+              >
+                BEGIN!
+              </motion.h1>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     );
   }
