@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { GameState } from '@/types/game';
-import { Star, Shuffle, Crown, Play, Award, Clapperboard, Home } from 'lucide-react';
+import { Star, Shuffle, Crown, Play, Award, Clapperboard, Home, RotateCcw } from 'lucide-react';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/hooks/useAuth';
 import { RewardedAd, useRewardedAd } from '@/components/ads/RewardedAd';
@@ -93,6 +93,7 @@ export default function GameOverScreen() {
   };
 
   const isClassicMode = gameState.mode === 'classic_fc' || gameState.mode === 'classic_cb';
+  const isSSC = gameState.mode === 'ssc';
   const stars = getStarRating(gameState.score);
   const messages = [
     "Keep practicing, partner!",
@@ -109,6 +110,16 @@ export default function GameOverScreen() {
       rewardedAd.showAd('play_again', () => {
         navigate(`/play/${gameState.mode}`);
       });
+    }
+  };
+
+  const handleReplayLevel = () => {
+    if (isPremium) {
+      navigate(`/play/ssc?startLevel=${gameState.sscLevel}`);
+    } else {
+      rewardedAd.showAd('replay_level', () => {
+        navigate(`/play/ssc?startLevel=${gameState.sscLevel}`);
+      }, String(gameState.sscLevel));
     }
   };
 
@@ -167,16 +178,33 @@ export default function GameOverScreen() {
             View Leaderboard
           </Button>
           
+          {/* SSC Mode: Replay This Level option */}
+          {isSSC && gameState.sscLevel > 1 && (
+            <Button onClick={handleReplayLevel} size="lg" className="gap-2 bg-accent hover:bg-accent/90">
+              {isPremium ? (
+                <>
+                  <RotateCcw className="w-4 h-4" />
+                  Replay Level {gameState.sscLevel}
+                </>
+              ) : (
+                <>
+                  <Clapperboard className="w-5 h-5" />
+                  Watch Ad to Retry Level {gameState.sscLevel}
+                </>
+              )}
+            </Button>
+          )}
+          
           <Button onClick={handlePlayAgain} size="lg" className="gap-2">
             {isPremium ? (
               <>
                 <Play className="w-4 h-4" />
-                Play Again
+                {isSSC ? 'Start From Level 1' : 'Play Again'}
               </>
             ) : (
               <>
                 <Clapperboard className="w-5 h-5" />
-                Watch Ad to Play Again
+                {isSSC ? 'Watch Ad to Start Over' : 'Watch Ad to Play Again'}
               </>
             )}
           </Button>

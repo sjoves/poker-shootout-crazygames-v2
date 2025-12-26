@@ -45,16 +45,19 @@ export function useGameState() {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const handResultsRef = useRef<HandResult[]>([]);
 
-  const startGame = useCallback((mode: GameMode, forceBonus: boolean = false) => {
+  const startGame = useCallback((mode: GameMode, forceBonus: boolean = false, startLevel: number = 1) => {
     const deck = shuffleDeck(createDeck());
     const isBlitz = mode === 'blitz_fc' || mode === 'blitz_cb';
     const isSSC = mode === 'ssc';
     
+    // Use startLevel for SSC mode (for replay functionality)
+    const level = isSSC ? startLevel : 1;
+    
     const unlockedPowerUps = isSSC 
-      ? POWER_UPS.filter(p => p.unlockedAtLevel <= 1).map(p => p.id)
+      ? POWER_UPS.filter(p => p.unlockedAtLevel <= level).map(p => p.id)
       : [];
     
-    const levelInfo = isSSC ? getSSCLevelInfo(1) : null;
+    const levelInfo = isSSC ? getSSCLevelInfo(level) : null;
 
     setState({
       ...INITIAL_STATE,
@@ -62,12 +65,12 @@ export function useGameState() {
       deck,
       isPlaying: true,
       timeRemaining: isBlitz ? 60 : (isSSC ? 60 : 9999),
-      sscLevel: 1,
+      sscLevel: level,
       sscPhase: levelInfo?.phase || 'static',
       sscRound: levelInfo?.round || 1,
       pointMultiplier: forceBonus ? 2 : (levelInfo?.pointMultiplier || 1),
       isBonusLevel: forceBonus || (levelInfo?.isBonus || false),
-      levelGoal: isSSC ? calculateLevelGoal(1) : 0,
+      levelGoal: isSSC ? calculateLevelGoal(level) : 0,
       unlockedPowerUps,
       activePowerUps: [...unlockedPowerUps],
     });

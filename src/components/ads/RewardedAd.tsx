@@ -14,7 +14,7 @@ interface RewardedAdProps {
   isOpen: boolean;
   onClose: () => void;
   onAdComplete: () => void;
-  adType: 'mode_unlock' | 'revive' | 'play_again';
+  adType: 'mode_unlock' | 'revive' | 'play_again' | 'replay_level';
   modeName?: string;
 }
 
@@ -30,6 +30,8 @@ export function RewardedAd({ isOpen, onClose, onAdComplete, adType, modeName }: 
         return 'Continue Playing';
       case 'play_again':
         return 'Play Again';
+      case 'replay_level':
+        return `Retry Level ${modeName || ''}`;
       default:
         return 'Watch Ad';
     }
@@ -43,6 +45,8 @@ export function RewardedAd({ isOpen, onClose, onAdComplete, adType, modeName }: 
         return 'Watch a short video to get more time and continue your game';
       case 'play_again':
         return 'Watch a short video to start a new game';
+      case 'replay_level':
+        return `Watch a short video to retry level ${modeName || 'this level'}`;
       default:
         return 'Watch a short video to continue';
     }
@@ -192,13 +196,13 @@ export function RewardedAd({ isOpen, onClose, onAdComplete, adType, modeName }: 
 export function useRewardedAd() {
   const [isOpen, setIsOpen] = useState(false);
   const [adConfig, setAdConfig] = useState<{
-    type: 'mode_unlock' | 'revive' | 'play_again';
+    type: 'mode_unlock' | 'revive' | 'play_again' | 'replay_level';
     modeName?: string;
     onComplete: () => void;
   } | null>(null);
 
   const showAd = useCallback((
-    type: 'mode_unlock' | 'revive' | 'play_again',
+    type: 'mode_unlock' | 'revive' | 'play_again' | 'replay_level',
     onComplete: () => void,
     modeName?: string
   ) => {

@@ -39,17 +39,19 @@ export default function GameScreen() {
   const prevHandsPlayed = useRef(state.handsPlayed);
   
   const isTestBonus = searchParams.get('testBonus') === 'true';
+  const startLevelParam = searchParams.get('startLevel');
+  const startLevel = startLevelParam ? parseInt(startLevelParam, 10) : undefined;
 
   useEffect(() => {
-    console.log('Game init effect:', { mode, isTestBonus, isPlaying: state.isPlaying, isGameOver: state.isGameOver, isLevelComplete: state.isLevelComplete });
+    console.log('Game init effect:', { mode, isTestBonus, startLevel, isPlaying: state.isPlaying, isGameOver: state.isGameOver, isLevelComplete: state.isLevelComplete });
     if (isTestBonus && !state.isPlaying && !state.isGameOver && !state.isLevelComplete) {
       console.log('Starting bonus game');
       startGame('ssc', true); // Start in bonus mode
     } else if (mode && !state.isPlaying && !state.isGameOver && !state.isLevelComplete) {
-      console.log('Starting game with mode:', mode);
-      startGame(mode as GameMode);
+      console.log('Starting game with mode:', mode, 'startLevel:', startLevel);
+      startGame(mode as GameMode, false, startLevel);
     }
-  }, [mode, isTestBonus, state.isPlaying, state.isGameOver, state.isLevelComplete, startGame]);
+  }, [mode, isTestBonus, startLevel, state.isPlaying, state.isGameOver, state.isLevelComplete, startGame]);
 
   // Play sound when hand is submitted
   useEffect(() => {
