@@ -8,7 +8,7 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/hooks/useAuth';
 import { RewardedAd, useRewardedAd } from '@/components/ads/RewardedAd';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { useGuestScores } from '@/hooks/useGuestScores';
 
 export default function GameOverScreen() {
   const location = useLocation();
@@ -17,14 +17,22 @@ export default function GameOverScreen() {
   const { user } = useAuth();
   const { isPremium, openCheckout } = useSubscription();
   const rewardedAd = useRewardedAd();
+  const { saveGuestScore } = useGuestScores();
   const scoreSavedRef = useRef(false);
 
   // Save score to leaderboard when component mounts
   useEffect(() => {
     const saveScore = async () => {
-      if (!user || !gameState || scoreSavedRef.current) return;
+      if (!gameState || scoreSavedRef.current) return;
       
       scoreSavedRef.current = true;
+      
+      // If user is not logged in, save to localStorage
+      if (!user) {
+        saveGuestScore(gameState);
+        console.log('Score saved locally (guest mode)');
+        return;
+      }
       
       try {
         // Get user's profile id
@@ -69,7 +77,7 @@ export default function GameOverScreen() {
     };
     
     saveScore();
-  }, [user, gameState]);
+  }, [user, gameState, saveGuestScore]);
 
   if (!gameState) {
     navigate('/');

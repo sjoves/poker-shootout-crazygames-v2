@@ -1,12 +1,62 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+
+// Guest scores sync function (inline to avoid circular deps)
+const syncGuestScoresOnLogin = async (userId: string) => {
+  const GUEST_SCORES_KEY = 'poker_shootout_guest_scores';
+  
+  try {
+    const stored = localStorage.getItem(GUEST_SCORES_KEY);
+    if (!stored) return;
+    
+    const guestScores = JSON.parse(stored);
+    if (!guestScores || guestScores.length === 0) return;
+    
+    // Get user's profile id
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('user_id', userId)
+      .maybeSingle();
+    
+    if (profileError || !profile) {
+      console.error('Error fetching profile for sync:', profileError);
+      return;
+    }
+    
+    // Insert all guest scores
+    const scoresToInsert = guestScores.map((score: any) => ({
+      user_id: userId,
+      profile_id: profile.id,
+      game_mode: score.game_mode,
+      score: score.score,
+      hands_played: score.hands_played,
+      ssc_level: score.ssc_level,
+      time_seconds: score.time_seconds,
+      best_hand: score.best_hand,
+      created_at: score.created_at,
+    }));
+    
+    const { error: insertError } = await supabase
+      .from('leaderboard_entries')
+      .insert(scoresToInsert);
+    
+    if (!insertError) {
+      localStorage.removeItem(GUEST_SCORES_KEY);
+      console.log(`Synced ${guestScores.length} guest scores to database`);
+    }
+  } catch (error) {
+    console.error('Error syncing guest scores:', error);
+  }
+};
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<{ username: string | null; avatar_url: string | null } | null>(null);
+  const syncedRef = useRef(false);
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -16,13 +66,19 @@ export function useAuth() {
         setUser(session?.user ?? null);
         setLoading(false);
         
-        // Fetch profile after auth state change
+        // Fetch profile and sync guest scores after auth state change
         if (session?.user) {
           setTimeout(() => {
             fetchProfile(session.user.id);
+            // Sync guest scores on login (only once per session)
+            if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && !syncedRef.current) {
+              syncedRef.current = true;
+              syncGuestScoresOnLogin(session.user.id);
+            }
           }, 0);
         } else {
           setProfile(null);
+          syncedRef.current = false;
         }
       }
     );
