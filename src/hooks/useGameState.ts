@@ -182,12 +182,15 @@ export function useGameState() {
         };
       }
 
-      // For SSC Static phase: if all 52 cards used and goal not reached, game over
-      if (prev.mode === 'ssc' && prev.sscPhase === 'static' && (prev.usedCards.length + 5) >= 52 && newScore < prev.levelGoal) {
+      // For SSC Static phase: if deck runs out and goal not reached, game over
+      // After this hand, deck will have no cards and we need at least 5 for next hand
+      if (prev.mode === 'ssc' && prev.sscPhase === 'static' && prev.deck.length < 5 && newScore < prev.levelGoal) {
         return {
           ...prev,
           score: newScore,
           rawScore: newRawScore,
+          levelScore: newLevelScore,
+          cumulativeScore: newCumulativeScore,
           handsPlayed: newHandsPlayed,
           selectedCards: [],
           currentHand: modifiedResult,
