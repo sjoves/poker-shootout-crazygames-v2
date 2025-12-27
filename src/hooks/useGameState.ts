@@ -100,11 +100,11 @@ export function useGameState() {
       const newSelectedCards = [...prev.selectedCards, card];
       const newUsedCards = [...prev.usedCards, card];
       
-      // For Blitz and SSC (non-static phase), cards should cycle back into the deck
-      // For Classic and SSC static, cards are removed from deck
+      // For Blitz and SSC, cards recycle back into the deck so players never run out
+      // Classic modes remove cards from the deck
       const isBlitz = prev.mode === 'blitz_fc' || prev.mode === 'blitz_cb';
-      const isSSCNonStatic = prev.mode === 'ssc' && prev.sscPhase !== 'static';
-      const shouldRecycle = isBlitz || isSSCNonStatic;
+      const isSSC = prev.mode === 'ssc';
+      const shouldRecycle = isBlitz || isSSC;
       
       // Remove from deck for now (recycling happens after hand submission)
       const newDeck = prev.deck.filter(c => c.id !== card.id);
@@ -154,10 +154,9 @@ export function useGameState() {
       const newCumulativeScore = prev.cumulativeScore + multipliedPoints;
 
       // Determine if cards should be recycled back into deck
-      const isSSCNonStatic = isSSC && prev.sscPhase !== 'static';
-      const shouldRecycle = isBlitz || isSSCNonStatic;
+      const shouldRecycle = isBlitz || isSSC;
       
-      // Recycle cards back into deck for Blitz and SSC non-static modes
+      // Recycle cards back into deck for Blitz and SSC modes
       const recycledDeck = shouldRecycle 
         ? [...prev.deck, ...prev.selectedCards] 
         : prev.deck;
@@ -179,23 +178,6 @@ export function useGameState() {
           currentHand: modifiedResult,
           isLevelComplete: true,
           deck: recycledDeck,
-        };
-      }
-
-      // For SSC Static phase: if deck runs out and goal not reached, game over
-      // After this hand, deck will have no cards and we need at least 5 for next hand
-      if (prev.mode === 'ssc' && prev.sscPhase === 'static' && prev.deck.length < 5 && newScore < prev.levelGoal) {
-        return {
-          ...prev,
-          score: newScore,
-          rawScore: newRawScore,
-          levelScore: newLevelScore,
-          cumulativeScore: newCumulativeScore,
-          handsPlayed: newHandsPlayed,
-          selectedCards: [],
-          currentHand: modifiedResult,
-          isGameOver: true,
-          isPlaying: false,
         };
       }
 
