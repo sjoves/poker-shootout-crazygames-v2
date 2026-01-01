@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -17,10 +17,12 @@ export default function AuthScreen() {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  if (user) {
-    navigate('/');
-    return null;
-  }
+  // Redirect to home if already logged in - must be in useEffect to avoid render-phase state updates
+  useEffect(() => {
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
