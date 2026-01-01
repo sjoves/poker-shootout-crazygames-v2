@@ -238,7 +238,7 @@ export default function SplashScreen() {
         <Button variant="ghost" size="sm" onClick={() => setShowAchievements(true)}>
           <Award className="w-4 h-4 mr-1" /> Achievements
         </Button>
-        <Button variant="ghost" size="sm" onClick={() => navigate('/auth')}>{user ? '👤 Account' : '👤 Sign In'}</Button>
+        <Button variant="ghost" size="sm" onClick={() => navigate(user ? '/account' : '/auth')}>{user ? '👤 Account' : '👤 Sign In'}</Button>
         <Button variant="ghost" size="sm" onClick={() => setShowSettings(true)}>⚙️ Settings</Button>
       </motion.div>
 

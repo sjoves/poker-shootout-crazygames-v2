@@ -9,6 +9,7 @@ import SplashScreen from "./pages/SplashScreen";
 import GameScreen from "./pages/GameScreen";
 import GameOverScreen from "./pages/GameOverScreen";
 import AuthScreen from "./pages/AuthScreen";
+import AccountScreen from "./pages/AccountScreen";
 import LeaderboardScreen from "./pages/LeaderboardScreen";
 import NotFound from "./pages/NotFound";
 
@@ -28,6 +29,7 @@ const App = () => (
               <Route path="/play/:mode" element={<GameScreen />} />
               <Route path="/game-over" element={<GameOverScreen />} />
               <Route path="/auth" element={<AuthScreen />} />
+              <Route path="/account" element={<AccountScreen />} />
               <Route path="/leaderboard" element={<LeaderboardScreen />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
