@@ -11,6 +11,7 @@ interface FallingCardsProps {
   speed?: number;
   isPaused?: boolean;
   isRecycling?: boolean;
+  reshuffleTrigger?: number;
 }
 
 type LocalFallingCard = FallingCard & { instanceKey: string };
@@ -22,6 +23,7 @@ export function FallingCards({
   speed = 1,
   isPaused = false,
   isRecycling = false,
+  reshuffleTrigger = 0,
 }: FallingCardsProps) {
   const [fallingCards, setFallingCards] = useState<LocalFallingCard[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -33,6 +35,14 @@ export function FallingCards({
 
   // Track which cards have already been spawned (by card id) so we don't re-spawn them
   const spawnedCardIdsRef = useRef<Set<string>>(new Set());
+
+  // Reset and re-deal when reshuffleTrigger changes or deck resets
+  useEffect(() => {
+    // Clear all spawned cards and reset for a fresh re-deal
+    spawnedCardIdsRef.current.clear();
+    deckIndexRef.current = 0;
+    setFallingCards([]); // Clear screen to trigger re-deal animation
+  }, [reshuffleTrigger]);
 
   // Reset spawned tracking when deck changes significantly (new game)
   useEffect(() => {

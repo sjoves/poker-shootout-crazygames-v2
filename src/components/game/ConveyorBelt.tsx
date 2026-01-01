@@ -17,6 +17,7 @@ interface ConveyorBeltProps {
   isPaused?: boolean;
   rows?: number;
   isRecycling?: boolean;
+  reshuffleTrigger?: number;
 }
 
 export function ConveyorBelt({
@@ -27,6 +28,7 @@ export function ConveyorBelt({
   isPaused = false,
   rows = 4,
   isRecycling = false,
+  reshuffleTrigger = 0,
 }: ConveyorBeltProps) {
   const [conveyorCards, setConveyorCards] = useState<ConveyorCard[]>([]);
   const [pendingReturns, setPendingReturns] = useState<PendingReturn[]>([]);
@@ -35,6 +37,15 @@ export function ConveyorBelt({
   const initializedRef = useRef(false);
   const returnDelayMs = 3000; // Cards return after 3 seconds
   const { playSound } = useAudio();
+
+  // Reset and re-deal when reshuffleTrigger changes
+  useEffect(() => {
+    if (reshuffleTrigger > 0) {
+      initializedRef.current = false;
+      setConveyorCards([]);
+      setPendingReturns([]);
+    }
+  }, [reshuffleTrigger]);
 
   // Initialize cards on tracks
   useEffect(() => {
@@ -73,7 +84,7 @@ export function ConveyorBelt({
     }
     
     setConveyorCards(cards);
-  }, [deck, rows, speed]);
+  }, [deck, rows, speed, reshuffleTrigger]);
 
   // Track when cards are selected and schedule their return
   const prevSelectedRef = useRef<string[]>([]);

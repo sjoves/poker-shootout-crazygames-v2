@@ -78,6 +78,8 @@ export interface GameState {
   // SSC cumulative scoring
   levelScore: number;
   cumulativeScore: number;
+  // Reshuffle trigger for visual re-deal in dynamic modes
+  reshuffleTrigger: number;
 }
 
 export interface PowerUp {
@@ -129,6 +131,7 @@ export const POKER_HANDS: PokerHand[] = [
 ];
 
 export const POWER_UPS: PowerUp[] = [
+  { id: 'reshuffle', name: 'Reshuffle', emoji: '🔀', description: 'Shuffle and re-deal all cards on screen', handType: '', tier: 1, isReusable: true },
   { id: 'two_pair', name: 'Two Pair', emoji: '2️⃣', description: 'Instantly form a Two Pair hand', handType: 'Two Pair', tier: 1 },
   { id: 'three_kind', name: 'Three of a Kind', emoji: '3️⃣', description: 'Instantly form Three of a Kind', handType: 'Three of a Kind', tier: 1 },
   { id: 'add_time', name: 'Add Time', emoji: '⏰', description: 'Add 15 seconds to the clock', handType: '', tier: 1, isReusable: true },

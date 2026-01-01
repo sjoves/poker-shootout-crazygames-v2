@@ -43,6 +43,7 @@ const INITIAL_STATE: GameState = {
   bonusTimePoints: 0,
   levelScore: 0,
   cumulativeScore: 0,
+  reshuffleTrigger: 0,
 };
 
 // Get available power-ups that haven't been earned yet
@@ -315,6 +316,16 @@ export function useGameState() {
 
       const powerUp = POWER_UPS.find(p => p.id === powerUpId);
       if (!powerUp) return prev;
+
+      // Handle reshuffle power-up
+      if (powerUp.id === 'reshuffle') {
+        const shuffledDeck = shuffleDeck([...prev.deck]);
+        return {
+          ...prev,
+          deck: shuffledDeck,
+          reshuffleTrigger: prev.reshuffleTrigger + 1,
+        };
+      }
 
       if (powerUp.id === 'add_time') {
         return {

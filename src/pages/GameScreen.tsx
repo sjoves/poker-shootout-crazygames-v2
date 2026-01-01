@@ -14,8 +14,6 @@ import { PowerUpSelection } from '@/components/game/PowerUpSelection';
 import { BonusRound } from '@/components/game/BonusRound';
 import { GameMode } from '@/types/game';
 import { TrophyIcon, StarIcon, BoltIcon } from '@heroicons/react/24/outline';
-import { Shuffle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 
 export default function GameScreen() {
@@ -35,7 +33,6 @@ export default function GameScreen() {
     setPaused,
     resetGame, 
     nextLevel,
-    reshuffleUnselected,
   } = useGameState();
   const { playSound, startMusic, stopMusic, isMusicLoading } = useAudio();
   const isMobile = useIsMobile();
@@ -329,6 +326,7 @@ export default function GameScreen() {
             speed={baseSpeed * (isBlitz ? 1.2 : 1)}
             isPaused={state.isPaused || state.isLevelComplete}
             isRecycling={isBlitz || (isSSC && state.sscPhase !== 'static')}
+            reshuffleTrigger={state.reshuffleTrigger}
           />
         )}
         {isConveyor && (
@@ -339,6 +337,7 @@ export default function GameScreen() {
             speed={baseSpeed * (isBlitz ? 1.5 : 1)}
             isPaused={state.isPaused || state.isLevelComplete}
             isRecycling={isBlitz || (isSSC && state.sscPhase !== 'static')}
+            reshuffleTrigger={state.reshuffleTrigger}
           />
         )}
         {isStatic && (
@@ -386,18 +385,9 @@ export default function GameScreen() {
           )}
         </AnimatePresence>
 
-        {/* Reshuffle button and Hand display overlay - positioned at bottom */}
+        {/* Hand display overlay - positioned at bottom */}
         {!isBonusRound && (
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-40 flex flex-col items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={reshuffleUnselected}
-              className="gap-2 bg-card/80 backdrop-blur-sm border-border hover:bg-card"
-            >
-              <Shuffle className="w-4 h-4" />
-              Reshuffle
-            </Button>
             <HandDisplay cards={state.selectedCards} currentHand={state.currentHand} />
           </div>
         )}
