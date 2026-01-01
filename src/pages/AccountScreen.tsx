@@ -12,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 
 export default function AccountScreen() {
   const navigate = useNavigate();
-  const { user, profile, signOut, updateUsername } = useAuth();
+  const { user, profile, loading, signOut, updateUsername } = useAuth();
   const { stats, streak, achievements, userAchievements } = useRetention();
   const { toast } = useToast();
   
@@ -20,12 +20,21 @@ export default function AccountScreen() {
   const [newUsername, setNewUsername] = useState(profile?.username || '');
   const [saving, setSaving] = useState(false);
 
-  // Redirect if not logged in
+  // Redirect if not logged in (only after loading is complete)
   useEffect(() => {
-    if (!user) {
+    if (!loading && !user) {
       navigate('/auth');
     }
-  }, [user, navigate]);
+  }, [user, loading, navigate]);
+
+  // Show loading state while auth is being checked
+  if (loading) {
+    return (
+      <div className="min-h-screen modern-bg flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   if (!user) {
     return null;
