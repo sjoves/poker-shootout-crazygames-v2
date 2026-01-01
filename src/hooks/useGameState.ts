@@ -31,10 +31,11 @@ const INITIAL_STATE: GameState = {
   sscLevel: 1,
   sscPhase: 'static',
   sscRound: 1,
-  
   levelGoal: 1000,
-  unlockedPowerUps: [],
+  earnedPowerUps: [],
   activePowerUps: [],
+  powerUpChoices: [],
+  showPowerUpSelection: false,
   rawScore: 0,
   timeBonus: 0,
   leftoverPenalty: 0,
@@ -43,6 +44,35 @@ const INITIAL_STATE: GameState = {
   levelScore: 0,
   cumulativeScore: 0,
 };
+
+// Get available power-ups that haven't been earned yet
+function getAvailablePowerUps(earnedPowerUps: string[], bonusRoundCount: number): string[] {
+  // Filter to power-ups not yet earned
+  const unearnedPowerUps = POWER_UPS.filter(p => !earnedPowerUps.includes(p.id));
+  
+  // Determine max tier based on bonus round count
+  // Rounds 1-2: tier 1 only, Rounds 3-4: tier 1-2, Rounds 5+: all tiers
+  let maxTier = 1;
+  if (bonusRoundCount >= 3) maxTier = 2;
+  if (bonusRoundCount >= 5) maxTier = 3;
+  
+  // Filter by tier
+  const eligiblePowerUps = unearnedPowerUps.filter(p => p.tier <= maxTier);
+  
+  return eligiblePowerUps.map(p => p.id);
+}
+
+// Generate 3 random power-up choices from available pool
+function generatePowerUpChoices(earnedPowerUps: string[], bonusRoundCount: number): string[] {
+  const available = getAvailablePowerUps(earnedPowerUps, bonusRoundCount);
+  
+  if (available.length === 0) return [];
+  if (available.length <= 3) return available;
+  
+  // Shuffle and take 3
+  const shuffled = [...available].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, 3);
+}
 
 export function useGameState() {
   const [state, setState] = useState<GameState>(INITIAL_STATE);
@@ -55,10 +85,6 @@ export function useGameState() {
     
     // Use startLevel for SSC mode (for replay functionality)
     const level = isSSC ? startLevel : 1;
-    
-    const unlockedPowerUps = isSSC 
-      ? POWER_UPS.filter(p => p.unlockedAtLevel <= level).map(p => p.id)
-      : [];
     
     const levelInfo = isSSC ? getSSCLevelInfo(level) : null;
     const isBonusLevel = forceBonus || (levelInfo?.isBonus || false);
@@ -76,11 +102,12 @@ export function useGameState() {
       sscLevel: level,
       sscPhase: levelInfo?.phase || 'static',
       sscRound: levelInfo?.round || 1,
-      
       isBonusLevel,
       levelGoal: isSSC ? calculateLevelGoal(level) : 0,
-      unlockedPowerUps,
-      activePowerUps: [...unlockedPowerUps],
+      earnedPowerUps: [],
+      activePowerUps: [],
+      powerUpChoices: [],
+      showPowerUpSelection: false,
       bonusRoundCount: initialBonusCount,
     });
     handResultsRef.current = [];
@@ -228,6 +255,10 @@ export function useGameState() {
       const newLevelScore = prev.levelScore + totalPoints;
       const newCumulativeScore = prev.cumulativeScore + totalPoints;
 
+      // Generate power-up choices for the player
+      const newBonusRoundCount = prev.bonusRoundCount;
+      const choices = generatePowerUpChoices(prev.earnedPowerUps, newBonusRoundCount);
+
       // Bonus round completes after one hand submission
       return {
         ...prev,
@@ -239,7 +270,9 @@ export function useGameState() {
         selectedCards: [],
         currentHand: result,
         isLevelComplete: true,
-        bonusTimePoints: timeBonusPoints, // Store for display
+        bonusTimePoints: timeBonusPoints,
+        powerUpChoices: choices,
+        showPowerUpSelection: choices.length > 0,
       };
     });
   }, []);
@@ -250,6 +283,32 @@ export function useGameState() {
       isLevelComplete: true,
     }));
   }, []);
+
+  const selectPowerUp = useCallback((powerUpId: string) => {
+    setState(prev => {
+      if (!prev.powerUpChoices.includes(powerUpId)) return prev;
+      
+      const newEarnedPowerUps = [...prev.earnedPowerUps, powerUpId];
+      const newActivePowerUps = [...prev.activePowerUps, powerUpId];
+      
+      return {
+        ...prev,
+        earnedPowerUps: newEarnedPowerUps,
+        activePowerUps: newActivePowerUps,
+        powerUpChoices: [],
+        showPowerUpSelection: false,
+      };
+    });
+  }, []);
+
+  const dismissPowerUpSelection = useCallback(() => {
+    setState(prev => ({
+      ...prev,
+      powerUpChoices: [],
+      showPowerUpSelection: false,
+    }));
+  }, []);
+
   const usePowerUp = useCallback((powerUpId: string) => {
     setState(prev => {
       if (!prev.activePowerUps.includes(powerUpId)) return prev;
@@ -287,7 +346,6 @@ export function useGameState() {
     setState(prev => {
       const newLevel = prev.sscLevel + 1;
       const levelInfo = getSSCLevelInfo(newLevel);
-      const newUnlocked = POWER_UPS.filter(p => p.unlockedAtLevel <= newLevel).map(p => p.id);
 
       // Increment bonus round count if entering a bonus level
       const newBonusRoundCount = levelInfo.isBonus ? prev.bonusRoundCount + 1 : prev.bonusRoundCount;
@@ -300,7 +358,7 @@ export function useGameState() {
       // Reset hand results for new level
       handResultsRef.current = [];
 
-      // Preserve cumulative score, reset level score
+      // Preserve earned power-ups across levels, refresh active power-ups
       return {
         ...prev,
         sscLevel: newLevel,
@@ -326,8 +384,10 @@ export function useGameState() {
         usedCards: [],
         currentHand: null,
         isLevelComplete: false,
-        unlockedPowerUps: newUnlocked,
-        activePowerUps: [...newUnlocked],
+        powerUpChoices: [],
+        showPowerUpSelection: false,
+        // Earned power-ups persist, refresh active for the level
+        activePowerUps: [...prev.earnedPowerUps],
       };
     });
   }, []);
@@ -453,6 +513,8 @@ export function useGameState() {
     submitHand,
     submitBonusHand,
     skipBonusRound,
+    selectPowerUp,
+    dismissPowerUpSelection,
     usePowerUp,
     nextLevel,
     reshuffleUnselected,

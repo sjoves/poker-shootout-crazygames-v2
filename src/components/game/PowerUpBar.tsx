@@ -5,26 +5,30 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface PowerUpBarProps {
-  unlockedPowerUps: string[];
+  earnedPowerUps: string[];
   activePowerUps: string[];
-  currentLevel: number;
   onUsePowerUp: (id: string) => void;
 }
 
 export function PowerUpBar({ 
-  unlockedPowerUps, 
+  earnedPowerUps, 
   activePowerUps, 
-  currentLevel, 
   onUsePowerUp 
 }: PowerUpBarProps) {
   const isMobile = useIsMobile();
   
+  // Only show power-ups the player has earned
+  const earnedPowerUpData = POWER_UPS.filter(p => earnedPowerUps.includes(p.id));
+  
+  if (earnedPowerUpData.length === 0) {
+    return null;
+  }
+  
   return (
     <div className="flex flex-col gap-1 sm:gap-2">
-      {POWER_UPS.map(powerUp => {
-        const isUnlocked = powerUp.unlockedAtLevel <= currentLevel;
+      {earnedPowerUpData.map(powerUp => {
         const isActive = activePowerUps.includes(powerUp.id);
-        const wasUsed = unlockedPowerUps.includes(powerUp.id) && !isActive;
+        const wasUsed = !isActive;
         
         return (
           <Tooltip key={powerUp.id}>
@@ -38,8 +42,7 @@ export function PowerUpBar({
                   'w-9 h-9 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-base sm:text-xl',
                   'border-2 transition-all',
                   isActive && 'bg-primary/20 border-primary cursor-pointer hover:bg-primary/30 animate-pulse-glow',
-                  !isUnlocked && 'bg-muted/50 border-muted-foreground/30 opacity-40 cursor-not-allowed',
-                  wasUsed && 'bg-muted/50 border-muted-foreground/50 opacity-60 cursor-not-allowed',
+                  wasUsed && !powerUp.isReusable && 'bg-muted/50 border-muted-foreground/50 opacity-60 cursor-not-allowed',
                 )}
               >
                 {powerUp.emoji}
@@ -47,14 +50,12 @@ export function PowerUpBar({
             </TooltipTrigger>
             <TooltipContent side="left">
               <p className="font-bold">{powerUp.name}</p>
-              {!isUnlocked && (
-                <p className="text-xs text-muted-foreground">Unlocks at Level {powerUp.unlockedAtLevel}</p>
-              )}
+              <p className="text-xs text-muted-foreground">{powerUp.description}</p>
               {wasUsed && !powerUp.isReusable && (
-                <p className="text-xs text-muted-foreground">Already used this level</p>
+                <p className="text-xs text-muted-foreground mt-1">Already used this level</p>
               )}
               {isActive && (
-                <p className="text-xs text-primary">Click to use!</p>
+                <p className="text-xs text-primary mt-1">Click to use!</p>
               )}
             </TooltipContent>
           </Tooltip>

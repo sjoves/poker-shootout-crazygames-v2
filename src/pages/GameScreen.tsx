@@ -10,6 +10,7 @@ import { FallingCards } from '@/components/game/FallingCards';
 import { ConveyorBelt } from '@/components/game/ConveyorBelt';
 import { StaticGrid } from '@/components/game/StaticGrid';
 import { PowerUpBar } from '@/components/game/PowerUpBar';
+import { PowerUpSelection } from '@/components/game/PowerUpSelection';
 import { BonusRound } from '@/components/game/BonusRound';
 import { GameMode } from '@/types/game';
 import { TrophyIcon, StarIcon, BoltIcon } from '@heroicons/react/24/outline';
@@ -27,6 +28,8 @@ export default function GameScreen() {
     selectCard, 
     submitBonusHand, 
     skipBonusRound, 
+    selectPowerUp,
+    dismissPowerUpSelection,
     usePowerUp, 
     pauseGame,
     setPaused,
@@ -363,16 +366,26 @@ export default function GameScreen() {
           />
         )}
 
-        {isSSC && !state.isLevelComplete && !isBonusRound && (
+        {isSSC && !state.isLevelComplete && !isBonusRound && state.earnedPowerUps.length > 0 && (
           <div className="absolute right-4 top-1/2 -translate-y-1/2">
             <PowerUpBar
-              unlockedPowerUps={state.unlockedPowerUps}
+              earnedPowerUps={state.earnedPowerUps}
               activePowerUps={state.activePowerUps}
-              currentLevel={state.sscLevel}
               onUsePowerUp={usePowerUp}
             />
           </div>
         )}
+
+        {/* Power-Up Selection Modal */}
+        <AnimatePresence>
+          {state.showPowerUpSelection && (
+            <PowerUpSelection
+              choices={state.powerUpChoices}
+              onSelect={selectPowerUp}
+              onDismiss={dismissPowerUpSelection}
+            />
+          )}
+        </AnimatePresence>
 
         {/* Reshuffle button and Hand display overlay - positioned at bottom */}
         {!isBonusRound && (

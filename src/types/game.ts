@@ -61,10 +61,12 @@ export interface GameState {
   sscLevel: number;
   sscPhase: SSCPhase;
   sscRound: number;
-  
   levelGoal: number;
-  unlockedPowerUps: string[];
+  // Power-up system - earned from bonus rounds
+  earnedPowerUps: string[];
   activePowerUps: string[];
+  powerUpChoices: string[];
+  showPowerUpSelection: boolean;
   // Classic mode scoring breakdown
   rawScore: number;
   timeBonus: number;
@@ -82,8 +84,9 @@ export interface PowerUp {
   id: string;
   name: string;
   emoji: string;
+  description: string;
   handType: string;
-  unlockedAtLevel: number;
+  tier: number; // 1 = common, 2 = uncommon, 3 = rare
   isReusable?: boolean;
 }
 
@@ -126,13 +129,13 @@ export const POKER_HANDS: PokerHand[] = [
 ];
 
 export const POWER_UPS: PowerUp[] = [
-  { id: 'two_pair', name: 'Two Pair', emoji: '2️⃣', handType: 'Two Pair', unlockedAtLevel: 3 },
-  { id: 'three_kind', name: 'Three of a Kind', emoji: '3️⃣', handType: 'Three of a Kind', unlockedAtLevel: 7 },
-  { id: 'straight', name: 'Straight', emoji: '➡️', handType: 'Straight', unlockedAtLevel: 10 },
-  { id: 'add_time', name: 'Add Time', emoji: '⏰', handType: '', unlockedAtLevel: 11, isReusable: true },
-  { id: 'flush', name: 'Flush', emoji: '♦️', handType: 'Flush', unlockedAtLevel: 15 },
-  { id: 'full_house', name: 'Full House', emoji: '🏠', handType: 'Full House', unlockedAtLevel: 20 },
-  { id: 'four_kind', name: 'Four of a Kind', emoji: '4️⃣', handType: 'Four of a Kind', unlockedAtLevel: 25 },
-  { id: 'straight_flush', name: 'Straight Flush', emoji: '🔥', handType: 'Straight Flush', unlockedAtLevel: 30 },
-  { id: 'royal_flush', name: 'Royal Flush', emoji: '👑', handType: 'Royal Flush', unlockedAtLevel: 35 },
+  { id: 'two_pair', name: 'Two Pair', emoji: '2️⃣', description: 'Instantly form a Two Pair hand', handType: 'Two Pair', tier: 1 },
+  { id: 'three_kind', name: 'Three of a Kind', emoji: '3️⃣', description: 'Instantly form Three of a Kind', handType: 'Three of a Kind', tier: 1 },
+  { id: 'add_time', name: 'Add Time', emoji: '⏰', description: 'Add 15 seconds to the clock', handType: '', tier: 1, isReusable: true },
+  { id: 'straight', name: 'Straight', emoji: '➡️', description: 'Instantly form a Straight', handType: 'Straight', tier: 2 },
+  { id: 'flush', name: 'Flush', emoji: '♦️', description: 'Instantly form a Flush', handType: 'Flush', tier: 2 },
+  { id: 'full_house', name: 'Full House', emoji: '🏠', description: 'Instantly form a Full House', handType: 'Full House', tier: 2 },
+  { id: 'four_kind', name: 'Four of a Kind', emoji: '4️⃣', description: 'Instantly form Four of a Kind', handType: 'Four of a Kind', tier: 3 },
+  { id: 'straight_flush', name: 'Straight Flush', emoji: '🔥', description: 'Instantly form a Straight Flush', handType: 'Straight Flush', tier: 3 },
+  { id: 'royal_flush', name: 'Royal Flush', emoji: '👑', description: 'Instantly form a Royal Flush', handType: 'Royal Flush', tier: 3 },
 ];
