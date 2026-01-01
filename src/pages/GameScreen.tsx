@@ -148,16 +148,15 @@ export default function GameScreen() {
   }, [state.isGameOver, state.mode, playSound]);
 
   // Auto-advance to next level after showing congratulations
+  // Only auto-advance if power-up selection is not showing
   useEffect(() => {
-    if (state.isLevelComplete) {
+    if (state.isLevelComplete && !state.showPowerUpSelection) {
       const timer = setTimeout(() => {
-        // If next level is bonus, set intro active
-        const nextLevelInfo = state.mode === 'ssc' ? true : false; // Will be bonus if applicable
         nextLevel();
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [state.isLevelComplete, nextLevel, state.mode]);
+  }, [state.isLevelComplete, state.showPowerUpSelection, nextLevel]);
 
   // Activate bonus intro when entering bonus round - pause timer during intro
   useEffect(() => {
