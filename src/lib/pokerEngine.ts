@@ -162,7 +162,6 @@ export interface SSCLevelInfo {
   phase: 'static' | 'conveyor' | 'falling';
   isBonus: boolean;
   round: number; // 1-indexed round number (each round = 4 levels)
-  pointMultiplier: number;
   difficultyMultiplier: number;
 }
 
@@ -190,11 +189,8 @@ export function getSSCLevelInfo(level: number): SSCLevelInfo {
     phaseInSuperRound = 2;
   }
   
-  // Overall round number (for point doubling)
+  // Overall round number
   const round = superRound * 3 + phaseInSuperRound + 1;
-  
-  // Points double each round (1x, 2x, 4x, 8x, ...)
-  const pointMultiplier = Math.pow(2, round - 1);
   
   // Count bonus rounds completed (every 4 levels is a bonus)
   const bonusRoundsCompleted = Math.floor((level - 1) / 4);
@@ -215,7 +211,6 @@ export function getSSCLevelInfo(level: number): SSCLevelInfo {
     phase,
     isBonus,
     round,
-    pointMultiplier,
     difficultyMultiplier,
   };
 }
@@ -226,10 +221,6 @@ export function getSSCPhase(level: number): 'static' | 'conveyor' | 'falling' {
 
 export function isSSCBonusLevel(level: number): boolean {
   return getSSCLevelInfo(level).isBonus;
-}
-
-export function getSSCPointMultiplier(level: number): number {
-  return getSSCLevelInfo(level).pointMultiplier;
 }
 
 export function calculateLevelGoal(level: number): number {

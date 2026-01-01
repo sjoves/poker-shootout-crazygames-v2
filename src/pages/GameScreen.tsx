@@ -352,7 +352,6 @@ export default function GameScreen() {
             onSubmitHand={submitBonusHand}
             onSkip={skipBonusRound}
             timeRemaining={state.timeRemaining}
-            pointMultiplier={state.pointMultiplier}
             score={state.score}
             level={state.sscLevel}
             bonusRoundNumber={state.bonusRoundCount}
@@ -440,12 +439,6 @@ export default function GameScreen() {
                     </p>
                   </div>
                 )}
-                {state.pointMultiplier > 1 && (
-                  <p className="text-sm text-accent flex items-center justify-center gap-1 mb-4">
-                    <BoltIcon className="w-4 h-4" />
-                    {state.pointMultiplier}x Points Active
-                  </p>
-                )}
                 <p className="text-sm text-primary animate-pulse">
                   Next level starting...
                 </p>
@@ -453,18 +446,6 @@ export default function GameScreen() {
             </motion.div>
           )}
         </AnimatePresence>
-
-        {/* Point Multiplier Indicator - only show when not in bonus round */}
-        {isSSC && state.pointMultiplier > 1 && !state.isLevelComplete && !isBonusRound && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="absolute top-4 right-4 bg-primary/20 text-primary px-3 py-1 rounded-full flex items-center gap-1 font-display text-xs"
-          >
-            <BoltIcon className="w-3 h-3" />
-            {state.pointMultiplier}x
-          </motion.div>
-        )}
       </div>
     </div>
   );

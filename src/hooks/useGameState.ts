@@ -31,7 +31,7 @@ const INITIAL_STATE: GameState = {
   sscLevel: 1,
   sscPhase: 'static',
   sscRound: 1,
-  pointMultiplier: 1,
+  
   levelGoal: 1000,
   unlockedPowerUps: [],
   activePowerUps: [],
@@ -76,7 +76,7 @@ export function useGameState() {
       sscLevel: level,
       sscPhase: levelInfo?.phase || 'static',
       sscRound: levelInfo?.round || 1,
-      pointMultiplier: forceBonus ? 2 : (levelInfo?.pointMultiplier || 1),
+      
       isBonusLevel,
       levelGoal: isSSC ? calculateLevelGoal(level) : 0,
       unlockedPowerUps,
@@ -131,11 +131,8 @@ export function useGameState() {
       const inFinalStretch = (isBlitz || isSSC) && prev.timeRemaining <= 10 && prev.timeRemaining > 0;
       const finalStretchMultiplier = inFinalStretch ? 2 : 1;
       
-      // Apply point multiplier for SSC mode + final stretch bonus
+      // Apply final stretch bonus
       let multipliedPoints = result.totalPoints;
-      if (isSSC) {
-        multipliedPoints = Math.floor(multipliedPoints * prev.pointMultiplier);
-      }
       if (inFinalStretch) {
         multipliedPoints = Math.floor(multipliedPoints * finalStretchMultiplier);
       }
@@ -218,20 +215,14 @@ export function useGameState() {
 
   const submitBonusHand = useCallback((cards: Card[], result: HandResult, timeRemaining: number) => {
     setState(prev => {
-      // Apply point multiplier for bonus round
-      const multipliedPoints = Math.floor(result.totalPoints * prev.pointMultiplier);
+      const points = result.totalPoints;
       
       // Calculate time bonus: 10 points per second remaining
       const timeBonusPoints = timeRemaining * 10;
       
-      const modifiedResult = {
-        ...result,
-        totalPoints: multipliedPoints,
-      };
-      
-      handResultsRef.current.push(modifiedResult);
+      handResultsRef.current.push(result);
 
-      const totalPoints = multipliedPoints + timeBonusPoints;
+      const totalPoints = points + timeBonusPoints;
       const newScore = prev.score + totalPoints;
       const newRawScore = prev.rawScore + totalPoints;
       const newLevelScore = prev.levelScore + totalPoints;
@@ -246,7 +237,7 @@ export function useGameState() {
         cumulativeScore: newCumulativeScore,
         handsPlayed: prev.handsPlayed + 1,
         selectedCards: [],
-        currentHand: modifiedResult,
+        currentHand: result,
         isLevelComplete: true,
         bonusTimePoints: timeBonusPoints, // Store for display
       };
@@ -315,7 +306,6 @@ export function useGameState() {
         sscLevel: newLevel,
         sscPhase: levelInfo.phase,
         sscRound: levelInfo.round,
-        pointMultiplier: levelInfo.pointMultiplier,
         isBonusLevel: levelInfo.isBonus,
         levelGoal: calculateLevelGoal(newLevel),
         bonusRoundCount: newBonusRoundCount,

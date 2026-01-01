@@ -16,7 +16,6 @@ interface BonusRoundProps {
   onSubmitHand: (cards: Card[], result: HandResult, timeRemaining: number) => void;
   onSkip: () => void;
   timeRemaining: number;
-  pointMultiplier: number;
   score?: number;
   level?: number;
   bonusRoundNumber?: number;
@@ -32,7 +31,6 @@ export function BonusRound({
   onSubmitHand, 
   onSkip, 
   timeRemaining, 
-  pointMultiplier,
   score = 0,
   level,
   bonusRoundNumber = 1,
@@ -173,16 +171,6 @@ export function BonusRound({
               >
                 Earn points + time bonus for speed!
               </motion.p>
-              {pointMultiplier > 1 && (
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.9 }}
-                  className="text-sm text-primary mt-2 font-bold"
-                >
-                  {pointMultiplier}x Points Active!
-                </motion.p>
-              )}
             </motion.div>
           )}
 
@@ -276,16 +264,13 @@ export function BonusRound({
           </p>
           <div className="text-sm text-muted-foreground space-y-1">
             <p>
-              Hand: {handResult.totalPoints * pointMultiplier} pts
-              {pointMultiplier > 1 && (
-                <span className="text-accent ml-1">({pointMultiplier}x)</span>
-              )}
+              Hand: {handResult.totalPoints} pts
             </p>
             <p className="text-accent">
               + Time Bonus: {timeRemaining * 10} pts ({timeRemaining}s × 10)
             </p>
             <p className="text-foreground font-bold border-t border-border pt-1 mt-1">
-              Total: {(handResult.totalPoints * pointMultiplier) + (timeRemaining * 10)} pts
+              Total: {handResult.totalPoints + (timeRemaining * 10)} pts
             </p>
           </div>
         </motion.div>

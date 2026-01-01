@@ -61,7 +61,7 @@ export interface GameState {
   sscLevel: number;
   sscPhase: SSCPhase;
   sscRound: number;
-  pointMultiplier: number;
+  
   levelGoal: number;
   unlockedPowerUps: string[];
   activePowerUps: string[];
