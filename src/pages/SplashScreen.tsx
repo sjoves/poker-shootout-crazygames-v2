@@ -40,6 +40,7 @@ export default function SplashScreen() {
   const [showSettings, setShowSettings] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
   const [showRewardWheel, setShowRewardWheel] = useState(false);
+  const [showChallenges, setShowChallenges] = useState(false);
   const rewardedAd = useRewardedAd();
 
   // Show daily reward prompt for logged in users
@@ -127,17 +128,6 @@ export default function SplashScreen() {
         </motion.div>
       )}
 
-      {/* Daily Challenges */}
-      {user && challenges.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="w-full max-w-md mb-4"
-        >
-          <DailyChallenges challenges={challenges} getChallengeInfo={getChallengeInfo} />
-        </motion.div>
-      )}
 
       {/* Game Mode Buttons */}
       <motion.div
@@ -197,6 +187,33 @@ export default function SplashScreen() {
           Sharp Shooter Challenge
           {getModeLabel('ssc')}
         </Button>
+
+        {/* Daily Challenges - Collapsible */}
+        {user && challenges.length > 0 && (
+          <div className="space-y-2">
+            <Button
+              variant="outline"
+              size="lg"
+              className="w-full h-14 text-lg font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground gap-2"
+              onClick={() => setShowChallenges(!showChallenges)}
+            >
+              <Target className="w-5 h-5 text-primary" />
+              Daily Challenges
+              <span className="ml-2 text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">
+                {challenges.filter(c => c.completed).length}/{challenges.length}
+              </span>
+            </Button>
+            {showChallenges && (
+              <motion.div 
+                initial={{ height: 0, opacity: 0 }} 
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+              >
+                <DailyChallenges challenges={challenges} getChallengeInfo={getChallengeInfo} />
+              </motion.div>
+            )}
+          </div>
+        )}
 
         {/* Premium Upsell */}
         {!isPremium && !loading && (
