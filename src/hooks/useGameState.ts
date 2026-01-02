@@ -317,6 +317,10 @@ export function useGameState() {
       const powerUp = POWER_UPS.find(p => p.id === powerUpId);
       if (!powerUp) return prev;
 
+      // Remove power-up from both earned and active lists (consumed until won again)
+      const newEarnedPowerUps = prev.earnedPowerUps.filter(id => id !== powerUpId);
+      const newActivePowerUps = prev.activePowerUps.filter(id => id !== powerUpId);
+
       // Handle reshuffle power-up
       if (powerUp.id === 'reshuffle') {
         const shuffledDeck = shuffleDeck([...prev.deck]);
@@ -324,6 +328,8 @@ export function useGameState() {
           ...prev,
           deck: shuffledDeck,
           reshuffleTrigger: prev.reshuffleTrigger + 1,
+          earnedPowerUps: newEarnedPowerUps,
+          activePowerUps: newActivePowerUps,
         };
       }
 
@@ -331,6 +337,8 @@ export function useGameState() {
         return {
           ...prev,
           timeRemaining: prev.timeRemaining + 15,
+          earnedPowerUps: newEarnedPowerUps,
+          activePowerUps: newActivePowerUps,
         };
       }
 
@@ -339,15 +347,13 @@ export function useGameState() {
       if (!hand) return prev;
 
       const newDeck = prev.deck.filter(c => !hand.some(h => h.id === c.id));
-      const newActivePowerUps = powerUp.isReusable 
-        ? prev.activePowerUps 
-        : prev.activePowerUps.filter(id => id !== powerUpId);
 
       return {
         ...prev,
         selectedCards: hand,
         deck: newDeck,
         usedCards: [...prev.usedCards, ...hand],
+        earnedPowerUps: newEarnedPowerUps,
         activePowerUps: newActivePowerUps,
       };
     });
