@@ -20,8 +20,8 @@ const GAME_MODES: { value: GameMode | 'all'; label: string; icon: React.ReactNod
 
 function getRankIcon(rank: number) {
   if (rank === 1) return <Trophy className="w-6 h-6 text-primary" />;
-  if (rank === 2) return <Medal className="w-6 h-6 text-muted-foreground" />;
-  if (rank === 3) return <Award className="w-6 h-6 text-primary/70" />;
+  if (rank === 2) return <Medal className="w-6 h-6 text-primary/80" />;
+  if (rank === 3) return <Award className="w-6 h-6 text-primary/60" />;
   return <span className="w-6 h-6 flex items-center justify-center text-muted-foreground font-mono">#{rank}</span>;
 }
 
