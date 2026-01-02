@@ -188,30 +188,41 @@ export default function SplashScreen() {
         </div>
 
         {/* SSC Mode */}
-        <div className="space-y-2">
+        {user && profile?.highest_ssc_level && profile.highest_ssc_level > 1 ? (
+          <div className="space-y-2">
+            <Button
+              variant="outline"
+              size="lg"
+              className="w-full h-14 text-lg font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground gap-2"
+              onClick={() => setSelectedMode(selectedMode === 'ssc' ? null : 'ssc')}
+            >
+              <Trophy className="w-5 h-5 text-primary" />
+              Sharp Shooter Challenge
+              {getModeLabel('ssc')}
+            </Button>
+            {selectedMode === 'ssc' && (
+              <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} className="flex gap-2">
+                <Button variant="secondary" className="flex-1" onClick={() => handleSSCStart(1)}>
+                  Start Level 1
+                </Button>
+                <Button variant="secondary" className="flex-1" onClick={() => handleSSCStart(profile.highest_ssc_level)}>
+                  Continue Lv.{profile.highest_ssc_level}
+                </Button>
+              </motion.div>
+            )}
+          </div>
+        ) : (
           <Button
             variant="outline"
             size="lg"
             className="w-full h-14 text-lg font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground gap-2"
-            onClick={() => setSelectedMode(selectedMode === 'ssc' ? null : 'ssc')}
+            onClick={() => handleSSCStart(1)}
           >
             <Trophy className="w-5 h-5 text-primary" />
             Sharp Shooter Challenge
             {getModeLabel('ssc')}
           </Button>
-          {selectedMode === 'ssc' && (
-            <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} className="flex gap-2">
-              <Button variant="secondary" className="flex-1" onClick={() => handleSSCStart(1)}>
-                Start Level 1
-              </Button>
-              {user && profile?.highest_ssc_level && profile.highest_ssc_level > 1 && (
-                <Button variant="secondary" className="flex-1" onClick={() => handleSSCStart(profile.highest_ssc_level)}>
-                  Continue Lv.{profile.highest_ssc_level}
-                </Button>
-              )}
-            </motion.div>
-          )}
-        </div>
+        )}
 
         {/* Daily Challenges - Collapsible */}
         {user && challenges.length > 0 && (
