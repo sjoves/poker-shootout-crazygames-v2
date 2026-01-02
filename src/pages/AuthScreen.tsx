@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 // Validation schemas
 const emailSchema = z.string().trim().email({ message: "Please enter a valid email address" });
@@ -14,7 +15,7 @@ const passwordSchema = z.string().min(6, { message: "Password must be at least 6
 const usernameSchema = z.string().trim().min(2, { message: "Username must be at least 2 characters" }).max(20, { message: "Username must be less than 20 characters" }).regex(/^[a-zA-Z0-9_]+$/, { message: "Username can only contain letters, numbers, and underscores" }).optional();
 
 export default function AuthScreen() {
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [mode, setMode] = useState<'signin' | 'signup' | 'forgot'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
@@ -39,12 +40,14 @@ export default function AuthScreen() {
       newErrors.email = emailResult.error.errors[0].message;
     }
     
-    const passwordResult = passwordSchema.safeParse(password);
-    if (!passwordResult.success) {
-      newErrors.password = passwordResult.error.errors[0].message;
+    if (mode !== 'forgot') {
+      const passwordResult = passwordSchema.safeParse(password);
+      if (!passwordResult.success) {
+        newErrors.password = passwordResult.error.errors[0].message;
+      }
     }
     
-    if (isSignUp && username) {
+    if (mode === 'signup' && username) {
       const usernameResult = usernameSchema.safeParse(username);
       if (!usernameResult.success) {
         newErrors.username = usernameResult.error.errors[0].message;
@@ -55,8 +58,29 @@ export default function AuthScreen() {
     return Object.keys(newErrors).length === 0;
   };
 
+  const handleForgotPassword = async () => {
+    if (!validateForm()) return;
+    
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/auth`,
+    });
+    setLoading(false);
+
+    if (error) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Check your email', description: 'We sent you a password reset link.' });
+      setMode('signin');
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (mode === 'forgot') {
+      return handleForgotPassword();
+    }
     
     if (!validateForm()) {
       return;
@@ -64,7 +88,7 @@ export default function AuthScreen() {
     
     setLoading(true);
 
-    const { error } = isSignUp 
+    const { error } = mode === 'signup'
       ? await signUp(email.trim(), password, username.trim() || undefined)
       : await signIn(email.trim(), password);
 
@@ -73,8 +97,16 @@ export default function AuthScreen() {
     if (error) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
     } else {
-      toast({ title: isSignUp ? 'Account created!' : 'Welcome back!' });
+      toast({ title: mode === 'signup' ? 'Account created!' : 'Welcome back!' });
       navigate('/');
+    }
+  };
+
+  const getTitle = () => {
+    switch (mode) {
+      case 'signup': return 'Create Account';
+      case 'forgot': return 'Reset Password';
+      default: return 'Welcome Back';
     }
   };
 
@@ -86,11 +118,17 @@ export default function AuthScreen() {
         className="w-full max-w-md bg-card/90 backdrop-blur-sm rounded-2xl p-8 border border-border"
       >
         <h1 className="text-3xl font-display text-primary text-center mb-6">
-          {isSignUp ? 'Create Account' : 'Welcome Back'}
+          {getTitle()}
         </h1>
 
+        {mode === 'forgot' && (
+          <p className="text-sm text-muted-foreground text-center mb-4">
+            Enter your email and we'll send you a reset link.
+          </p>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
-          {isSignUp && (
+          {mode === 'signup' && (
             <div>
               <Label htmlFor="username">Username</Label>
               <Input
@@ -128,37 +166,60 @@ export default function AuthScreen() {
             )}
           </div>
 
-          <div>
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                if (errors.password) setErrors(prev => ({ ...prev, password: undefined }));
-              }}
-              placeholder="••••••••"
-              required
-              className={`mt-1 ${errors.password ? 'border-destructive' : ''}`}
-            />
-            {errors.password && (
-              <p className="text-xs text-destructive mt-1">{errors.password}</p>
-            )}
-          </div>
+          {mode !== 'forgot' && (
+            <div>
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (errors.password) setErrors(prev => ({ ...prev, password: undefined }));
+                }}
+                placeholder="••••••••"
+                required
+                className={`mt-1 ${errors.password ? 'border-destructive' : ''}`}
+              />
+              {errors.password && (
+                <p className="text-xs text-destructive mt-1">{errors.password}</p>
+              )}
+            </div>
+          )}
 
           <Button type="submit" className="w-full" size="lg" disabled={loading}>
-            {loading ? 'Loading...' : (isSignUp ? 'Create Account' : 'Sign In')}
+            {loading ? 'Loading...' : (
+              mode === 'signup' ? 'Create Account' : 
+              mode === 'forgot' ? 'Send Reset Link' : 'Sign In'
+            )}
           </Button>
         </form>
 
-        <div className="mt-6 text-center">
+        {mode === 'signin' && (
           <button
-            onClick={() => setIsSignUp(!isSignUp)}
-            className="text-sm text-muted-foreground hover:text-primary"
+            onClick={() => setMode('forgot')}
+            className="w-full text-sm text-muted-foreground hover:text-primary mt-3"
           >
-            {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
+            Forgot password?
           </button>
+        )}
+
+        <div className="mt-4 text-center">
+          {mode === 'forgot' ? (
+            <button
+              onClick={() => setMode('signin')}
+              className="text-sm text-muted-foreground hover:text-primary"
+            >
+              Back to Sign In
+            </button>
+          ) : (
+            <button
+              onClick={() => setMode(mode === 'signup' ? 'signin' : 'signup')}
+              className="text-sm text-muted-foreground hover:text-primary"
+            >
+              {mode === 'signup' ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
+            </button>
+          )}
         </div>
 
         <Button variant="ghost" className="w-full mt-4" onClick={() => navigate('/')}>
