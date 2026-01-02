@@ -19,9 +19,9 @@ const GAME_MODES: { value: GameMode | 'all'; label: string; icon: React.ReactNod
 ];
 
 function getRankIcon(rank: number) {
-  if (rank === 1) return <Trophy className="w-6 h-6 text-yellow-400" />;
-  if (rank === 2) return <Medal className="w-6 h-6 text-gray-300" />;
-  if (rank === 3) return <Award className="w-6 h-6 text-amber-600" />;
+  if (rank === 1) return <Trophy className="w-6 h-6 text-primary" />;
+  if (rank === 2) return <Medal className="w-6 h-6 text-muted-foreground" />;
+  if (rank === 3) return <Award className="w-6 h-6 text-primary/70" />;
   return <span className="w-6 h-6 flex items-center justify-center text-muted-foreground font-mono">#{rank}</span>;
 }
 
@@ -125,9 +125,9 @@ export default function LeaderboardScreen() {
                   transition={{ delay: index * 0.03 }}
                   className={`
                     relative overflow-hidden rounded-xl border
-                    ${index === 0 ? 'bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border-yellow-500/30' : ''}
-                    ${index === 1 ? 'bg-gradient-to-r from-gray-400/10 to-gray-300/10 border-gray-400/30' : ''}
-                    ${index === 2 ? 'bg-gradient-to-r from-amber-600/10 to-orange-500/10 border-amber-600/30' : ''}
+                    ${index === 0 ? 'bg-gradient-to-r from-primary/15 to-primary/5 border-primary/50' : ''}
+                    ${index === 1 ? 'bg-gradient-to-r from-muted/30 to-muted/10 border-muted-foreground/30' : ''}
+                    ${index === 2 ? 'bg-gradient-to-r from-primary/10 to-primary/5 border-primary/30' : ''}
                     ${index > 2 ? 'bg-card/50 border-border' : ''}
                   `}
                 >
@@ -181,15 +181,6 @@ export default function LeaderboardScreen() {
                       </div>
                     </div>
                   </div>
-
-                  {/* Best Hand Badge */}
-                  {entry.best_hand && (
-                    <div className="absolute top-2 right-2">
-                      <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">
-                        {entry.best_hand}
-                      </span>
-                    </div>
-                  )}
                 </motion.div>
               ))}
             </AnimatePresence>
