@@ -575,6 +575,18 @@ export function useGameState() {
                   isBonusFailed: true 
                 };
               }
+              // For regular SSC levels, if goal is already met, complete the level instead of game over
+              if (isSSC && prev.score >= prev.levelGoal) {
+                const starRating = calculateStarRating(prev.score, prev.levelGoal);
+                const shouldBonus = shouldTriggerBonusRound(prev.sscLevel);
+                return {
+                  ...prev,
+                  timeRemaining: 0,
+                  isLevelComplete: true,
+                  pendingBonusRound: shouldBonus,
+                  starRating,
+                };
+              }
               return { ...prev, timeRemaining: 0, isGameOver: true, isPlaying: false };
             }
             return { ...prev, timeRemaining: newTimeRemaining, timeElapsed: prev.timeElapsed + 1 };
