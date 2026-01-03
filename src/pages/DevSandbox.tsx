@@ -49,6 +49,7 @@ const DevSandbox = () => {
   const [breathingEnabled, setBreathingEnabled] = useState(true);
   const [breathingAmplitude, setBreathingAmplitude] = useState(150);
   const [breathingSpeed, setBreathingSpeed] = useState(0.5);
+  const [baseRotationSpeed, setBaseRotationSpeed] = useState(0.6);
   
   // Deck and cards
   const [deck, setDeck] = useState<CardType[]>(() => shuffleDeck(createDeck()));
@@ -338,9 +339,21 @@ const DevSandbox = () => {
           </div>
         </div>
 
-        {/* Row 4: Orbit Breathing Controls (only show for orbit phase) */}
+        {/* Row 4: Orbit Controls (only show for orbit phase) */}
         {effectivePhase === 'orbit' && (
-          <div className="flex gap-4 items-center bg-card/50 rounded p-1">
+          <div className="flex gap-4 items-center bg-card/50 rounded p-1 flex-wrap">
+            {/* Rotation Speed */}
+            <div className="flex items-center gap-1">
+              <span className="text-muted-foreground text-xs">Rotation:</span>
+              <input 
+                type="range" min="1" max="20" value={baseRotationSpeed * 10}
+                onChange={(e) => setBaseRotationSpeed(parseInt(e.target.value) / 10)}
+                className="w-16 h-1 accent-primary"
+              />
+              <span className="font-mono text-xs w-6">{baseRotationSpeed.toFixed(1)}</span>
+            </div>
+            
+            {/* Breathing Toggle */}
             <span className="text-muted-foreground">Breathing:</span>
             <Button 
               variant={breathingEnabled ? "default" : "outline"} 
@@ -353,7 +366,7 @@ const DevSandbox = () => {
             <div className="flex items-center gap-1">
               <span className="text-muted-foreground text-xs">Amp:</span>
               <input 
-                type="range" min="0" max="80" value={breathingAmplitude}
+                type="range" min="0" max="200" value={breathingAmplitude}
                 onChange={(e) => setBreathingAmplitude(parseInt(e.target.value))}
                 className="w-16 h-1 accent-primary"
                 disabled={!breathingEnabled}
@@ -597,6 +610,7 @@ const DevSandbox = () => {
                 breathingAmplitude={breathingAmplitude}
                 breathingSpeed={breathingSpeed}
                 showRingGuides={showRingGuides}
+                baseRotationSpeed={baseRotationSpeed}
               />
             )}
           </>

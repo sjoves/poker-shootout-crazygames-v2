@@ -23,6 +23,7 @@ interface OrbitCardsProps {
   breathingAmplitude?: number;
   breathingSpeed?: number;
   showRingGuides?: boolean;
+  baseRotationSpeed?: number;
 }
 
 const OrbitCardWrapper = ({
@@ -73,6 +74,7 @@ export function OrbitCards({
   breathingAmplitude = 150,
   breathingSpeed = 0.5,
   showRingGuides = true,
+  baseRotationSpeed = 0.6,
 }: OrbitCardsProps) {
   const [slots, setSlots] = useState<OrbitSlot[]>([]);
   const [hiddenDeckCount, setHiddenDeckCount] = useState(0);
@@ -89,13 +91,17 @@ export function OrbitCards({
 
   // Ring config: Inner 5, Middle 8, Outer 12 = 25
   const cardsPerRing = useMemo(() => [5, 8, 12] as const, []);
-  const ringMultipliers = useMemo(() => [1.0, 1.15, 1.3] as const, []);
+  
+  // Slot speed multipliers: Inner 0.4x, Middle 0.5x, Outer 0.6x
+  const ringSpeedMultipliers = useMemo(() => [0.4, 0.5, 0.6] as const, []);
+  
   const totalOrbitCards = 25;
 
-  const baseSpeed = useMemo(() => {
-    // Orbit base speed: 1.05 × (1 + (level - 10) × 0.005)
-    return 1.05 * (1 + (level > 10 ? (level - 10) * 0.005 : 0));
-  }, [level]);
+  // Speed scales with level > 10: base × (1 + (level - 10) × 0.005)
+  const effectiveSpeed = useMemo(() => {
+    const levelMultiplier = level > 10 ? 1 + (level - 10) * 0.005 : 1;
+    return baseRotationSpeed * levelMultiplier;
+  }, [baseRotationSpeed, level]);
 
   const getBaseRingRadii = useCallback(() => {
     if (!containerRef.current) return [80, 140, 200];
@@ -105,7 +111,7 @@ export function OrbitCards({
   }, []);
 
   const initialize = useCallback(() => {
-    // Ensure deck ids are unique in case upstream logic ever duplicates.
+    // Ensure deck ids are unique
     const dedupedDeck = Array.from(new Map(deck.map(c => [c.id, c])).values());
 
     const newSlots: OrbitSlot[] = [];
@@ -134,7 +140,6 @@ export function OrbitCards({
           queue.push(next);
           continue;
         }
-        // Fill ring order + slot order deterministically
         const slotToFill = newSlots.length;
         const ring = (slotToFill < 5 ? 0 : slotToFill < 13 ? 1 : 2) as 0 | 1 | 2;
         const slotIndex = ring === 0 ? slotToFill : ring === 1 ? slotToFill - 5 : slotToFill - 13;
@@ -151,12 +156,12 @@ export function OrbitCards({
     lastTimeRef.current = 0;
   }, [cardsPerRing, deck]);
 
-  // Only reset orbit when the caller explicitly reshuffles (prevents stalls on selection)
+  // Only reset orbit when the caller explicitly reshuffles
   useEffect(() => {
     initialize();
   }, [reshuffleTrigger, initialize]);
 
-  // rAF loop (never tied to deck/shuffle updates)
+  // Global rAF loop - single source of truth for animation timing
   useEffect(() => {
     if (isPaused) return;
 
@@ -179,60 +184,32 @@ export function OrbitCards({
     if (isPaused) lastTimeRef.current = 0;
   }, [isPaused]);
 
-  const ringRadii = useMemo(() => {
-    const base = getBaseRingRadii();
-    if (!breathingEnabled) return base;
-
-    // Required formula:
-    // radius = baseRadius + (Math.sin(globalTime * 0.5) * 150)
-    return base.map((radius, idx) => {
-      const phaseOffset = idx * 0.3;
-      const breath = Math.sin(globalTime * 0.5 + phaseOffset) * breathingAmplitude;
-      return radius + breath;
-    });
-  }, [breathingAmplitude, breathingEnabled, getBaseRingRadii, globalTime]);
-
-  const drawNextUnique = useCallback((forbidden: Set<string>) => {
-    const queue = hiddenDeckRef.current;
-    // Try up to queue.length iterations to find a usable card
-    for (let i = 0; i < queue.length; i++) {
-      const candidate = queue.shift();
-      if (!candidate) break;
-      if (!forbidden.has(candidate.id)) return candidate;
-      queue.push(candidate);
-    }
-    return null;
-  }, []);
-
-  const recycleCardInSlot = useCallback(
+  // Calculate position for a slot using BOTH angle rotation and breathing radius
+  const getSlotPosition = useCallback(
     (slot: OrbitSlot) => {
-      // Move played card to the back of the queue (ensuring queue uniqueness)
-      const queue = hiddenDeckRef.current;
-      const withoutPlayed = queue.filter(c => c.id !== slot.card.id);
-      withoutPlayed.push(slot.card);
-      hiddenDeckRef.current = withoutPlayed;
+      const baseRadii = getBaseRingRadii();
+      const baseRadius = baseRadii[slot.ring] ?? baseRadii[0];
+      
+      // Breathing: radius = baseRadius + (sin(time * 0.5) * amplitude)
+      const phaseOffset = slot.ring * 0.3;
+      const breathOffset = breathingEnabled 
+        ? Math.sin(globalTime * breathingSpeed + phaseOffset) * breathingAmplitude 
+        : 0;
+      const radius = baseRadius + breathOffset;
 
-      const forbidden = new Set<string>([
-        ...selectedCardIds,
-        ...slots.map(s => s.card.id).filter(id => id !== slot.card.id),
-      ]);
+      // Rotation: angle = (slotIndex / totalSlotsInRing) * 2 * PI + (globalTime * speedMultiplier)
+      const ringSpeedMultiplier = ringSpeedMultipliers[slot.ring];
+      const baseAngle = (slot.slotIndex / slot.totalSlotsInRing) * Math.PI * 2;
+      const rotationAngle = globalTime * effectiveSpeed * ringSpeedMultiplier;
+      const angle = baseAngle + rotationAngle;
 
-      const replacement = drawNextUnique(forbidden);
-      if (!replacement) {
-        setHiddenDeckCount(hiddenDeckRef.current.length);
-        return null;
-      }
-
-      // Ensure the replacement is removed from queue (drawNextUnique already shifted it)
-      setHiddenDeckCount(hiddenDeckRef.current.length);
-
-      return {
-        ...slot,
-        card: replacement,
-        isNew: true,
-      } as OrbitSlot;
+      // x = cos(angle) * radius; y = sin(angle) * radius
+      const x = Math.cos(angle) * radius;
+      const y = Math.sin(angle) * radius;
+      
+      return { x, y };
     },
-    [drawNextUnique, selectedCardIds, slots]
+    [breathingAmplitude, breathingEnabled, breathingSpeed, effectiveSpeed, getBaseRingRadii, globalTime, ringSpeedMultipliers]
   );
 
   const handleCardClick = useCallback(
@@ -241,34 +218,40 @@ export function OrbitCards({
       onSelectCard(slot.card);
 
       setSlots(prev => {
-        // Rebuild forbidden set based on next slots
         const next = prev.map(s => {
           if (s.card.id !== slot.card.id) return s;
 
           const queue = hiddenDeckRef.current;
-          // Put played to back, then draw replacement, preserving uniqueness.
+          // Move played card to back of queue
           const withoutPlayed = queue.filter(c => c.id !== slot.card.id);
           withoutPlayed.push(slot.card);
           hiddenDeckRef.current = withoutPlayed;
 
-          const forbidden = new Set<string>([...selectedCardIds, ...prev.map(p => p.card.id).filter(id => id !== slot.card.id)]);
-          const replacement = (() => {
-            const q = hiddenDeckRef.current;
-            for (let i = 0; i < q.length; i++) {
-              const candidate = q.shift();
-              if (!candidate) break;
-              if (!forbidden.has(candidate.id)) return candidate;
-              q.push(candidate);
+          // Draw replacement (avoiding duplicates)
+          const forbidden = new Set<string>([
+            ...selectedCardIds,
+            ...prev.map(p => p.card.id).filter(id => id !== slot.card.id)
+          ]);
+          
+          const q = hiddenDeckRef.current;
+          let replacement: Card | null = null;
+          for (let i = 0; i < q.length; i++) {
+            const candidate = q.shift();
+            if (!candidate) break;
+            if (!forbidden.has(candidate.id)) {
+              replacement = candidate;
+              break;
             }
-            return null;
-          })();
+            q.push(candidate);
+          }
 
-          if (!replacement) return s; // Shouldn't happen with a full deck
+          if (!replacement) return s;
 
+          // Return new slot with isNew flag for fly-in animation
           return { ...s, card: replacement, isNew: true };
         });
 
-        // Deduplicate visible card ids to prevent AnimatePresence key collisions
+        // Deduplicate visible card ids
         const seen = new Set<string>();
         const deduped: OrbitSlot[] = [];
         for (const s of next) {
@@ -278,32 +261,34 @@ export function OrbitCards({
         }
 
         setHiddenDeckCount(hiddenDeckRef.current.length);
-
         return deduped;
       });
     },
     [onSelectCard, playCardHit, selectedCardIds]
   );
 
-  const getSlotPosition = useCallback(
-    (slot: OrbitSlot) => {
-      const radius = ringRadii[slot.ring] ?? ringRadii[0];
-      const ringSpeedMultiplier = ringMultipliers[slot.ring];
+  // Clear isNew flag after animation completes
+  useEffect(() => {
+    const hasNewCards = slots.some(s => s.isNew);
+    if (!hasNewCards) return;
 
-      // Required formula:
-      // angle = (slotIndex / totalSlotsInRing) * 2 * PI + (globalTime * speedMultiplier)
-      const angle =
-        (slot.slotIndex / slot.totalSlotsInRing) * Math.PI * 2 +
-        globalTime * baseSpeed * ringSpeedMultiplier;
+    const timer = setTimeout(() => {
+      setSlots(prev => prev.map(s => ({ ...s, isNew: false })));
+    }, 600);
 
-      const x = Math.cos(angle) * radius;
-      const y = Math.sin(angle) * radius;
-      return { x, y };
-    },
-    [baseSpeed, globalTime, ringMultipliers, ringRadii]
-  );
+    return () => clearTimeout(timer);
+  }, [slots]);
 
   const baseRadii = useMemo(() => getBaseRingRadii(), [getBaseRingRadii]);
+
+  // Calculate current breathing radii for ring guides
+  const currentRadii = useMemo(() => {
+    return baseRadii.map((base, idx) => {
+      if (!breathingEnabled) return base;
+      const phaseOffset = idx * 0.3;
+      return base + Math.sin(globalTime * breathingSpeed + phaseOffset) * breathingAmplitude;
+    });
+  }, [baseRadii, breathingAmplitude, breathingEnabled, breathingSpeed, globalTime]);
 
   return (
     <div
@@ -312,9 +297,11 @@ export function OrbitCards({
       style={{ perspective: '1000px' }}
     >
       <div className="relative w-full h-full max-w-[100vmin] max-h-[100vmin] mx-auto">
+        {/* Center dot */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-primary/30 z-10" />
 
-        {showRingGuides && ringRadii.map((radius, index) => (
+        {/* Ring guides */}
+        {showRingGuides && currentRadii.map((radius, index) => (
           <div
             key={index}
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-primary/10 pointer-events-none"
@@ -322,22 +309,25 @@ export function OrbitCards({
           />
         ))}
 
+        {/* Ring labels */}
         {showRingGuides && baseRadii.map((_, index) => (
           <div
             key={`label-${index}`}
             className="absolute top-1/2 left-1/2 text-[8px] text-primary/40 pointer-events-none z-5"
-            style={{ transform: `translate(-50%, -50%) translateY(${-ringRadii[index] - 8}px)` }}
+            style={{ transform: `translate(-50%, -50%) translateY(${-currentRadii[index] - 8}px)` }}
           >
-            {[`Inner ${cardsPerRing[0]}×1.0`, `Mid ${cardsPerRing[1]}×1.15`, `Outer ${cardsPerRing[2]}×1.3`][index]}
+            {[`Inner ${cardsPerRing[0]}×0.4`, `Mid ${cardsPerRing[1]}×0.5`, `Outer ${cardsPerRing[2]}×0.6`][index]}
           </div>
         ))}
 
+        {/* Debug info */}
         {showRingGuides && (
           <div className="absolute bottom-2 left-2 text-[10px] text-primary/50 bg-background/50 px-2 py-1 rounded">
-            Orbit: {slots.length}/{totalOrbitCards} | Queue: {hiddenDeckCount}
+            Orbit: {slots.length}/{totalOrbitCards} | Queue: {hiddenDeckCount} | Speed: {effectiveSpeed.toFixed(2)}
           </div>
         )}
 
+        {/* Cards */}
         <AnimatePresence mode="popLayout">
           {slots.map((slot) => {
             const isSelected = selectedCardIds.includes(slot.card.id);
