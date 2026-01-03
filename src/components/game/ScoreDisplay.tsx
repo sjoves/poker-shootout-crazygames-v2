@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { TrophyIcon, ClockIcon, Cog6ToothIcon, SpeakerWaveIcon, SpeakerXMarkIcon } from '@heroicons/react/24/outline';
+import { TrophyIcon, ClockIcon, Cog6ToothIcon, SpeakerWaveIcon, SpeakerXMarkIcon, HandRaisedIcon } from '@heroicons/react/24/outline';
 import { HandResult } from '@/types/game';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -154,11 +154,7 @@ export function ScorePanel({
         {/* Progress - cards/hands (Classic & Blitz modes only, hidden during bonus round) */}
         {level === undefined && !isBonusRound && (
           <div className="flex items-center gap-2">
-            <svg className="w-5 h-5 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="4" y="4" width="16" height="4" rx="1" />
-              <rect x="4" y="10" width="16" height="4" rx="1" />
-              <rect x="4" y="16" width="16" height="4" rx="1" />
-            </svg>
+            <HandRaisedIcon className="w-5 h-5 text-accent" />
             <span className="text-lg font-semibold text-foreground tabular-nums">{progressValue}</span>
           </div>
         )}
