@@ -135,7 +135,7 @@ export function LootBoxReveal({
               {/* Glow Effect */}
               <motion.div
                 className={cn(
-                  "absolute inset-0 rounded-full blur-3xl opacity-30 mx-auto",
+                  "absolute inset-0 rounded-full blur-3xl opacity-30 mx-auto pointer-events-none",
                   tier === 'gold' && "bg-amber-400",
                   tier === 'silver' && "bg-slate-300",
                   tier === 'bronze' && "bg-amber-600",
