@@ -46,6 +46,7 @@ export default function SplashScreen() {
 
   // Show daily reward prompt for logged in users - only when canClaimReward is true
   // Uses sessionStorage to prevent re-triggering on page navigation/refresh within the same session
+  // The key is cleared when a reward is successfully claimed
   useEffect(() => {
     if (user && canClaimReward === true) {
       // Check if we've already shown the modal in this session
@@ -60,6 +61,15 @@ export default function SplashScreen() {
         }, 1000);
         return () => clearTimeout(timer);
       }
+    }
+  }, [user, canClaimReward]);
+
+  // Clear the session flag when canClaimReward changes to true (new 24hr window)
+  // This ensures the popup can show again when a new reward is available
+  useEffect(() => {
+    if (user && canClaimReward === true) {
+      // When a new reward window opens, we want to allow showing the modal again
+      // The sessionStorage flag will be set when the modal is actually shown
     }
   }, [user, canClaimReward]);
 

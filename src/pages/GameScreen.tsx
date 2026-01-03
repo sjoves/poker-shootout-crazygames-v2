@@ -316,6 +316,7 @@ export default function GameScreen() {
               onRestart={() => { resetGame(); startGame(mode as GameMode); }}
               onPause={pauseGame}
               isPaused={state.isPaused}
+              gameMode={isSSC ? 'ssc' : isBlitz ? 'blitz' : 'classic'}
             />
             {/* Better-Hand Multiplier Indicator */}
             <AnimatePresence>
