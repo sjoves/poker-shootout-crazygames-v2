@@ -66,8 +66,16 @@ export default function GameScreen() {
       setIsLoadingMusic(true);
       setIntroPhase('loading');
       
-      // Wait for music to load
-      await startMusic();
+      // Wait for music to load with a timeout to prevent hanging
+      try {
+        await Promise.race([
+          startMusic(),
+          new Promise(resolve => setTimeout(resolve, 2000)) // 2 second timeout
+        ]);
+      } catch (err) {
+        console.log('Music failed to start, continuing anyway:', err);
+      }
+      
       setIsLoadingMusic(false);
       
       // Start intro sequence
