@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Play, Pause, RotateCcw, Gift, Trophy, Target, Eye, EyeOff, User, HelpCircle, Settings, Terminal } from 'lucide-react';
+import { ArrowLeft, Play, Pause, RotateCcw, Gift, Trophy, Target, Eye, EyeOff, User, HelpCircle, Settings, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card as CardType, SSCPhase, POWER_UPS, HandResult, GameMode } from '@/types/game';
 import { createDeck, shuffleDeck, generateSpecificHand, calculateLevelGoal, evaluateHand, createBonusFriendlyDeck } from '@/lib/pokerEngine';
@@ -12,7 +12,7 @@ import { OrbitCards } from '@/components/game/OrbitCards';
 import { BonusRound } from '@/components/game/BonusRound';
 import { LevelCompleteModal } from '@/components/game/LevelCompleteModal';
 
-type MainMode = 'classic' | 'blitz' | 'ssc';
+type MainMode = 'ssc' | 'classic' | 'blitz';
 type SubMode = 'fc' | 'cb';
 
 const PHASES: SSCPhase[] = ['static', 'conveyor', 'falling', 'orbit'];
@@ -22,13 +22,17 @@ const HAND_TYPES = [
   'Flush', 'Straight', 'Three of a Kind', 'Two Pair', 'One Pair',
 ];
 
+const TIER_1_POWERUPS = ['reshuffle', 'two_pair', 'three_kind', 'add_time'];
+const TIER_2_POWERUPS = ['straight', 'flush', 'full_house'];
+const TIER_3_POWERUPS = ['four_kind', 'straight_flush', 'royal_flush'];
+
 const DevSandbox = () => {
   const navigate = useNavigate();
   
   // Game mode state
   const [mainMode, setMainMode] = useState<MainMode>('ssc');
   const [subMode, setSubMode] = useState<SubMode>('fc');
-  const [phase, setPhase] = useState<SSCPhase>('static');
+  const [phase, setPhase] = useState<SSCPhase>('orbit');
   const [level, setLevel] = useState(22);
   
   // Timer and game state
@@ -41,6 +45,11 @@ const DevSandbox = () => {
   const [speedOverride, setSpeedOverride] = useState<number | null>(null);
   const [isPaused, setIsPaused] = useState(false);
   
+  // Breathing controls (for Orbit)
+  const [breathingEnabled, setBreathingEnabled] = useState(true);
+  const [breathingAmplitude, setBreathingAmplitude] = useState(30);
+  const [breathingSpeed, setBreathingSpeed] = useState(0.5);
+  
   // Deck and cards
   const [deck, setDeck] = useState<CardType[]>(() => shuffleDeck(createDeck()));
   const [selectedCards, setSelectedCards] = useState<CardType[]>([]);
@@ -49,8 +58,9 @@ const DevSandbox = () => {
   // Debug toggles
   const [showHitboxes, setShowHitboxes] = useState(false);
   const [showHandEvaluator, setShowHandEvaluator] = useState(true);
+  const [showRingGuides, setShowRingGuides] = useState(true);
   
-  // Power-up inventory
+  // Power-up inventory (max 3)
   const [inventory, setInventory] = useState<string[]>([]);
   
   // Modal states
@@ -66,16 +76,28 @@ const DevSandbox = () => {
     return phase;
   }, [mainMode, subMode, phase]);
 
-  // Calculate speed based on settings
+  // Calculate speed based on settings and phase
   const getPhaseSpeed = useCallback(() => {
     if (speedOverride !== null) return speedOverride;
-    if (effectivePhase === 'conveyor') return 1.2 * (1 + (level > 10 ? (level - 10) * 0.02 : 0));
-    if (effectivePhase === 'falling') return 1.5 * (1 + (level > 10 ? (level - 10) * 0.005 : 0));
-    if (effectivePhase === 'orbit') return 1.05 * (1 + (level > 10 ? (level - 10) * 0.005 : 0));
+    
+    // Conveyor: 1.2 × (1 + (level - 10) × 0.02)
+    if (effectivePhase === 'conveyor') {
+      return 1.2 * (1 + (level > 10 ? (level - 10) * 0.02 : 0));
+    }
+    // Falling: 1.5 × (1 + (level - 10) × 0.005)
+    if (effectivePhase === 'falling') {
+      return 1.5 * (1 + (level > 10 ? (level - 10) * 0.005 : 0));
+    }
+    // Orbit: 1.05 × (1 + (level - 10) × 0.005)
+    if (effectivePhase === 'orbit') {
+      return 1.05 * (1 + (level > 10 ? (level - 10) * 0.005 : 0));
+    }
     return 1;
   }, [effectivePhase, level, speedOverride]);
 
   const effectiveSpeed = getPhaseSpeed();
+  
+  // Goal: 500 × 1.05^(level - 1)
   const levelGoal = calculateLevelGoal(level);
 
   // Real-time hand evaluation
@@ -193,7 +215,7 @@ const DevSandbox = () => {
         <div className="flex items-center gap-2">
           <span className="text-lg font-bold font-display">Dev Sandbox</span>
           <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded">
-            {mainMode.toUpperCase()}{mainMode !== 'ssc' ? `-${subMode.toUpperCase()}` : ''}
+            {mainMode.toUpperCase()}{mainMode !== 'ssc' ? `-${subMode.toUpperCase()}` : ''} | {effectivePhase}
           </span>
         </div>
         <div className="flex gap-1">
@@ -208,35 +230,42 @@ const DevSandbox = () => {
         </div>
       </header>
 
-      {/* Mode & Controls Panel */}
+      {/* Top-Tier Game Mode Controls */}
       <div className="flex-shrink-0 p-2 bg-muted/50 border-b border-border space-y-2 text-xs">
-        {/* Game Mode Switcher */}
+        {/* Row 1: Mode + Sub-Mode + Phase */}
         <div className="flex gap-2 items-center flex-wrap">
-          <span className="text-muted-foreground w-12">Mode:</span>
+          <span className="text-muted-foreground w-10">Mode:</span>
           <div className="flex border border-border rounded overflow-hidden">
-            {(['classic', 'blitz', 'ssc'] as MainMode[]).map(m => (
+            {(['ssc', 'classic', 'blitz'] as MainMode[]).map(m => (
               <button
                 key={m}
                 onClick={() => { setMainMode(m); handleStartGame(); }}
-                className={`px-3 py-1 capitalize ${mainMode === m ? 'bg-primary text-primary-foreground' : 'bg-card hover:bg-muted'}`}
+                className={`px-3 py-1 uppercase font-medium ${mainMode === m ? 'bg-primary text-primary-foreground' : 'bg-card hover:bg-muted'}`}
               >
                 {m}
               </button>
             ))}
           </div>
+          
+          {/* Sub-mode for Classic/Blitz */}
           {mainMode !== 'ssc' && (
             <div className="flex border border-border rounded overflow-hidden ml-2">
-              {(['fc', 'cb'] as SubMode[]).map(s => (
-                <button
-                  key={s}
-                  onClick={() => setSubMode(s)}
-                  className={`px-2 py-1 uppercase ${subMode === s ? 'bg-accent text-accent-foreground' : 'bg-card hover:bg-muted'}`}
-                >
-                  {s}
-                </button>
-              ))}
+              <button
+                onClick={() => setSubMode('fc')}
+                className={`px-2 py-1 ${subMode === 'fc' ? 'bg-accent text-accent-foreground' : 'bg-card hover:bg-muted'}`}
+              >
+                Falling
+              </button>
+              <button
+                onClick={() => setSubMode('cb')}
+                className={`px-2 py-1 ${subMode === 'cb' ? 'bg-accent text-accent-foreground' : 'bg-card hover:bg-muted'}`}
+              >
+                Conveyor
+              </button>
             </div>
           )}
+          
+          {/* Phase selector for SSC */}
           {mainMode === 'ssc' && (
             <div className="flex gap-1 ml-2">
               {PHASES.map(p => (
@@ -252,24 +281,33 @@ const DevSandbox = () => {
           )}
         </div>
 
-        {/* Level & Timer Row */}
+        {/* Row 2: Level Jumper + Goal Display */}
         <div className="flex gap-4 items-center">
           <div className="flex items-center gap-2 flex-1">
-            <span className="text-muted-foreground w-12">Level:</span>
+            <span className="text-muted-foreground w-10">Level:</span>
             <input 
               type="range" min="1" max="100" value={level} 
               onChange={(e) => setLevel(parseInt(e.target.value))}
               className="flex-1 h-1.5 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
             />
-            <span className="font-mono w-6">{level}</span>
+            <span className="font-mono w-8 text-center">{level}</span>
           </div>
+          <div className="flex items-center gap-2 bg-card border border-border rounded px-2 py-1">
+            <Target className="w-3 h-3 text-primary" />
+            <span className="text-muted-foreground">Goal:</span>
+            <span className="font-mono font-bold">{levelGoal.toLocaleString()}</span>
+          </div>
+        </div>
+
+        {/* Row 3: Timer Controls */}
+        <div className="flex gap-4 items-center">
           <div className="flex items-center gap-2">
-            <span className="text-muted-foreground">Timer:</span>
+            <span className="text-muted-foreground w-10">Timer:</span>
             <input 
               type="number" 
               value={timeRemaining} 
               onChange={(e) => setTimeRemaining(Math.max(0, parseInt(e.target.value) || 0))}
-              className="w-14 bg-card border border-border rounded px-1 py-0.5 text-center font-mono"
+              className="w-16 bg-card border border-border rounded px-2 py-1 text-center font-mono"
             />
             <Button 
               variant={isTimerRunning ? "default" : "outline"} 
@@ -280,19 +318,15 @@ const DevSandbox = () => {
               {isTimerRunning ? 'Stop' : 'Run'}
             </Button>
           </div>
-        </div>
-
-        {/* Speed Override */}
-        <div className="flex gap-4 items-center">
-          <div className="flex items-center gap-2 flex-1">
-            <span className="text-muted-foreground w-12">Speed:</span>
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground">Speed:</span>
             <input 
               type="range" min="0" max="100" 
               value={speedOverride !== null ? speedOverride * 10 : getPhaseSpeed() * 10} 
               onChange={(e) => setSpeedOverride(parseFloat(e.target.value) / 10)}
-              className="flex-1 h-1.5 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
+              className="w-24 h-1.5 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
             />
-            <span className="font-mono w-10">{(speedOverride ?? getPhaseSpeed()).toFixed(1)}</span>
+            <span className="font-mono w-8">{(speedOverride ?? getPhaseSpeed()).toFixed(1)}</span>
             <Button 
               variant="ghost" 
               size="sm" 
@@ -302,64 +336,159 @@ const DevSandbox = () => {
               Auto
             </Button>
           </div>
-          <div className="flex items-center gap-2">
-            <Button 
-              variant={showHitboxes ? "default" : "outline"} 
-              size="sm" 
-              className="h-6 px-2"
-              onClick={() => setShowHitboxes(!showHitboxes)}
-            >
-              {showHitboxes ? <Eye className="w-3 h-3 mr-1" /> : <EyeOff className="w-3 h-3 mr-1" />}
-              Hitbox
-            </Button>
-          </div>
         </div>
 
-        {/* Lifecycle & Deck Controls */}
-        <div className="flex gap-1 flex-wrap">
+        {/* Row 4: Orbit Breathing Controls (only show for orbit phase) */}
+        {effectivePhase === 'orbit' && (
+          <div className="flex gap-4 items-center bg-card/50 rounded p-1">
+            <span className="text-muted-foreground">Breathing:</span>
+            <Button 
+              variant={breathingEnabled ? "default" : "outline"} 
+              size="sm" 
+              className="h-5 px-2 text-xs"
+              onClick={() => setBreathingEnabled(!breathingEnabled)}
+            >
+              {breathingEnabled ? 'ON' : 'OFF'}
+            </Button>
+            <div className="flex items-center gap-1">
+              <span className="text-muted-foreground text-xs">Amp:</span>
+              <input 
+                type="range" min="0" max="80" value={breathingAmplitude}
+                onChange={(e) => setBreathingAmplitude(parseInt(e.target.value))}
+                className="w-16 h-1 accent-primary"
+                disabled={!breathingEnabled}
+              />
+              <span className="font-mono text-xs w-6">{breathingAmplitude}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-muted-foreground text-xs">Speed:</span>
+              <input 
+                type="range" min="1" max="20" value={breathingSpeed * 10}
+                onChange={(e) => setBreathingSpeed(parseInt(e.target.value) / 10)}
+                className="w-16 h-1 accent-primary"
+                disabled={!breathingEnabled}
+              />
+              <span className="font-mono text-xs w-6">{breathingSpeed.toFixed(1)}</span>
+            </div>
+            <Button 
+              variant={showRingGuides ? "default" : "outline"} 
+              size="sm" 
+              className="h-5 px-2 text-xs"
+              onClick={() => setShowRingGuides(!showRingGuides)}
+            >
+              Rings
+            </Button>
+          </div>
+        )}
+
+        {/* Row 5: Lifecycle & Debug Controls */}
+        <div className="flex gap-1 flex-wrap items-center">
           <Button variant="outline" size="sm" className="h-6 px-2" onClick={handleStartGame}>
             <Play className="w-3 h-3 mr-1" /> Start
           </Button>
           <Button variant="outline" size="sm" className="h-6 px-2" onClick={handleEndGame}>
-            <Target className="w-3 h-3 mr-1" /> End
+            Game Over
           </Button>
           {mainMode === 'ssc' && (
             <Button variant="outline" size="sm" className="h-6 px-2" onClick={handleWinLevel}>
-              <Trophy className="w-3 h-3 mr-1" /> Win
+              <Trophy className="w-3 h-3 mr-1" /> Force Win
             </Button>
           )}
           <Button variant="outline" size="sm" className="h-6 px-2" onClick={() => setShowBonusRound(true)}>
             <Gift className="w-3 h-3 mr-1" /> Bonus
           </Button>
-          <div className="border-l border-border mx-1" />
+          <div className="border-l border-border mx-1 h-4" />
           <Button variant="outline" size="sm" className="h-6 px-2" onClick={() => handleRefillDeck(false)}>
             <RotateCcw className="w-3 h-3 mr-1" /> Refill
           </Button>
           <Button variant="outline" size="sm" className="h-6 px-2" onClick={() => handleRefillDeck(true)}>
             🎁 Bonus Deck
           </Button>
-          <div className="border-l border-border mx-1" />
-          <div className="flex items-center gap-1">
+          <div className="border-l border-border mx-1 h-4" />
+          <Button 
+            variant={showHitboxes ? "default" : "outline"} 
+            size="sm" 
+            className="h-6 px-2"
+            onClick={() => setShowHitboxes(!showHitboxes)}
+          >
+            {showHitboxes ? <Eye className="w-3 h-3 mr-1" /> : <EyeOff className="w-3 h-3 mr-1" />}
+            Hitbox
+          </Button>
+        </div>
+
+        {/* Row 6: Power-Up Granter */}
+        <div className="flex gap-2 items-center flex-wrap">
+          <span className="text-muted-foreground">Inventory:</span>
+          <div className="flex gap-0.5">
             {inventory.map(id => {
               const p = POWER_UPS.find(x => x.id === id);
               return p ? (
-                <button key={id} onClick={() => handleRemovePowerUp(id)} className="bg-secondary px-1.5 py-0.5 rounded text-xs">
+                <button 
+                  key={id} 
+                  onClick={() => handleRemovePowerUp(id)} 
+                  className="bg-secondary px-2 py-0.5 rounded text-sm hover:bg-destructive/20"
+                  title={`${p.name} (click to remove)`}
+                >
                   {p.emoji}
                 </button>
               ) : null;
             })}
-            {inventory.length < 3 && (
-              <select 
-                className="bg-card border border-border rounded px-1 py-0.5 text-xs"
-                onChange={(e) => { if (e.target.value) handleAddPowerUp(e.target.value); e.target.value = ''; }}
-                value=""
-              >
-                <option value="">+Pwr</option>
-                {POWER_UPS.filter(p => !inventory.includes(p.id)).map(p => (
-                  <option key={p.id} value={p.id}>{p.emoji}</option>
-                ))}
-              </select>
-            )}
+            {Array(3 - inventory.length).fill(null).map((_, i) => (
+              <div key={`empty-${i}`} className="w-7 h-6 border border-dashed border-muted-foreground/30 rounded" />
+            ))}
+          </div>
+          <div className="border-l border-border mx-1 h-4" />
+          <span className="text-muted-foreground text-xs">Add:</span>
+          <div className="flex gap-0.5">
+            <span className="text-muted-foreground text-xs">T1:</span>
+            {TIER_1_POWERUPS.map(id => {
+              const p = POWER_UPS.find(x => x.id === id);
+              return p ? (
+                <button 
+                  key={id} 
+                  onClick={() => handleAddPowerUp(id)} 
+                  className="bg-card border border-border px-1.5 py-0.5 rounded text-xs hover:bg-muted disabled:opacity-50"
+                  disabled={inventory.includes(id) || inventory.length >= 3}
+                  title={p.name}
+                >
+                  {p.emoji}
+                </button>
+              ) : null;
+            })}
+          </div>
+          <div className="flex gap-0.5">
+            <span className="text-muted-foreground text-xs">T2:</span>
+            {TIER_2_POWERUPS.map(id => {
+              const p = POWER_UPS.find(x => x.id === id);
+              return p ? (
+                <button 
+                  key={id} 
+                  onClick={() => handleAddPowerUp(id)} 
+                  className="bg-card border border-border px-1.5 py-0.5 rounded text-xs hover:bg-muted disabled:opacity-50"
+                  disabled={inventory.includes(id) || inventory.length >= 3}
+                  title={p.name}
+                >
+                  {p.emoji}
+                </button>
+              ) : null;
+            })}
+          </div>
+          <div className="flex gap-0.5">
+            <span className="text-muted-foreground text-xs">T3:</span>
+            {TIER_3_POWERUPS.map(id => {
+              const p = POWER_UPS.find(x => x.id === id);
+              return p ? (
+                <button 
+                  key={id} 
+                  onClick={() => handleAddPowerUp(id)} 
+                  className="bg-card border border-border px-1.5 py-0.5 rounded text-xs hover:bg-muted disabled:opacity-50"
+                  disabled={inventory.includes(id) || inventory.length >= 3}
+                  title={p.name}
+                >
+                  {p.emoji}
+                </button>
+              ) : null;
+            })}
           </div>
         </div>
       </div>
@@ -396,10 +525,10 @@ const DevSandbox = () => {
             {effectivePhase === 'conveyor' && (
               <>
                 <div className="absolute top-0 left-0 w-16 h-full bg-green-500/20 border-r-2 border-dashed border-green-500">
-                  <span className="text-green-500 text-xs p-1 writing-vertical">Spawn L</span>
+                  <span className="text-green-500 text-xs p-1">Spawn L</span>
                 </div>
                 <div className="absolute top-0 right-0 w-16 h-full bg-green-500/20 border-l-2 border-dashed border-green-500">
-                  <span className="text-green-500 text-xs p-1 writing-vertical">Spawn R</span>
+                  <span className="text-green-500 text-xs p-1">Spawn R</span>
                 </div>
               </>
             )}
@@ -464,6 +593,10 @@ const DevSandbox = () => {
                 level={level}
                 isPaused={isPaused}
                 reshuffleTrigger={reshuffleTrigger}
+                breathingEnabled={breathingEnabled}
+                breathingAmplitude={breathingAmplitude}
+                breathingSpeed={breathingSpeed}
+                showRingGuides={showRingGuides}
               />
             )}
           </>
@@ -492,7 +625,7 @@ const DevSandbox = () => {
             ))}
           </div>
           
-          {/* Live Hand Evaluation */}
+          {/* Live Hand Evaluation Overlay */}
           {showHandEvaluator && currentHandResult && (
             <motion.div 
               initial={{ opacity: 0, scale: 0.9 }}
@@ -536,7 +669,7 @@ const DevSandbox = () => {
         </div>
       </div>
 
-      {/* Bottom Navigation */}
+      {/* Bottom Navigation: Profile, Leaderboard, Help, Settings, Test */}
       <div className="flex-shrink-0 p-2 bg-muted border-t border-border flex justify-center gap-3">
         <Button variant="ghost" size="icon" className="w-9 h-9" onClick={() => navigate('/account')}>
           <User className="w-4 h-4 text-primary" />
@@ -551,7 +684,7 @@ const DevSandbox = () => {
           <Settings className="w-4 h-4 text-primary" />
         </Button>
         <Button variant="default" size="icon" className="w-9 h-9">
-          <Terminal className="w-4 h-4" />
+          <Zap className="w-4 h-4" />
         </Button>
       </div>
 
