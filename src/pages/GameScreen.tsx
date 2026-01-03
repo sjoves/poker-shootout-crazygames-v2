@@ -84,9 +84,18 @@ export default function GameScreen() {
     };
   }, [mode, isTestBonus, startLevel, startMusic, stopMusic]);
 
-  // Intro sequence timing
+  // Check if we need to show SSC explainer BEFORE intro sequence
   useEffect(() => {
-    if (introPhase === 'ready') {
+    if (introPhase === 'loading' || isLoadingMusic) return;
+    
+    // For SSC mode, show explainer first if not seen
+    if (mode === 'ssc' && !state.hasSeenSSCExplainer && introPhase === 'ready') {
+      setShowSSCExplainer(true);
+      return; // Don't proceed with intro until explainer is dismissed
+    }
+    
+    // Only proceed with intro if we're in 'ready' phase and explainer is not showing
+    if (introPhase === 'ready' && !showSSCExplainer) {
       const timer = setTimeout(() => setIntroPhase('begin'), 1200);
       return () => clearTimeout(timer);
     }
@@ -102,7 +111,7 @@ export default function GameScreen() {
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [introPhase, isTestBonus, mode, startLevel, startGame]);
+  }, [introPhase, isTestBonus, mode, startLevel, startGame, isLoadingMusic, state.hasSeenSSCExplainer, showSSCExplainer]);
 
   // Play sound when hand is submitted
   useEffect(() => {
@@ -152,19 +161,12 @@ export default function GameScreen() {
     }
   }, [state.isGameOver, state.mode, playSound]);
 
-  // Show SSC explainer on first launch
-  useEffect(() => {
-    if (isSSC && state.isPlaying && !state.hasSeenSSCExplainer && introPhase === 'playing') {
-      setShowSSCExplainer(true);
-      setPaused(true);
-    }
-  }, [isSSC, state.isPlaying, state.hasSeenSSCExplainer, introPhase, setPaused]);
-
+  // Handle SSC explainer close - proceed to countdown
   const handleExplainerClose = useCallback(() => {
     setShowSSCExplainer(false);
     markExplainerSeen();
-    setPaused(false);
-  }, [markExplainerSeen, setPaused]);
+    // The intro sequence will now proceed since showSSCExplainer is false
+  }, [markExplainerSeen]);
 
   // Activate bonus intro when entering bonus round - pause timer during intro
   useEffect(() => {

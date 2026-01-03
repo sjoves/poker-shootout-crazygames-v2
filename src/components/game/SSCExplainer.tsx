@@ -40,9 +40,12 @@ export function SSCExplainer({ isOpen, onClose }: SSCExplainerProps) {
             exit={{ scale: 0.9, y: 20 }}
             className="max-w-sm mx-4 p-6 bg-card border border-border rounded-2xl shadow-2xl"
           >
-            <h2 className="text-2xl font-display text-center text-foreground mb-6">
-              How to Play
+            <h2 className="text-2xl font-display text-center text-foreground mb-1">
+              SHARP SHOOTER CHALLENGE
             </h2>
+            <p className="text-center text-muted-foreground text-sm mb-6">
+              Reach your highest level!
+            </p>
 
             <div className="space-y-4 mb-6">
               {items.map((item, index) => (
