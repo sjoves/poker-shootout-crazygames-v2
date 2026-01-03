@@ -116,26 +116,24 @@ export default function AuthScreen() {
     let loginEmail = input;
     
     if (!isEmail) {
-      // Look up email by username
-      const { data: profile, error: lookupError } = await supabase
-        .from('profiles')
-        .select('user_id')
-        .eq('username', input)
-        .single();
-      
-      if (lookupError || !profile) {
+      // Use secure edge function for username-to-email lookup
+      try {
+        const { data, error: lookupError } = await supabase.functions.invoke('username-lookup', {
+          body: { username: input }
+        });
+        
+        if (lookupError || !data?.email) {
+          setLoading(false);
+          // Use generic error message that doesn't reveal if username exists
+          toast({ title: 'Error', description: 'Invalid username or password', variant: 'destructive' });
+          return;
+        }
+        
+        loginEmail = data.email;
+      } catch {
         setLoading(false);
-        toast({ title: 'Error', description: 'Username not found', variant: 'destructive' });
+        toast({ title: 'Error', description: 'Invalid username or password', variant: 'destructive' });
         return;
-      }
-      
-      // Get email from auth user
-      const { data: userData } = await supabase.auth.admin?.getUserById?.(profile.user_id) || {};
-      if (!userData?.user?.email) {
-        // Fallback: try signing in with username as email (won't work but gives proper error)
-        loginEmail = input;
-      } else {
-        loginEmail = userData.user.email;
       }
     }
 
