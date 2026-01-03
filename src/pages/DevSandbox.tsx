@@ -47,7 +47,7 @@ const DevSandbox = () => {
   
   // Breathing controls (for Orbit)
   const [breathingEnabled, setBreathingEnabled] = useState(true);
-  const [breathingAmplitude, setBreathingAmplitude] = useState(30);
+  const [breathingAmplitude, setBreathingAmplitude] = useState(150);
   const [breathingSpeed, setBreathingSpeed] = useState(0.5);
   
   // Deck and cards

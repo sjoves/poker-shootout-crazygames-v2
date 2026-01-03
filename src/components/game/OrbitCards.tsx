@@ -1,15 +1,15 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import useSound from 'use-sound';
 import { Card } from '@/types/game';
 import { PlayingCard } from './PlayingCard';
-import useSound from 'use-sound';
 
-interface OrbitCard extends Card {
-  ring: number;
-  baseAngle: number; // Initial angle offset for this card's slot
-  speed: number;
-  isNew?: boolean;
-  entryTime?: number; // Time when card entered orbit (for fly-in animation tracking)
+interface OrbitSlot {
+  ring: 0 | 1 | 2;
+  slotIndex: number;
+  totalSlotsInRing: number;
+  card: Card;
+  isNew: boolean;
 }
 
 interface OrbitCardsProps {
@@ -25,19 +25,18 @@ interface OrbitCardsProps {
   showRingGuides?: boolean;
 }
 
-// Wrapper component for smooth fly-in transitions
-const OrbitCardWrapper = ({ 
-  x, 
-  y, 
-  isNew, 
-  children, 
+const OrbitCardWrapper = ({
+  x,
+  y,
+  isNew,
+  children,
   cardId,
-  onClick 
-}: { 
-  x: number; 
-  y: number; 
-  isNew: boolean; 
-  children: React.ReactNode; 
+  onClick,
+}: {
+  x: number;
+  y: number;
+  isNew: boolean;
+  children: React.ReactNode;
   cardId: string;
   onClick: () => void;
 }) => {
@@ -45,19 +44,9 @@ const OrbitCardWrapper = ({
     <motion.div
       key={cardId}
       initial={isNew ? { x: 0, y: 0, scale: 0, opacity: 0 } : false}
-      animate={{ 
-        x, 
-        y, 
-        scale: 1, 
-        opacity: 1 
-      }}
+      animate={{ x, y, scale: 1, opacity: 1 }}
       exit={{ opacity: 0, scale: 0, transition: { duration: 0.2 } }}
-      transition={{ 
-        type: 'spring', 
-        stiffness: 70, 
-        damping: 15,
-        mass: 1
-      }}
+      transition={{ type: 'spring', stiffness: 70, damping: 15, mass: 1 }}
       className="absolute top-1/2 left-1/2 cursor-pointer z-20"
       style={{
         marginLeft: '-28px',
@@ -81,229 +70,240 @@ export function OrbitCards({
   isPaused = false,
   reshuffleTrigger = 0,
   breathingEnabled = true,
-  breathingAmplitude = 30,
+  breathingAmplitude = 150,
   breathingSpeed = 0.5,
   showRingGuides = true,
 }: OrbitCardsProps) {
-  const [orbitCards, setOrbitCards] = useState<OrbitCard[]>([]);
-  const [hiddenDeck, setHiddenDeck] = useState<Card[]>([]);
-  const [globalTime, setGlobalTime] = useState(0); // Global time for rotation + breathing
-  const containerRef = useRef<HTMLDivElement>(null);
-  const rafRef = useRef<number>();
+  const [slots, setSlots] = useState<OrbitSlot[]>([]);
+  const [hiddenDeckCount, setHiddenDeckCount] = useState(0);
+  const hiddenDeckRef = useRef<Card[]>([]);
+
+  const [globalTime, setGlobalTime] = useState(0);
   const lastTimeRef = useRef<number>(0);
-  const pendingReplenishRef = useRef(false); // Prevent infinite loop
+  const rafRef = useRef<number>();
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const safeZonePadding = 40;
+
   const [playCardHit] = useSound('/sounds/card-hit.wav', { volume: 0.3 });
 
-  // Configuration - 5/8/12 card distribution per ring = 25 total
-  const totalRings = 3;
-  const cardsPerRing = useMemo(() => [5, 8, 12], []); // Inner to outer
-  const ringMultipliers = useMemo(() => [1.0, 1.15, 1.3], []); // Speed multipliers per ring
-  const safeZonePadding = 40;
+  // Ring config: Inner 5, Middle 8, Outer 12 = 25
+  const cardsPerRing = useMemo(() => [5, 8, 12] as const, []);
+  const ringMultipliers = useMemo(() => [1.0, 1.15, 1.3] as const, []);
   const totalOrbitCards = 25;
 
-  // Calculate base ring radii based on container size
+  const baseSpeed = useMemo(() => {
+    // Orbit base speed: 1.05 × (1 + (level - 10) × 0.005)
+    return 1.05 * (1 + (level > 10 ? (level - 10) * 0.005 : 0));
+  }, [level]);
+
   const getBaseRingRadii = useCallback(() => {
     if (!containerRef.current) return [80, 140, 200];
     const rect = containerRef.current.getBoundingClientRect();
     const maxRadius = Math.min(rect.width, rect.height) / 2 - safeZonePadding;
-    return [
-      maxRadius * 0.35, // Inner ring
-      maxRadius * 0.6,  // Middle ring
-      maxRadius * 0.9,  // Outer ring
-    ];
+    return [maxRadius * 0.35, maxRadius * 0.6, maxRadius * 0.9];
   }, []);
 
-  // Calculate base speed with level scaling
-  const baseSpeed = useMemo(() => {
-    return 1.05 * (1 + (level > 10 ? (level - 10) * 0.005 : 0));
-  }, [level]);
+  const initialize = useCallback(() => {
+    // Ensure deck ids are unique in case upstream logic ever duplicates.
+    const dedupedDeck = Array.from(new Map(deck.map(c => [c.id, c])).values());
 
-  // Initialize orbit cards with 25 in orbit, rest in hidden deck
-  const initializeCards = useCallback(() => {
-    const newOrbitCards: OrbitCard[] = [];
-    const newHiddenDeck: Card[] = [];
-    let deckIndex = 0;
+    const newSlots: OrbitSlot[] = [];
+    let i = 0;
 
-    // Populate orbit rings
-    for (let ring = 0; ring < totalRings; ring++) {
-      const numCards = cardsPerRing[ring];
-      const ringSpeed = baseSpeed * ringMultipliers[ring];
-      
-      for (let i = 0; i < numCards && deckIndex < deck.length; i++) {
-        const card = deck[deckIndex++];
-        // baseAngle is the card's fixed slot position in the ring
-        const baseAngle = (i / numCards) * Math.PI * 2;
-        newOrbitCards.push({
-          ...card,
-          ring,
-          baseAngle,
-          speed: ringSpeed,
-          isNew: false,
-          entryTime: 0,
-        });
+    for (let ring = 0 as 0 | 1 | 2; ring < 3; ring = (ring + 1) as 0 | 1 | 2) {
+      const totalSlotsInRing = cardsPerRing[ring];
+      for (let slotIndex = 0; slotIndex < totalSlotsInRing; slotIndex++) {
+        const card = dedupedDeck[i++];
+        if (!card) break;
+        newSlots.push({ ring, slotIndex, totalSlotsInRing, card, isNew: false });
       }
     }
 
-    // Rest goes to hidden deck (recycle queue)
-    while (deckIndex < deck.length) {
-      newHiddenDeck.push(deck[deckIndex++]);
+    const queue = dedupedDeck.slice(i);
+    hiddenDeckRef.current = queue;
+    setHiddenDeckCount(queue.length);
+
+    // Guarantee 25 slots if possible
+    if (newSlots.length < totalOrbitCards && queue.length > 0) {
+      const forbidden = new Set<string>(newSlots.map(s => s.card.id));
+      while (newSlots.length < totalOrbitCards) {
+        const next = queue.shift();
+        if (!next) break;
+        if (forbidden.has(next.id)) {
+          queue.push(next);
+          continue;
+        }
+        // Fill ring order + slot order deterministically
+        const slotToFill = newSlots.length;
+        const ring = (slotToFill < 5 ? 0 : slotToFill < 13 ? 1 : 2) as 0 | 1 | 2;
+        const slotIndex = ring === 0 ? slotToFill : ring === 1 ? slotToFill - 5 : slotToFill - 13;
+        const totalSlotsInRing = cardsPerRing[ring];
+        newSlots.push({ ring, slotIndex, totalSlotsInRing, card: next, isNew: false });
+        forbidden.add(next.id);
+      }
+      hiddenDeckRef.current = queue;
+      setHiddenDeckCount(queue.length);
     }
 
-    setOrbitCards(newOrbitCards);
-    setHiddenDeck(newHiddenDeck);
+    setSlots(newSlots);
     setGlobalTime(0);
     lastTimeRef.current = 0;
-  }, [deck, baseSpeed, cardsPerRing, ringMultipliers, totalRings]);
+  }, [cardsPerRing, deck]);
 
-  // Reset on deck change or reshuffle
+  // Only reset orbit when the caller explicitly reshuffles (prevents stalls on selection)
   useEffect(() => {
-    initializeCards();
-  }, [deck.length, reshuffleTrigger, initializeCards]);
+    initialize();
+  }, [reshuffleTrigger, initialize]);
 
-  // Animation loop - updates global time for rotation and breathing
+  // rAF loop (never tied to deck/shuffle updates)
   useEffect(() => {
     if (isPaused) return;
 
-    const animate = (timestamp: number) => {
-      if (lastTimeRef.current === 0) {
-        lastTimeRef.current = timestamp;
-      }
-      
-      const deltaTime = (timestamp - lastTimeRef.current) / 1000;
-      lastTimeRef.current = timestamp;
-
-      // Update global time - this drives both rotation and breathing
-      setGlobalTime(prev => prev + deltaTime);
-
-      // Clear isNew flag after fly-in animation completes
-      setOrbitCards(prev => 
-        prev.map(card => ({
-          ...card,
-          isNew: card.isNew && card.entryTime !== undefined && (timestamp / 1000 - card.entryTime) < 0.6,
-        }))
-      );
-
-      rafRef.current = requestAnimationFrame(animate);
+    const tick = (ts: number) => {
+      if (lastTimeRef.current === 0) lastTimeRef.current = ts;
+      const dt = (ts - lastTimeRef.current) / 1000;
+      lastTimeRef.current = ts;
+      setGlobalTime(t => t + dt);
+      rafRef.current = requestAnimationFrame(tick);
     };
 
-    rafRef.current = requestAnimationFrame(animate);
+    rafRef.current = requestAnimationFrame(tick);
 
     return () => {
-      if (rafRef.current) {
-        cancelAnimationFrame(rafRef.current);
-      }
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, [isPaused]);
 
-  // Reset time ref when paused
   useEffect(() => {
-    if (isPaused) {
-      lastTimeRef.current = 0;
-    }
+    if (isPaused) lastTimeRef.current = 0;
   }, [isPaused]);
 
-  // Handle card selection with recycling
-  const handleCardClick = useCallback((card: OrbitCard) => {
-    playCardHit();
-    onSelectCard(card);
-    
-    // Remove from orbit and add to back of hidden deck
-    setOrbitCards(prev => prev.filter(c => c.id !== card.id));
-    setHiddenDeck(prev => [...prev, card as Card]);
-    pendingReplenishRef.current = true;
-  }, [onSelectCard, playCardHit]);
-
-  // Replenish orbit from hidden deck (debounced with ref to prevent infinite loop)
-  useEffect(() => {
-    if (!pendingReplenishRef.current) return;
-    
-    const missingCount = totalOrbitCards - orbitCards.length;
-    
-    if (missingCount > 0 && hiddenDeck.length > 0) {
-      pendingReplenishRef.current = false;
-      
-      const cardsToAdd = hiddenDeck.slice(0, missingCount);
-      const remainingHidden = hiddenDeck.slice(missingCount);
-      
-      if (cardsToAdd.length > 0) {
-        // Find which ring needs cards
-        const ringCounts = [0, 0, 0];
-        orbitCards.forEach(c => ringCounts[c.ring]++);
-        
-        const newCards: OrbitCard[] = cardsToAdd.map((card) => {
-          // Find first ring that needs cards
-          let targetRing = 0;
-          for (let r = 0; r < totalRings; r++) {
-            if (ringCounts[r] < cardsPerRing[r]) {
-              targetRing = r;
-              ringCounts[r]++;
-              break;
-            }
-          }
-          
-          // Calculate entry angle - find a gap in the ring
-          const ringCards = orbitCards.filter(c => c.ring === targetRing);
-          const numCardsInRing = cardsPerRing[targetRing];
-          
-          // Find the missing slot index
-          const existingSlots = new Set(ringCards.map(c => {
-            // Calculate which slot this card occupies based on its baseAngle
-            return Math.round((c.baseAngle / (Math.PI * 2)) * numCardsInRing) % numCardsInRing;
-          }));
-          
-          let entrySlot = 0;
-          for (let i = 0; i < numCardsInRing; i++) {
-            if (!existingSlots.has(i)) {
-              entrySlot = i;
-              break;
-            }
-          }
-          
-          const entryBaseAngle = (entrySlot / numCardsInRing) * Math.PI * 2;
-          
-          return {
-            ...card,
-            ring: targetRing,
-            baseAngle: entryBaseAngle,
-            speed: baseSpeed * ringMultipliers[targetRing],
-            isNew: true,
-            entryTime: globalTime,
-          };
-        });
-        
-        setOrbitCards(prev => [...prev, ...newCards]);
-        setHiddenDeck(remainingHidden);
-      }
-    }
-  }, [orbitCards.length, hiddenDeck.length, totalOrbitCards, baseSpeed, cardsPerRing, ringMultipliers, totalRings, globalTime, orbitCards, hiddenDeck]);
-
-  // Calculate breathing radii based on global time
   const ringRadii = useMemo(() => {
-    const baseRadii = getBaseRingRadii();
-    if (!breathingEnabled) return baseRadii;
-    
-    // Formula: baseRadius + (Math.sin(time * breathingSpeed) * amplitude)
-    return baseRadii.map((radius, index) => {
-      const phaseOffset = index * 0.3;
-      const breathOffset = Math.sin(globalTime * breathingSpeed + phaseOffset) * breathingAmplitude;
-      return radius + breathOffset;
+    const base = getBaseRingRadii();
+    if (!breathingEnabled) return base;
+
+    // Required formula:
+    // radius = baseRadius + (Math.sin(globalTime * 0.5) * 150)
+    return base.map((radius, idx) => {
+      const phaseOffset = idx * 0.3;
+      const breath = Math.sin(globalTime * 0.5 + phaseOffset) * breathingAmplitude;
+      return radius + breath;
     });
-  }, [getBaseRingRadii, breathingEnabled, globalTime, breathingSpeed, breathingAmplitude]);
+  }, [breathingAmplitude, breathingEnabled, getBaseRingRadii, globalTime]);
+
+  const drawNextUnique = useCallback((forbidden: Set<string>) => {
+    const queue = hiddenDeckRef.current;
+    // Try up to queue.length iterations to find a usable card
+    for (let i = 0; i < queue.length; i++) {
+      const candidate = queue.shift();
+      if (!candidate) break;
+      if (!forbidden.has(candidate.id)) return candidate;
+      queue.push(candidate);
+    }
+    return null;
+  }, []);
+
+  const recycleCardInSlot = useCallback(
+    (slot: OrbitSlot) => {
+      // Move played card to the back of the queue (ensuring queue uniqueness)
+      const queue = hiddenDeckRef.current;
+      const withoutPlayed = queue.filter(c => c.id !== slot.card.id);
+      withoutPlayed.push(slot.card);
+      hiddenDeckRef.current = withoutPlayed;
+
+      const forbidden = new Set<string>([
+        ...selectedCardIds,
+        ...slots.map(s => s.card.id).filter(id => id !== slot.card.id),
+      ]);
+
+      const replacement = drawNextUnique(forbidden);
+      if (!replacement) {
+        setHiddenDeckCount(hiddenDeckRef.current.length);
+        return null;
+      }
+
+      // Ensure the replacement is removed from queue (drawNextUnique already shifted it)
+      setHiddenDeckCount(hiddenDeckRef.current.length);
+
+      return {
+        ...slot,
+        card: replacement,
+        isNew: true,
+      } as OrbitSlot;
+    },
+    [drawNextUnique, selectedCardIds, slots]
+  );
+
+  const handleCardClick = useCallback(
+    (slot: OrbitSlot) => {
+      playCardHit();
+      onSelectCard(slot.card);
+
+      setSlots(prev => {
+        // Rebuild forbidden set based on next slots
+        const next = prev.map(s => {
+          if (s.card.id !== slot.card.id) return s;
+
+          const queue = hiddenDeckRef.current;
+          // Put played to back, then draw replacement, preserving uniqueness.
+          const withoutPlayed = queue.filter(c => c.id !== slot.card.id);
+          withoutPlayed.push(slot.card);
+          hiddenDeckRef.current = withoutPlayed;
+
+          const forbidden = new Set<string>([...selectedCardIds, ...prev.map(p => p.card.id).filter(id => id !== slot.card.id)]);
+          const replacement = (() => {
+            const q = hiddenDeckRef.current;
+            for (let i = 0; i < q.length; i++) {
+              const candidate = q.shift();
+              if (!candidate) break;
+              if (!forbidden.has(candidate.id)) return candidate;
+              q.push(candidate);
+            }
+            return null;
+          })();
+
+          if (!replacement) return s; // Shouldn't happen with a full deck
+
+          return { ...s, card: replacement, isNew: true };
+        });
+
+        // Deduplicate visible card ids to prevent AnimatePresence key collisions
+        const seen = new Set<string>();
+        const deduped: OrbitSlot[] = [];
+        for (const s of next) {
+          if (seen.has(s.card.id)) continue;
+          seen.add(s.card.id);
+          deduped.push(s);
+        }
+
+        setHiddenDeckCount(hiddenDeckRef.current.length);
+
+        return deduped;
+      });
+    },
+    [onSelectCard, playCardHit, selectedCardIds]
+  );
+
+  const getSlotPosition = useCallback(
+    (slot: OrbitSlot) => {
+      const radius = ringRadii[slot.ring] ?? ringRadii[0];
+      const ringSpeedMultiplier = ringMultipliers[slot.ring];
+
+      // Required formula:
+      // angle = (slotIndex / totalSlotsInRing) * 2 * PI + (globalTime * speedMultiplier)
+      const angle =
+        (slot.slotIndex / slot.totalSlotsInRing) * Math.PI * 2 +
+        globalTime * baseSpeed * ringSpeedMultiplier;
+
+      const x = Math.cos(angle) * radius;
+      const y = Math.sin(angle) * radius;
+      return { x, y };
+    },
+    [baseSpeed, globalTime, ringMultipliers, ringRadii]
+  );
 
   const baseRadii = useMemo(() => getBaseRingRadii(), [getBaseRingRadii]);
-
-  // Calculate card position using angle + radius formula
-  // angle = baseAngle + (time * speedMultiplier)
-  // radius = baseRadius + (Math.sin(time * 0.5) * amplitude)
-  // x = cos(angle) * radius; y = sin(angle) * radius
-  const getCardPosition = useCallback((card: OrbitCard) => {
-    const radius = ringRadii[card.ring] || ringRadii[0];
-    // Rotation: angle = baseAngle + (globalTime * speed * 0.35)
-    const angle = card.baseAngle + (globalTime * card.speed * 0.35);
-    const x = Math.cos(angle) * radius;
-    const y = Math.sin(angle) * radius;
-    return { x, y };
-  }, [ringRadii, globalTime]);
 
   return (
     <div
@@ -311,61 +311,51 @@ export function OrbitCards({
       className="absolute inset-0 overflow-hidden touch-none flex items-center justify-center"
       style={{ perspective: '1000px' }}
     >
-      {/* Center anchor container */}
       <div className="relative w-full h-full max-w-[100vmin] max-h-[100vmin] mx-auto">
-        {/* Center point indicator */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-primary/30 z-10" />
 
-        {/* Orbit rings visual guides */}
         {showRingGuides && ringRadii.map((radius, index) => (
-          <motion.div
+          <div
             key={index}
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-primary/10 pointer-events-none"
-            style={{
-              width: radius * 2,
-              height: radius * 2,
-            }}
+            style={{ width: radius * 2, height: radius * 2 }}
           />
         ))}
 
-        {/* Ring info labels */}
         {showRingGuides && baseRadii.map((_, index) => (
           <div
             key={`label-${index}`}
             className="absolute top-1/2 left-1/2 text-[8px] text-primary/40 pointer-events-none z-5"
-            style={{
-              transform: `translate(-50%, -50%) translateY(${-ringRadii[index] - 8}px)`,
-            }}
+            style={{ transform: `translate(-50%, -50%) translateY(${-ringRadii[index] - 8}px)` }}
           >
             {[`Inner ${cardsPerRing[0]}×1.0`, `Mid ${cardsPerRing[1]}×1.15`, `Outer ${cardsPerRing[2]}×1.3`][index]}
           </div>
         ))}
 
-        {/* Hidden deck counter */}
         {showRingGuides && (
           <div className="absolute bottom-2 left-2 text-[10px] text-primary/50 bg-background/50 px-2 py-1 rounded">
-            Orbit: {orbitCards.length}/{totalOrbitCards} | Queue: {hiddenDeck.length}
+            Orbit: {slots.length}/{totalOrbitCards} | Queue: {hiddenDeckCount}
           </div>
         )}
 
-        {/* Orbiting cards with AnimatePresence for smooth transitions */}
         <AnimatePresence mode="popLayout">
-          {orbitCards.map(card => {
-            const pos = getCardPosition(card);
-            const isSelected = selectedCardIds.includes(card.id);
+          {slots.map((slot) => {
+            const isSelected = selectedCardIds.includes(slot.card.id);
             if (isSelected) return null;
+
+            const pos = getSlotPosition(slot);
 
             return (
               <OrbitCardWrapper
-                key={card.id}
-                cardId={card.id}
+                key={slot.card.id}
+                cardId={slot.card.id}
                 x={pos.x}
                 y={pos.y}
-                isNew={card.isNew || false}
-                onClick={() => handleCardClick(card)}
+                isNew={slot.isNew}
+                onClick={() => handleCardClick(slot)}
               >
                 <PlayingCard
-                  card={card}
+                  card={slot.card}
                   size="sm"
                   className="shadow-lg hover:shadow-xl transition-shadow"
                 />
