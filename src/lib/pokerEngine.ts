@@ -250,24 +250,24 @@ export function getSSCSpeed(level: number): number {
     const isFirstFallingCycle = level >= 7 && level <= 9;
     baseSpeed = isFirstFallingCycle ? 1.53 : 1.8;
   } else {
-    // Orbit mode: base speed of 1.5 (between conveyor and falling)
-    baseSpeed = 1.5;
+    // Orbit mode: 30% slower base speed for better playability (1.5 * 0.7 = 1.05)
+    baseSpeed = 1.05;
   }
   
   // Speed scaling logic:
   // - Levels 1-10: No speed increase (use base speed)
   // - Levels 11+: 
-  //   - Falling mode: 0.5% linear increase per level (reduced from 2%)
-  //   - Conveyor/Orbit: 2% linear increase per level
+  //   - Falling & Orbit modes: 0.5% linear increase per level (gentle progression)
+  //   - Conveyor: 2% linear increase per level
   if (level >= 11) {
     const levelsAbove10 = level - 10;
     
-    if (info.phase === 'falling') {
-      // Falling mode gets slower acceleration (0.5% per level)
+    if (info.phase === 'falling' || info.phase === 'orbit') {
+      // Falling and Orbit modes get slower acceleration (0.5% per level)
       const speedIncrease = 1 + (levelsAbove10 * 0.005);
       return baseSpeed * speedIncrease;
     } else {
-      // Conveyor and Orbit maintain original 2% scaling
+      // Conveyor maintains original 2% scaling
       const speedIncrease = 1 + (levelsAbove10 * 0.02);
       return baseSpeed * speedIncrease;
     }
@@ -279,9 +279,12 @@ export function getSSCSpeed(level: number): number {
 // Get orbital speed for a specific ring (outer rings move faster)
 export function getOrbitRingSpeed(level: number, ringIndex: number, totalRings: number): number {
   const baseSpeed = getSSCSpeed(level);
-  // Outer rings (higher index) move faster
-  // Ring 0 (innermost) = baseSpeed, outer rings scale up
-  const ringMultiplier = 1 + (ringIndex / totalRings) * 0.5; // Up to 50% faster for outermost
+  // Ring speed multipliers for playability:
+  // - Inner ring (0): 1.0x (anchor speed - slowest, most manageable)
+  // - Middle ring (1): 1.15x (slightly faster)
+  // - Outer ring (2): 1.3x (fastest, but still controllable)
+  const ringMultipliers = [1.0, 1.15, 1.3];
+  const ringMultiplier = ringMultipliers[ringIndex] || 1.0;
   return baseSpeed * ringMultiplier;
 }
 

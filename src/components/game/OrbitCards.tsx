@@ -68,7 +68,7 @@ export function OrbitCards({
             ...card,
             ring,
             angle,
-            speed: ringSpeed * (ring === 0 ? 1 : ring === 1 ? 1.25 : 1.5), // Outer faster
+            speed: ringSpeed, // Ring speed multipliers now handled in getOrbitRingSpeed
           });
         }
       }
@@ -97,7 +97,7 @@ export function OrbitCards({
       setOrbitCards(prev => 
         prev.map(card => ({
           ...card,
-          angle: card.angle + card.speed * deltaTime * 0.5, // Rotation speed
+          angle: card.angle + card.speed * deltaTime * 0.35, // Reduced rotation multiplier for smoother feel
         }))
       );
 
@@ -141,11 +141,13 @@ export function OrbitCards({
   return (
     <div
       ref={containerRef}
-      className="absolute inset-0 overflow-hidden touch-none"
+      className="absolute inset-0 overflow-hidden touch-none flex items-center justify-center"
       style={{ perspective: '1000px' }}
     >
-      {/* Center point indicator */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-primary/30 z-10" />
+      {/* Center anchor container - ensures perfect centering on mobile */}
+      <div className="relative w-full h-full max-w-[100vmin] max-h-[100vmin] mx-auto">
+        {/* Center point indicator */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-primary/30 z-10" />
 
       {/* Orbit rings visual guides */}
       {ringRadii.map((radius, index) => (
@@ -203,6 +205,7 @@ export function OrbitCards({
           );
         })}
       </AnimatePresence>
+      </div>
     </div>
   );
 }
