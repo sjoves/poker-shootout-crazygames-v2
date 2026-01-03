@@ -8,6 +8,7 @@ import {
   calculateLeftoverPenalty,
   calculateLevelGoal,
   getSSCLevelInfo,
+  shouldTriggerBonusRound,
   generateSpecificHand,
   createBonusFriendlyDeck,
   calculateStarRating,
@@ -43,6 +44,7 @@ const INITIAL_STATE: GameState = {
   timeBonus: 0,
   leftoverPenalty: 0,
   bonusRoundCount: 0,
+  pendingBonusRound: false,
   bonusTimePoints: 0,
   levelScore: 0,
   cumulativeScore: 0,
@@ -96,7 +98,8 @@ export function useGameState() {
     const level = isSSC ? startLevel : 1;
     
     const levelInfo = isSSC ? getSSCLevelInfo(level) : null;
-    const isBonusLevel = forceBonus || (levelInfo?.isBonus || false);
+    // forceBonus is used for testing bonus rounds directly
+    const isBonusLevel = forceBonus;
     const initialBonusCount = isBonusLevel ? 1 : 0;
     
     // Use bonus-friendly deck for bonus rounds
@@ -118,6 +121,7 @@ export function useGameState() {
       powerUpChoices: [],
       showPowerUpSelection: false,
       bonusRoundCount: initialBonusCount,
+      pendingBonusRound: false,
     });
     handResultsRef.current = [];
   }, []);
@@ -221,6 +225,8 @@ export function useGameState() {
       // For SSC, check if level is complete
       if (prev.mode === 'ssc' && newScore >= prev.levelGoal) {
         const starRating = calculateStarRating(newScore, prev.levelGoal);
+        // Check if a bonus round should trigger after this level
+        const shouldBonus = shouldTriggerBonusRound(prev.sscLevel);
         return {
           ...prev,
           score: newScore,
@@ -231,6 +237,7 @@ export function useGameState() {
           selectedCards: [],
           currentHand: modifiedResult,
           isLevelComplete: true,
+          pendingBonusRound: shouldBonus,
           deck: recycledDeck,
           previousHandRank: newPreviousHandRank,
           betterHandStreak: newBetterHandStreak,
@@ -396,41 +403,74 @@ export function useGameState() {
     });
   }, []);
 
+  // Start a bonus round (called when pendingBonusRound is true)
+  const startBonusRound = useCallback(() => {
+    setState(prev => {
+      const newBonusRoundCount = prev.bonusRoundCount + 1;
+      const deck = createBonusFriendlyDeck(newBonusRoundCount);
+      
+      handResultsRef.current = [];
+      
+      return {
+        ...prev,
+        isBonusLevel: true,
+        isBonusFailed: false,
+        pendingBonusRound: false,
+        bonusRoundCount: newBonusRoundCount,
+        isPlaying: true,
+        isPaused: false,
+        isGameOver: false,
+        score: 0,
+        rawScore: 0,
+        levelScore: 0,
+        handsPlayed: 0,
+        cardsSelected: 0,
+        timeRemaining: 60,
+        timeElapsed: 0,
+        bonusTimePoints: 0,
+        selectedCards: [],
+        deck,
+        usedCards: [],
+        currentHand: null,
+        isLevelComplete: false,
+        powerUpChoices: [],
+        showPowerUpSelection: false,
+        // Reset multiplier for bonus round
+        previousHandRank: null,
+        betterHandStreak: 0,
+        currentMultiplier: 1,
+        starRating: 0,
+      };
+    });
+  }, []);
+
+  // Proceed to next numbered level (called after bonus round or directly)
   const nextLevel = useCallback(() => {
     setState(prev => {
-      const newLevel = prev.sscLevel + 1;
+      // If we're coming from a bonus round, don't increment level
+      // The level was already "completed" before the bonus round
+      const newLevel = prev.isBonusLevel ? prev.sscLevel + 1 : prev.sscLevel + 1;
       const levelInfo = getSSCLevelInfo(newLevel);
-
-      // Increment bonus round count if entering a bonus level
-      const newBonusRoundCount = levelInfo.isBonus ? prev.bonusRoundCount + 1 : prev.bonusRoundCount;
       
-      // Use bonus-friendly deck for early bonus rounds
-      const deck = levelInfo.isBonus 
-        ? createBonusFriendlyDeck(newBonusRoundCount) 
-        : shuffleDeck(createDeck());
+      const deck = shuffleDeck(createDeck());
 
-      // Reset hand results for new level
       handResultsRef.current = [];
 
-      // Preserve earned power-ups across levels, refresh active power-ups
       return {
         ...prev,
         sscLevel: newLevel,
         sscPhase: levelInfo.phase,
         sscRound: levelInfo.round,
-        isBonusLevel: levelInfo.isBonus,
+        isBonusLevel: false,
         isBonusFailed: false,
+        pendingBonusRound: false,
         levelGoal: calculateLevelGoal(newLevel),
-        bonusRoundCount: newBonusRoundCount,
-        // Ensure game is playing and not paused for new level
         isPlaying: true,
         isPaused: false,
         isGameOver: false,
-        // Reset level-specific values, preserve cumulative score
         score: 0,
         rawScore: 0,
         levelScore: 0,
-        // cumulativeScore is preserved from prev
         handsPlayed: 0,
         cardsSelected: 0,
         timeRemaining: 60,
@@ -445,9 +485,7 @@ export function useGameState() {
         isLevelComplete: false,
         powerUpChoices: [],
         showPowerUpSelection: false,
-        // Earned power-ups persist, refresh active for the level
         activePowerUps: [...prev.earnedPowerUps],
-        // Reset Better-Hand multiplier for new level
         previousHandRank: null,
         betterHandStreak: 0,
         currentMultiplier: 1,
@@ -598,6 +636,7 @@ export function useGameState() {
     dismissPowerUpSelection,
     usePowerUp,
     nextLevel,
+    startBonusRound,
     reshuffleUnselected,
     pauseGame,
     setPaused,

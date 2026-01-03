@@ -152,22 +152,20 @@ export function calculateLeftoverPenalty(cards: Card[]): number {
   return cards.reduce((sum, card) => sum + card.value * 10, 0);
 }
 
-// SSC Level structure (NEW):
-// 3-Level Cycle: Levels 1-3 Static, 4-6 Conveyor, 7-9 Falling. Repeat cycle.
-// Bonus rounds occur every 3 levels (after levels 3, 6, 9, 12, etc.)
+// SSC Level structure:
+// IMPORTANT: Bonus rounds are separate from numbered levels.
+// Levels follow strict 3-3-3 rotation: 1-3 Static, 4-6 Conveyor, 7-9 Falling (repeats)
+// Bonus rounds occur AFTER levels 3, 6, 9, etc. but don't count as levels.
 
 export interface SSCLevelInfo {
   phase: 'static' | 'conveyor' | 'falling';
-  isBonus: boolean;
-  round: number; // Which cycle we're in (1-indexed)
+  round: number; // Which 9-level cycle we're in (1-indexed)
   difficultyMultiplier: number;
 }
 
+// Get level info for a numbered level (NOT bonus round)
 export function getSSCLevelInfo(level: number): SSCLevelInfo {
-  // Bonus round every 3 levels - bonus rounds are separate from main levels
-  const isBonus = level > 0 && level % 3 === 0;
-  
-  // Determine phase based on 9-level cycle (3 static, 3 conveyor, 3 falling)
+  // Determine phase based on strict 9-level cycle (3 static, 3 conveyor, 3 falling)
   const cyclePosition = ((level - 1) % 9) + 1; // 1-9
   
   let phase: 'static' | 'conveyor' | 'falling';
@@ -187,23 +185,23 @@ export function getSSCLevelInfo(level: number): SSCLevelInfo {
   
   return {
     phase,
-    isBonus,
     round,
     difficultyMultiplier,
   };
+}
+
+// Check if a bonus round should occur AFTER completing a level
+export function shouldTriggerBonusRound(levelJustCompleted: number): boolean {
+  return levelJustCompleted > 0 && levelJustCompleted % 3 === 0;
 }
 
 export function getSSCPhase(level: number): 'static' | 'conveyor' | 'falling' {
   return getSSCLevelInfo(level).phase;
 }
 
-export function isSSCBonusLevel(level: number): boolean {
-  return getSSCLevelInfo(level).isBonus;
-}
-
 export function calculateLevelGoal(level: number): number {
   // Level 1 starts at 500 points
-  // Increase point goal by 5% compounding per level
+  // Increase point goal by 5% compounding per level (numbered levels only)
   const baseGoal = 500;
   return Math.floor(baseGoal * Math.pow(1.05, level - 1));
 }
@@ -213,8 +211,9 @@ export function getSSCSpeed(level: number): number {
   
   if (info.phase === 'static') return 0;
   
-  // Base speed for moving modes
-  const baseSpeed = info.phase === 'conveyor' ? 0.5 : 0.7;
+  // SIGNIFICANTLY higher base speeds for moving modes
+  // Level 4 (first Conveyor) and Level 7 (first Falling) should feel fast immediately
+  const baseSpeed = info.phase === 'conveyor' ? 1.2 : 1.8; // Increased from 0.5/0.7
   
   // Starting Level 10, increase speed by 2% linearly per level
   if (level >= 10) {

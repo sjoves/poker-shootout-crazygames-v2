@@ -36,6 +36,7 @@ export default function GameScreen() {
     setPaused,
     resetGame, 
     nextLevel,
+    startBonusRound,
     markExplainerSeen,
   } = useGameState();
   const { playSound, startMusic, stopMusic, isMusicLoading } = useAudio();
@@ -439,8 +440,10 @@ export default function GameScreen() {
           starRating={state.starRating}
           isBonusRound={state.isBonusLevel}
           isBonusFailed={state.isBonusFailed}
+          pendingBonusRound={state.pendingBonusRound}
           bonusTimePoints={state.bonusTimePoints}
           onNextLevel={nextLevel}
+          onStartBonusRound={startBonusRound}
         />
 
         {/* SSC Explainer */}
