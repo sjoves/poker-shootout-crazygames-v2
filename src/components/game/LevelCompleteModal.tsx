@@ -13,8 +13,10 @@ interface LevelCompleteModalProps {
   starRating: number;
   isBonusRound: boolean;
   isBonusFailed: boolean;
+  pendingBonusRound: boolean;
   bonusTimePoints?: number;
   onNextLevel: () => void;
+  onStartBonusRound: () => void;
 }
 
 export function LevelCompleteModal({
@@ -27,14 +29,36 @@ export function LevelCompleteModal({
   starRating,
   isBonusRound,
   isBonusFailed,
+  pendingBonusRound,
   bonusTimePoints,
   onNextLevel,
+  onStartBonusRound,
 }: LevelCompleteModalProps) {
   const stars = [1, 2, 3];
   
   // Calculate thresholds for display
   const twoStarThreshold = Math.floor(goalScore * 1.25);
   const threeStarThreshold = Math.floor(goalScore * 1.5);
+
+  // Determine button text and action based on state
+  const getButtonConfig = () => {
+    if (isBonusFailed) {
+      // After failed bonus round, continue to next level
+      return { text: `Continue to Level ${level + 1}`, action: onNextLevel };
+    }
+    if (isBonusRound) {
+      // After successful bonus round, continue to next level
+      return { text: `Continue to Level ${level + 1}`, action: onNextLevel };
+    }
+    if (pendingBonusRound) {
+      // After completing a level that triggers bonus, go to bonus round
+      return { text: 'Bonus Round!', action: onStartBonusRound };
+    }
+    // Normal level complete, go to next level
+    return { text: 'Next Level', action: onNextLevel };
+  };
+
+  const buttonConfig = getButtonConfig();
 
   return (
     <AnimatePresence>
@@ -66,6 +90,10 @@ export function LevelCompleteModal({
               ) : isBonusRound ? (
                 <div className="w-16 h-16 mx-auto bg-accent/20 rounded-full flex items-center justify-center">
                   <span className="text-4xl">🎁</span>
+                </div>
+              ) : pendingBonusRound ? (
+                <div className="w-16 h-16 mx-auto bg-accent/20 rounded-full flex items-center justify-center">
+                  <span className="text-4xl">🎉</span>
                 </div>
               ) : (
                 <TrophyIcon className="w-16 h-16 text-primary mx-auto" />
@@ -145,20 +173,18 @@ export function LevelCompleteModal({
               </p>
             </div>
 
-            {/* Next Level Button */}
+            {/* Action Button */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.8 }}
             >
               <Button
-                onClick={onNextLevel}
+                onClick={buttonConfig.action}
                 size="lg"
                 className="w-full font-display text-lg"
               >
-                {isBonusFailed 
-                  ? `Continue to Level ${level + 1}` 
-                  : 'Next Level'}
+                {buttonConfig.text}
               </Button>
             </motion.div>
           </motion.div>

@@ -59,7 +59,7 @@ export interface GameState {
   deck: Card[];
   usedCards: Card[];
   currentHand: HandResult | null;
-  sscLevel: number;
+  sscLevel: number; // The actual numbered level (1, 2, 3, 4...)
   sscPhase: SSCPhase;
   sscRound: number;
   levelGoal: number;
@@ -74,6 +74,8 @@ export interface GameState {
   leftoverPenalty: number;
   // Bonus round tracking
   bonusRoundCount: number;
+  // Flag to trigger bonus round after level complete
+  pendingBonusRound: boolean;
   // Bonus round time bonus
   bonusTimePoints?: number;
   // SSC cumulative scoring
