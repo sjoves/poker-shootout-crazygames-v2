@@ -9,11 +9,11 @@ interface LootBoxRevealProps {
   isOpen: boolean;
   powerUpId: string | null;
   tier: RewardTier | null;
-  inventoryFull: boolean;
-  currentPowerUps: string[];
+  inventoryFull?: boolean; // Kept for backwards compatibility, but unused
+  currentPowerUps?: string[]; // Kept for backwards compatibility, but unused
   onClaim: () => void;
-  onSwap: (discardId: string) => void;
-  onDiscard: () => void;
+  onSwap?: (discardId: string) => void; // Kept for backwards compatibility, but unused
+  onDiscard?: () => void; // Kept for backwards compatibility, but unused
 }
 
 type RevealPhase = 'closed' | 'shaking' | 'opening' | 'revealed';
@@ -22,14 +22,9 @@ export function LootBoxReveal({
   isOpen,
   powerUpId,
   tier,
-  inventoryFull,
-  currentPowerUps,
   onClaim,
-  onSwap,
-  onDiscard,
 }: LootBoxRevealProps) {
   const [phase, setPhase] = useState<RevealPhase>('closed');
-  const [selectedToDiscard, setSelectedToDiscard] = useState<string | null>(null);
 
   const powerUp = powerUpId ? POWER_UPS.find(p => p.id === powerUpId) : null;
   const tierInfo = tier ? getTierDisplayInfo(tier) : null;
@@ -49,12 +44,6 @@ export function LootBoxReveal({
       };
     }
   }, [isOpen, powerUp]);
-
-  const handleSwap = () => {
-    if (selectedToDiscard) {
-      onSwap(selectedToDiscard);
-    }
-  };
 
   if (!isOpen || !powerUp || !tierInfo) return null;
 
@@ -191,73 +180,20 @@ export function LootBoxReveal({
                 </div>
               </motion.div>
 
-              {/* Action Buttons */}
+              {/* Action Button - Always show Claim since inventory is unlimited */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="mt-6 space-y-3"
+                className="mt-6"
               >
-                {!inventoryFull ? (
-                  <Button
-                    onClick={onClaim}
-                    size="lg"
-                    className="w-full font-display text-lg"
-                  >
-                    Claim Power-up!
-                  </Button>
-                ) : (
-                  <>
-                    <p className="text-gold text-sm font-medium mb-3">
-                      ⚠️ Inventory Full! (3/3)
-                    </p>
-                    <p className="text-muted-foreground text-xs mb-3">
-                      Choose a power-up to replace:
-                    </p>
-                    
-                    {/* Current Power-ups to swap */}
-                    <div className="flex gap-2 justify-center mb-4">
-                      {currentPowerUps.map(id => {
-                        const pu = POWER_UPS.find(p => p.id === id);
-                        if (!pu) return null;
-                        return (
-                          <button
-                            key={id}
-                            onClick={() => setSelectedToDiscard(id)}
-                            className={cn(
-                              "p-3 rounded-lg border-2 transition-all",
-                              selectedToDiscard === id
-                                ? "border-destructive bg-destructive/10"
-                                : "border-border hover:border-muted-foreground"
-                            )}
-                          >
-                            <span className="text-2xl">{pu.emoji}</span>
-                            <p className="text-xs mt-1">{pu.name}</p>
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={handleSwap}
-                        disabled={!selectedToDiscard}
-                        size="lg"
-                        className="flex-1 font-display"
-                      >
-                        Swap
-                      </Button>
-                      <Button
-                        onClick={onDiscard}
-                        variant="outline"
-                        size="lg"
-                        className="flex-1 font-display"
-                      >
-                        Discard New
-                      </Button>
-                    </div>
-                  </>
-                )}
+                <Button
+                  onClick={onClaim}
+                  size="lg"
+                  className="w-full font-display text-lg"
+                >
+                  Claim Power-up!
+                </Button>
               </motion.div>
             </motion.div>
           )}
