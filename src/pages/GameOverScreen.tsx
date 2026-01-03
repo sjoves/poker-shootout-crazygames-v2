@@ -190,7 +190,7 @@ export default function GameOverScreen() {
           {displayScore.toLocaleString()}
         </div>
 
-        <div className="bg-card/80 rounded-xl p-4 mb-6 text-left space-y-1">
+        <div className="bg-card/80 rounded-xl p-4 mb-6 text-left space-y-1 w-full max-w-md mx-auto">
           <p className="text-sm text-muted-foreground">Hands Played: {gameState.handsPlayed}</p>
           {isClassicMode && (
             <>
@@ -223,7 +223,7 @@ export default function GameOverScreen() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-gradient-to-br from-gold/10 to-primary/10 border border-gold/30 rounded-xl p-4 mb-6"
+            className="bg-gradient-to-br from-gold/10 to-primary/10 border border-gold/30 rounded-xl p-4 mb-6 w-full max-w-md mx-auto"
           >
             <div className="flex items-center gap-2 mb-2">
               <CloudUpload className="w-5 h-5 text-gold" />
@@ -249,7 +249,7 @@ export default function GameOverScreen() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-card/60 border border-primary/30 rounded-xl p-4 mb-6"
+            className="bg-card/60 border border-primary/30 rounded-xl p-4 mb-6 w-full max-w-md mx-auto"
           >
             <div className="flex items-center justify-center gap-2 text-primary">
               <CheckCircle className="w-5 h-5" />
