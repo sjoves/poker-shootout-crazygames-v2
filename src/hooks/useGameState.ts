@@ -9,7 +9,9 @@ import {
   calculateLevelGoal,
   getSSCLevelInfo,
   generateSpecificHand,
-  createBonusFriendlyDeck
+  createBonusFriendlyDeck,
+  calculateStarRating,
+  getBetterHandMultiplier
 } from '@/lib/pokerEngine';
 
 const INITIAL_STATE: GameState = {
@@ -24,6 +26,7 @@ const INITIAL_STATE: GameState = {
   isGameOver: false,
   isLevelComplete: false,
   isBonusLevel: false,
+  isBonusFailed: false,
   selectedCards: [],
   deck: [],
   usedCards: [],
@@ -31,7 +34,7 @@ const INITIAL_STATE: GameState = {
   sscLevel: 1,
   sscPhase: 'static',
   sscRound: 1,
-  levelGoal: 1000,
+  levelGoal: 500,
   earnedPowerUps: [],
   activePowerUps: [],
   powerUpChoices: [],
@@ -44,6 +47,11 @@ const INITIAL_STATE: GameState = {
   levelScore: 0,
   cumulativeScore: 0,
   reshuffleTrigger: 0,
+  previousHandRank: null,
+  betterHandStreak: 0,
+  currentMultiplier: 1,
+  starRating: 0,
+  hasSeenSSCExplainer: false,
 };
 
 // Get available power-ups that haven't been earned yet
@@ -159,8 +167,28 @@ export function useGameState() {
       const inFinalStretch = (isBlitz || isSSC) && prev.timeRemaining <= 10 && prev.timeRemaining > 0;
       const finalStretchMultiplier = inFinalStretch ? 2 : 1;
       
-      // Apply final stretch bonus
+      // Calculate Better-Hand multiplier for SSC mode
+      let betterHandMultiplier = 1;
+      let newBetterHandStreak = 0;
+      let newPreviousHandRank = result.hand.rank;
+      
+      if (isSSC && !prev.isBonusLevel) {
+        // Check if current hand is better (lower rank number = better hand)
+        if (prev.previousHandRank !== null && result.hand.rank < prev.previousHandRank) {
+          // Hand is better than previous - increase streak
+          newBetterHandStreak = prev.betterHandStreak + 1;
+          betterHandMultiplier = getBetterHandMultiplier(newBetterHandStreak);
+        } else if (prev.previousHandRank !== null) {
+          // Hand is equal or worse - reset streak
+          newBetterHandStreak = 0;
+          betterHandMultiplier = 1;
+        }
+        // First hand of level - no multiplier yet
+      }
+      
+      // Apply multipliers
       let multipliedPoints = result.totalPoints;
+      multipliedPoints = Math.floor(multipliedPoints * betterHandMultiplier);
       if (inFinalStretch) {
         multipliedPoints = Math.floor(multipliedPoints * finalStretchMultiplier);
       }
@@ -192,6 +220,7 @@ export function useGameState() {
 
       // For SSC, check if level is complete
       if (prev.mode === 'ssc' && newScore >= prev.levelGoal) {
+        const starRating = calculateStarRating(newScore, prev.levelGoal);
         return {
           ...prev,
           score: newScore,
@@ -203,6 +232,10 @@ export function useGameState() {
           currentHand: modifiedResult,
           isLevelComplete: true,
           deck: recycledDeck,
+          previousHandRank: newPreviousHandRank,
+          betterHandStreak: newBetterHandStreak,
+          currentMultiplier: betterHandMultiplier,
+          starRating,
         };
       }
 
@@ -237,6 +270,9 @@ export function useGameState() {
         currentHand: modifiedResult,
         deck: recycledDeck,
         isGameOver: false,
+        previousHandRank: newPreviousHandRank,
+        betterHandStreak: newBetterHandStreak,
+        currentMultiplier: betterHandMultiplier,
       };
     });
   }, []);
@@ -282,6 +318,7 @@ export function useGameState() {
     setState(prev => ({
       ...prev,
       isLevelComplete: true,
+      isBonusFailed: true, // Bonus round skipped/failed - but doesn't cause game over
     }));
   }, []);
 
@@ -382,6 +419,7 @@ export function useGameState() {
         sscPhase: levelInfo.phase,
         sscRound: levelInfo.round,
         isBonusLevel: levelInfo.isBonus,
+        isBonusFailed: false,
         levelGoal: calculateLevelGoal(newLevel),
         bonusRoundCount: newBonusRoundCount,
         // Ensure game is playing and not paused for new level
@@ -409,8 +447,21 @@ export function useGameState() {
         showPowerUpSelection: false,
         // Earned power-ups persist, refresh active for the level
         activePowerUps: [...prev.earnedPowerUps],
+        // Reset Better-Hand multiplier for new level
+        previousHandRank: null,
+        betterHandStreak: 0,
+        currentMultiplier: 1,
+        starRating: 0,
       };
     });
+  }, []);
+
+  // Mark SSC explainer as seen
+  const markExplainerSeen = useCallback(() => {
+    setState(prev => ({
+      ...prev,
+      hasSeenSSCExplainer: true,
+    }));
   }, []);
 
   const reshuffleUnselected = useCallback(() => {
@@ -477,6 +528,15 @@ export function useGameState() {
           if (isBlitz || isSSC) {
             const newTimeRemaining = prev.timeRemaining - 1;
             if (newTimeRemaining <= 0) {
+              // For bonus rounds in SSC, time running out doesn't cause game over
+              if (isSSC && prev.isBonusLevel) {
+                return { 
+                  ...prev, 
+                  timeRemaining: 0, 
+                  isLevelComplete: true, 
+                  isBonusFailed: true 
+                };
+              }
               return { ...prev, timeRemaining: 0, isGameOver: true, isPlaying: false };
             }
             return { ...prev, timeRemaining: newTimeRemaining, timeElapsed: prev.timeElapsed + 1 };
@@ -544,5 +604,6 @@ export function useGameState() {
     endGame,
     resetGame,
     getHandResults,
+    markExplainerSeen,
   };
 }

@@ -152,60 +152,38 @@ export function calculateLeftoverPenalty(cards: Card[]): number {
   return cards.reduce((sum, card) => sum + card.value * 10, 0);
 }
 
-// SSC Level structure:
-// Round 1: Levels 1-3 (Static) + Level 4 (Bonus)
-// Round 2: Levels 5-7 (Conveyor) + Level 8 (Bonus)
-// Round 3: Levels 9-11 (Falling) + Level 12 (Bonus)
-// Pattern repeats with 5% difficulty increase and double points per round
+// SSC Level structure (NEW):
+// 3-Level Cycle: Levels 1-3 Static, 4-6 Conveyor, 7-9 Falling. Repeat cycle.
+// Bonus rounds occur every 3 levels (after levels 3, 6, 9, 12, etc.)
 
 export interface SSCLevelInfo {
   phase: 'static' | 'conveyor' | 'falling';
   isBonus: boolean;
-  round: number; // 1-indexed round number (each round = 4 levels)
+  round: number; // Which cycle we're in (1-indexed)
   difficultyMultiplier: number;
 }
 
 export function getSSCLevelInfo(level: number): SSCLevelInfo {
-  // Each "super round" is 12 levels (3 phases × 4 levels each with bonus)
-  const superRound = Math.floor((level - 1) / 12);
-  const positionInSuperRound = ((level - 1) % 12) + 1; // 1-12
+  // Bonus round every 3 levels - bonus rounds are separate from main levels
+  const isBonus = level > 0 && level % 3 === 0;
   
-  // Determine phase and bonus status
+  // Determine phase based on 9-level cycle (3 static, 3 conveyor, 3 falling)
+  const cyclePosition = ((level - 1) % 9) + 1; // 1-9
+  
   let phase: 'static' | 'conveyor' | 'falling';
-  let isBonus: boolean;
-  let phaseInSuperRound: number;
-  
-  if (positionInSuperRound <= 4) {
+  if (cyclePosition <= 3) {
     phase = 'static';
-    isBonus = positionInSuperRound === 4;
-    phaseInSuperRound = 0;
-  } else if (positionInSuperRound <= 8) {
+  } else if (cyclePosition <= 6) {
     phase = 'conveyor';
-    isBonus = positionInSuperRound === 8;
-    phaseInSuperRound = 1;
   } else {
     phase = 'falling';
-    isBonus = positionInSuperRound === 12;
-    phaseInSuperRound = 2;
   }
   
-  // Overall round number
-  const round = superRound * 3 + phaseInSuperRound + 1;
+  // Which full cycle are we in (each cycle is 9 levels)
+  const round = Math.ceil(level / 9);
   
-  // Count bonus rounds completed (every 4 levels is a bonus)
-  const bonusRoundsCompleted = Math.floor((level - 1) / 4);
-  
-  // Difficulty increases by 1% per bonus round completed after the first
-  // First 4 levels (before first bonus): 0.7x base
-  // After first bonus (level 5+): 0.7x + 1% per additional bonus round
-  let difficultyMultiplier: number;
-  if (bonusRoundsCompleted <= 1) {
-    // No increase until after the first bonus round
-    difficultyMultiplier = 0.7;
-  } else {
-    // 1% increase for each bonus round after the first
-    difficultyMultiplier = 0.7 + ((bonusRoundsCompleted - 1) * 0.01);
-  }
+  // Difficulty multiplier increases slightly each cycle
+  const difficultyMultiplier = 1 + (round - 1) * 0.1;
   
   return {
     phase,
@@ -224,30 +202,10 @@ export function isSSCBonusLevel(level: number): boolean {
 }
 
 export function calculateLevelGoal(level: number): number {
-  const info = getSSCLevelInfo(level);
-  
-  // Base goals: Level 1 = 1000, then increase
-  let baseGoal: number;
-  if (level === 1) baseGoal = 1000;
-  else if (level <= 3) baseGoal = 1000 + (level - 1) * 500; // 1500, 2000
-  else baseGoal = 2000 + (level - 3) * 300;
-  
-  // Apply difficulty multiplier
-  baseGoal = Math.floor(baseGoal * info.difficultyMultiplier);
-  
-  // Apply 10% increase per level starting at level 10
-  if (level >= 10) {
-    const levelsAbove9 = level - 9;
-    const additionalMultiplier = Math.pow(1.1, levelsAbove9);
-    baseGoal = Math.floor(baseGoal * additionalMultiplier);
-  }
-  
-  // Bonus levels have higher goals
-  if (info.isBonus) {
-    baseGoal = Math.floor(baseGoal * 1.5);
-  }
-  
-  return baseGoal;
+  // Level 1 starts at 500 points
+  // Increase point goal by 5% compounding per level
+  const baseGoal = 500;
+  return Math.floor(baseGoal * Math.pow(1.05, level - 1));
 }
 
 export function getSSCSpeed(level: number): number {
@@ -255,24 +213,66 @@ export function getSSCSpeed(level: number): number {
   
   if (info.phase === 'static') return 0;
   
-  // Position within phase (1-3 for regular levels, 4 for bonus)
-  const superRound = Math.floor((level - 1) / 12);
-  const positionInSuperRound = ((level - 1) % 12) + 1;
+  // Base speed for moving modes
+  const baseSpeed = info.phase === 'conveyor' ? 0.5 : 0.7;
   
-  let phasePosition: number;
-  if (info.phase === 'conveyor') {
-    phasePosition = positionInSuperRound - 4;
-  } else {
-    phasePosition = positionInSuperRound - 8;
+  // Starting Level 10, increase speed by 2% linearly per level
+  if (level >= 10) {
+    const levelsAbove9 = level - 9;
+    const speedIncrease = 1 + (levelsAbove9 * 0.02);
+    return baseSpeed * speedIncrease;
   }
   
-  // Base speed + increase per level in phase + difficulty scaling
-  const baseSpeed = info.phase === 'conveyor' ? 0.4 : 0.6;
-  const speedIncrement = info.phase === 'conveyor' ? 0.1 : 0.15;
-  const speed = baseSpeed + (phasePosition - 1) * speedIncrement;
+  return baseSpeed;
+}
+
+// Calculate star rating based on score vs goal
+export function calculateStarRating(score: number, goal: number): number {
+  if (score >= goal * 1.5) return 3;
+  if (score >= goal * 1.25) return 2;
+  if (score >= goal) return 1;
+  return 0;
+}
+
+// Calculate Better-Hand multiplier
+export function getBetterHandMultiplier(streak: number): number {
+  if (streak <= 0) return 1;
+  if (streak === 1) return 1.2;
+  if (streak === 2) return 1.5;
+  return 2; // 3+ consecutive better hands
+}
+
+// Calculate hand strength for tie-breaking (higher is better)
+export function calculateHandStrength(cards: Card[]): number {
+  if (cards.length !== 5) return 0;
   
-  // Apply difficulty multiplier for higher rounds
-  return speed * info.difficultyMultiplier;
+  const valueCounts = getValueCounts(cards);
+  const sortedValues = cards.map(c => c.value).sort((a, b) => b - a);
+  const countArray = Array.from(valueCounts.entries()).sort((a, b) => {
+    // Sort by count first, then by value
+    if (b[1].length !== a[1].length) return b[1].length - a[1].length;
+    return b[0] - a[0];
+  });
+  
+  // Base strength from hand rank (higher rank hands have much higher base)
+  let strength = 0;
+  
+  // Add kickers for tie-breaking (weighted by position)
+  for (let i = 0; i < sortedValues.length; i++) {
+    strength += sortedValues[i] * Math.pow(15, 4 - i);
+  }
+  
+  // For pairs/sets, weight the matched cards more heavily
+  if (countArray.length > 0) {
+    const primaryValue = countArray[0][0];
+    strength += primaryValue * 1000000;
+    if (countArray.length > 1) {
+      const secondaryValue = countArray[1][0];
+      strength += secondaryValue * 10000;
+    }
+  }
+  
+  return strength;
 }
 
 // Generate a hand of a specific type for power-ups

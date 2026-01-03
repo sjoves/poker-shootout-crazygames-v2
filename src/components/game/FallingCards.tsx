@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import type { Card, FallingCard } from "@/types/game";
 import { PlayingCard } from "./PlayingCard";
 import { useAudio } from "@/contexts/AudioContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface FallingCardsProps {
   deck: Card[];
@@ -32,6 +33,10 @@ export function FallingCards({
   const deckIndexRef = useRef<number>(0);
   const spawnCountRef = useRef<number>(0);
   const { playSound } = useAudio();
+  const isMobile = useIsMobile();
+  
+  // 20% larger hitbox on mobile
+  const hitboxPadding = isMobile ? 'p-6 -m-6' : 'p-4 -m-4';
 
   // Track which cards have already been spawned (by card id) so we don't re-spawn them
   const spawnedCardIdsRef = useRef<Set<string>>(new Set());
@@ -209,10 +214,10 @@ export function FallingCards({
             }}
             className="z-10"
           >
-            {/* Larger invisible hit zone for easier clicking */}
+            {/* Larger invisible hit zone for easier clicking - 20% larger on mobile */}
             <button
               onClick={() => handleCardClick(card)}
-              className="relative cursor-pointer p-4 -m-4 focus:outline-none"
+              className={`relative cursor-pointer ${hitboxPadding} focus:outline-none`}
               aria-label={`Select ${card.rank} of ${card.suit}`}
             >
               <PlayingCard

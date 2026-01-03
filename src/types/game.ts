@@ -54,6 +54,7 @@ export interface GameState {
   isGameOver: boolean;
   isLevelComplete: boolean;
   isBonusLevel: boolean;
+  isBonusFailed: boolean;
   selectedCards: Card[];
   deck: Card[];
   usedCards: Card[];
@@ -80,6 +81,14 @@ export interface GameState {
   cumulativeScore: number;
   // Reshuffle trigger for visual re-deal in dynamic modes
   reshuffleTrigger: number;
+  // Better-Hand multiplier system
+  previousHandRank: number | null;
+  betterHandStreak: number;
+  currentMultiplier: number;
+  // Star rating for level completion
+  starRating: number;
+  // SSC explainer shown flag
+  hasSeenSSCExplainer: boolean;
 }
 
 export interface PowerUp {
@@ -117,17 +126,18 @@ export const RANK_VALUES: Record<Rank, number> = {
   'J': 11, 'Q': 12, 'K': 13, 'A': 14
 };
 
+// SSC Mode Scoring - new point values per user request
 export const POKER_HANDS: PokerHand[] = [
-  { name: 'Royal Flush', basePoints: 4000, rank: 1 },
-  { name: 'Straight Flush', basePoints: 2400, rank: 2 },
-  { name: 'Four of a Kind', basePoints: 1600, rank: 3 },
+  { name: 'Royal Flush', basePoints: 5000, rank: 1 },
+  { name: 'Straight Flush', basePoints: 2500, rank: 2 },
+  { name: 'Four of a Kind', basePoints: 1500, rank: 3 },
   { name: 'Full House', basePoints: 1000, rank: 4 },
-  { name: 'Flush', basePoints: 600, rank: 5 },
-  { name: 'Straight', basePoints: 400, rank: 6 },
-  { name: 'Three of a Kind', basePoints: 240, rank: 7 },
-  { name: 'Two Pair', basePoints: 160, rank: 8 },
-  { name: 'One Pair', basePoints: 80, rank: 9 },
-  { name: 'High Card', basePoints: 20, rank: 10 },
+  { name: 'Flush', basePoints: 750, rank: 5 },
+  { name: 'Straight', basePoints: 500, rank: 6 },
+  { name: 'Three of a Kind', basePoints: 300, rank: 7 },
+  { name: 'Two Pair', basePoints: 150, rank: 8 },
+  { name: 'One Pair', basePoints: 50, rank: 9 },
+  { name: 'High Card', basePoints: 10, rank: 10 },
 ];
 
 export const POWER_UPS: PowerUp[] = [

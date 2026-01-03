@@ -12,8 +12,11 @@ import { StaticGrid } from '@/components/game/StaticGrid';
 import { PowerUpBar } from '@/components/game/PowerUpBar';
 import { PowerUpSelection } from '@/components/game/PowerUpSelection';
 import { BonusRound } from '@/components/game/BonusRound';
+import { LevelCompleteModal } from '@/components/game/LevelCompleteModal';
+import { SSCExplainer } from '@/components/game/SSCExplainer';
 import { GameMode } from '@/types/game';
-import { TrophyIcon, StarIcon, BoltIcon } from '@heroicons/react/24/outline';
+import { getSSCSpeed } from '@/lib/pokerEngine';
+import { BoltIcon, ArrowTrendingUpIcon } from '@heroicons/react/24/outline';
 
 
 export default function GameScreen() {
@@ -33,10 +36,14 @@ export default function GameScreen() {
     setPaused,
     resetGame, 
     nextLevel,
+    markExplainerSeen,
   } = useGameState();
   const { playSound, startMusic, stopMusic, isMusicLoading } = useAudio();
   const isMobile = useIsMobile();
-  const baseSpeed = isMobile ? 0.6 : 1; // Slower speed on mobile
+  const isSSC = state.mode === 'ssc';
+  const baseSpeed = isMobile ? 0.6 : 1;
+  const sscSpeed = isSSC ? getSSCSpeed(state.sscLevel) : 1;
+  const [showSSCExplainer, setShowSSCExplainer] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [showUsedCards, setShowUsedCards] = useState(false);
   const [bonusIntroActive, setBonusIntroActive] = useState(false);
@@ -144,16 +151,19 @@ export default function GameScreen() {
     }
   }, [state.isGameOver, state.mode, playSound]);
 
-  // Auto-advance to next level after showing congratulations
-  // Only auto-advance if power-up selection is not showing
+  // Show SSC explainer on first launch
   useEffect(() => {
-    if (state.isLevelComplete && !state.showPowerUpSelection) {
-      const timer = setTimeout(() => {
-        nextLevel();
-      }, 2000);
-      return () => clearTimeout(timer);
+    if (isSSC && state.isPlaying && !state.hasSeenSSCExplainer && introPhase === 'playing') {
+      setShowSSCExplainer(true);
+      setPaused(true);
     }
-  }, [state.isLevelComplete, state.showPowerUpSelection, nextLevel]);
+  }, [isSSC, state.isPlaying, state.hasSeenSSCExplainer, introPhase, setPaused]);
+
+  const handleExplainerClose = useCallback(() => {
+    setShowSSCExplainer(false);
+    markExplainerSeen();
+    setPaused(false);
+  }, [markExplainerSeen, setPaused]);
 
   // Activate bonus intro when entering bonus round - pause timer during intro
   useEffect(() => {
@@ -188,7 +198,6 @@ export default function GameScreen() {
   };
 
   const isBlitz = state.mode === 'blitz_fc' || state.mode === 'blitz_cb';
-  const isSSC = state.mode === 'ssc';
   const isBonusRound = isSSC && state.isBonusLevel && !state.isLevelComplete;
   const isFalling = !isBonusRound && (state.mode === 'classic_fc' || state.mode === 'blitz_fc' || (isSSC && state.sscPhase === 'falling'));
   const isConveyor = !isBonusRound && (state.mode === 'classic_cb' || state.mode === 'blitz_cb' || (isSSC && state.sscPhase === 'conveyor'));
@@ -294,6 +303,33 @@ export default function GameScreen() {
               onPause={pauseGame}
               isPaused={state.isPaused}
             />
+            {/* Better-Hand Multiplier Indicator */}
+            <AnimatePresence>
+              {isSSC && !state.isBonusLevel && state.currentMultiplier > 1 && (
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  className="absolute top-20 left-4 z-40"
+                >
+                  <motion.div
+                    animate={{ scale: [1, 1.05, 1] }}
+                    transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+                    className="flex items-center gap-2 bg-accent/20 backdrop-blur-sm border border-accent/30 rounded-lg px-3 py-2"
+                  >
+                    <ArrowTrendingUpIcon className="w-5 h-5 text-accent" />
+                    <span className="font-display text-lg font-bold text-accent">
+                      {state.currentMultiplier}x
+                    </span>
+                    <span className="text-xs text-accent/80">
+                      ({state.betterHandStreak} streak)
+                    </span>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Final Stretch Bonus Indicator */}
             <AnimatePresence>
               {inFinalStretch && (
                 <motion.div
@@ -323,7 +359,7 @@ export default function GameScreen() {
             deck={state.deck}
             selectedCardIds={selectedIds}
             onSelectCard={selectCard}
-            speed={baseSpeed * (isBlitz ? 1.2 : 1)}
+            speed={baseSpeed * (isBlitz ? 1.2 : isSSC ? sscSpeed : 1)}
             isPaused={state.isPaused || state.isLevelComplete}
             isRecycling={isBlitz || (isSSC && state.sscPhase !== 'static')}
             reshuffleTrigger={state.reshuffleTrigger}
@@ -334,7 +370,7 @@ export default function GameScreen() {
             deck={state.deck}
             selectedCardIds={selectedIds}
             onSelectCard={selectCard}
-            speed={baseSpeed * (isBlitz ? 1.5 : 1)}
+            speed={baseSpeed * (isBlitz ? 1.5 : isSSC ? sscSpeed : 1)}
             isPaused={state.isPaused || state.isLevelComplete}
             isRecycling={isBlitz || (isSSC && state.sscPhase !== 'static')}
             reshuffleTrigger={state.reshuffleTrigger}
@@ -392,62 +428,23 @@ export default function GameScreen() {
           </div>
         )}
 
-        {/* Level Complete Overlay */}
-        <AnimatePresence>
-          {state.isLevelComplete && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-50"
-            >
-              <motion.div
-                initial={{ y: 50 }}
-                animate={{ y: 0 }}
-                className="text-center p-8 bg-card border border-border rounded-2xl shadow-2xl"
-              >
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
-                >
-                  {state.isBonusLevel ? (
-                    <StarIcon className="w-16 h-16 text-accent mx-auto mb-4" />
-                  ) : (
-                    <TrophyIcon className="w-16 h-16 text-primary mx-auto mb-4" />
-                  )}
-                </motion.div>
-                <h2 className="text-3xl font-display text-foreground mb-2">
-                  {state.isBonusLevel ? 'Bonus Round Complete!' : `Level ${state.sscLevel} Complete!`}
-                </h2>
-                {state.isBonusLevel && state.bonusTimePoints ? (
-                  <div className="text-sm text-muted-foreground mb-2 space-y-1">
-                    <p>Hand Score: {(state.levelScore - state.bonusTimePoints).toLocaleString()}</p>
-                    <p className="text-accent">+ Time Bonus: {state.bonusTimePoints.toLocaleString()}</p>
-                    <p className="text-lg text-foreground font-bold border-t border-border pt-1 mt-1">
-                      Level Score: {state.levelScore.toLocaleString()}
-                    </p>
-                    <p className="text-xl text-primary font-bold mt-2">
-                      Total Score: {state.cumulativeScore.toLocaleString()}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="text-muted-foreground mb-2 space-y-1">
-                    <p className="text-lg">
-                      Level Score: {state.levelScore.toLocaleString()}
-                    </p>
-                    <p className="text-xl text-primary font-bold mt-2">
-                      Total Score: {state.cumulativeScore.toLocaleString()}
-                    </p>
-                  </div>
-                )}
-                <p className="text-sm text-primary animate-pulse">
-                  Next level starting...
-                </p>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Level Complete Modal */}
+        <LevelCompleteModal
+          isOpen={state.isLevelComplete && !state.showPowerUpSelection}
+          level={state.sscLevel}
+          score={state.score}
+          levelScore={state.levelScore}
+          cumulativeScore={state.cumulativeScore}
+          goalScore={state.levelGoal}
+          starRating={state.starRating}
+          isBonusRound={state.isBonusLevel}
+          isBonusFailed={state.isBonusFailed}
+          bonusTimePoints={state.bonusTimePoints}
+          onNextLevel={nextLevel}
+        />
+
+        {/* SSC Explainer */}
+        <SSCExplainer isOpen={showSSCExplainer} onClose={handleExplainerClose} />
       </div>
     </div>
   );

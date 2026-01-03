@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Card, ConveyorCard } from '@/types/game';
 import { PlayingCard } from './PlayingCard';
 import { useAudio } from '@/contexts/AudioContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface PendingReturn {
   card: Card;
@@ -37,6 +38,11 @@ export function ConveyorBelt({
   const initializedRef = useRef(false);
   const returnDelayMs = 3000; // Cards return after 3 seconds
   const { playSound } = useAudio();
+  const isMobile = useIsMobile();
+  
+  // Card width with spacing to prevent overlapping
+  const cardWidth = isMobile ? 72 : 64;
+  const cardSpacing = isMobile ? 28 : 20; // Larger spacing on mobile to prevent overlap
 
   // Reset and re-deal when reshuffleTrigger changes
   useEffect(() => {
@@ -53,22 +59,32 @@ export function ConveyorBelt({
     initializedRef.current = true;
     
     const containerWidth = containerRef.current.offsetWidth;
-    const cardWidth = 64;
-    const cardsPerRow = Math.floor(containerWidth / (cardWidth + 20));
+    const cardsPerRow = Math.floor(containerWidth / (cardWidth + cardSpacing));
     
     const cards: ConveyorCard[] = [];
     let deckIndex = 0;
+    const usedCardIds = new Set<string>(); // Track used cards to prevent duplicates
     
     for (let row = 0; row < rows; row++) {
       for (let i = 0; i < cardsPerRow; i++) {
-        if (deckIndex >= deck.length) deckIndex = 0;
-        const card = deck[deckIndex];
+        // Find a card that hasn't been used yet
+        let card = null;
+        for (let j = 0; j < deck.length; j++) {
+          const candidateIndex = (deckIndex + j) % deck.length;
+          const candidate = deck[candidateIndex];
+          if (candidate && !usedCardIds.has(candidate.id)) {
+            card = candidate;
+            usedCardIds.add(candidate.id);
+            deckIndex = candidateIndex + 1;
+            break;
+          }
+        }
         if (!card) continue;
         
         const isLeftToRight = row % 2 === 0;
         const x = isLeftToRight 
-          ? i * (cardWidth + 20)
-          : containerWidth - (i + 1) * (cardWidth + 20);
+          ? i * (cardWidth + cardSpacing)
+          : containerWidth - (i + 1) * (cardWidth + cardSpacing);
         
         cards.push({
           ...card,
@@ -78,13 +94,11 @@ export function ConveyorBelt({
           row,
           speed: speed * (isLeftToRight ? 1 : -1) * 0.5,
         });
-        
-        deckIndex++;
       }
     }
     
     setConveyorCards(cards);
-  }, [deck, rows, speed, reshuffleTrigger]);
+  }, [deck, rows, speed, reshuffleTrigger, cardWidth, cardSpacing]);
 
   // Track when cards are selected and schedule their return
   const prevSelectedRef = useRef<string[]>([]);
@@ -107,7 +121,6 @@ export function ConveyorBelt({
     if (isPaused || !containerRef.current) return;
     
     const containerWidth = containerRef.current.offsetWidth;
-    const cardWidth = 64;
     
     const animate = () => {
       const now = Date.now();
@@ -120,7 +133,13 @@ export function ConveyorBelt({
         if (readyToReturn.length > 0) {
           setConveyorCards(cards => {
             const newCards = [...cards];
+            // Get IDs of cards currently on the belt to prevent duplicates
+            const currentCardsOnBelt = new Set(cards.map(c => c.id.split('-row')[0]));
+            
             readyToReturn.forEach(({ card }) => {
+              // Skip if card is already on the belt (prevent duplicates)
+              if (currentCardsOnBelt.has(card.id)) return;
+              
               // Find a random row and position to insert the card
               const row = Math.floor(Math.random() * rows);
               const isLeftToRight = row % 2 === 0;
@@ -134,6 +153,7 @@ export function ConveyorBelt({
                 row,
                 speed: speed * (isLeftToRight ? 1 : -1) * 0.5,
               });
+              currentCardsOnBelt.add(card.id);
             });
             return newCards;
           });
@@ -160,7 +180,7 @@ export function ConveyorBelt({
         for (let row = 0; row < rows; row++) {
           const rowCards = updatedCards.filter(c => c.row === row);
           const isLeftToRight = row % 2 === 0;
-          const minCardsPerRow = Math.floor(containerWidth / (cardWidth + 20)) + 2;
+          const minCardsPerRow = Math.floor(containerWidth / (cardWidth + cardSpacing)) + 2;
           
           if (rowCards.length < minCardsPerRow) {
             // Find a card that's not already on the belt, not selected, and not pending return
@@ -199,7 +219,7 @@ export function ConveyorBelt({
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [isPaused, selectedCardIds, speed, rows, pendingReturns]);
+  }, [isPaused, selectedCardIds, speed, rows, pendingReturns, cardWidth, cardSpacing, deck]);
 
   const handleCardClick = useCallback((card: ConveyorCard) => {
     const originalCard: Card = {
