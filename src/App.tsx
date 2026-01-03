@@ -14,6 +14,7 @@ import AccountScreen from "./pages/AccountScreen";
 import LeaderboardScreen from "./pages/LeaderboardScreen";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import NotFound from "./pages/NotFound";
+import TestOrbitPage from "./pages/TestOrbitPage";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,7 @@ const App = () => (
                 <Route path="/account" element={<AccountScreen />} />
                 <Route path="/leaderboard" element={<LeaderboardScreen />} />
                 <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="/test-orbit" element={<TestOrbitPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>

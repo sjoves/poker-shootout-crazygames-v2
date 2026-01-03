@@ -15,7 +15,7 @@ import { DailyChallenges } from '@/components/retention/DailyChallenges';
 import { AchievementsPanel, AchievementNotification } from '@/components/retention/AchievementsPanel';
 import { DailyRewardWheel } from '@/components/retention/DailyRewardWheel';
 import { StarIcon } from '@heroicons/react/24/solid';
-import { Target, Zap, Trophy, Gift, Award, HelpCircle, User, Settings } from 'lucide-react';
+import { Target, Zap, Trophy, Gift, Award, HelpCircle, User, Settings, Dna } from 'lucide-react';
 
 export default function SplashScreen() {
   const navigate = useNavigate();
@@ -287,20 +287,20 @@ export default function SplashScreen() {
         transition={{ delay: 0.4 }}
         className="mt-6 flex justify-center gap-3"
       >
-        <Button variant="ghost" size="icon" className="w-10 h-10" onClick={() => setShowTutorial(true)}>
-          <HelpCircle className="w-5 h-5 text-primary" />
+        <Button variant="ghost" size="icon" className="w-10 h-10" onClick={() => navigate(user ? '/account' : '/auth')}>
+          <User className="w-5 h-5 text-primary" />
         </Button>
         <Button variant="ghost" size="icon" className="w-10 h-10" onClick={() => navigate('/leaderboard')}>
           <Trophy className="w-5 h-5 text-primary" />
         </Button>
-        <Button variant="ghost" size="icon" className="w-10 h-10" onClick={() => setShowAchievements(true)}>
-          <Award className="w-5 h-5 text-primary" />
-        </Button>
-        <Button variant="ghost" size="icon" className="w-10 h-10" onClick={() => navigate(user ? '/account' : '/auth')}>
-          <User className="w-5 h-5 text-primary" />
+        <Button variant="ghost" size="icon" className="w-10 h-10" onClick={() => setShowTutorial(true)}>
+          <HelpCircle className="w-5 h-5 text-primary" />
         </Button>
         <Button variant="ghost" size="icon" className="w-10 h-10" onClick={() => setShowSettings(true)}>
           <Settings className="w-5 h-5 text-primary" />
+        </Button>
+        <Button variant="ghost" size="icon" className="w-10 h-10" onClick={() => navigate('/test-orbit')}>
+          <Dna className="w-5 h-5 text-primary" />
         </Button>
       </motion.div>
 
