@@ -52,15 +52,21 @@ export default function SplashScreen() {
     }
   }, [user, canClaimReward]);
 
-  const handleModeSelect = (mode: GameMode) => {
+  const handleModeSelect = (mode: GameMode, phaseOverride?: string) => {
+    // Build URL with optional phase override for Classic/Blitz modes
+    let url = `/play/${mode}`;
+    if (phaseOverride) {
+      url += `?phase=${phaseOverride}`;
+    }
+    
     if (requiresAdForMode(mode)) {
       const modeName = mode.startsWith('blitz') ? 'Blitz Mode' : 'SSC Mode';
       rewardedAd.showAd('mode_unlock', () => {
         markAdWatchedForMode(mode);
-        navigate(`/play/${mode}`);
+        navigate(url);
       }, modeName);
     } else {
-      navigate(`/play/${mode}`);
+      navigate(url);
     }
   };
 
@@ -161,9 +167,10 @@ export default function SplashScreen() {
             <span className="ml-2 text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">Free</span>
           </Button>
           {selectedMode === 'classic' && (
-            <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} className="flex gap-2">
-              <Button variant="secondary" className="flex-1" onClick={() => handleModeSelect('classic_cb')}>Carnival Gallery</Button>
-              <Button variant="secondary" className="flex-1" onClick={() => handleModeSelect('classic_fc')}>Sky is Falling</Button>
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="flex flex-col gap-2">
+              <Button variant="secondary" className="w-full" onClick={() => handleModeSelect('classic_cb', 'sitting_duck')}>Sitting Duck</Button>
+              <Button variant="secondary" className="w-full" onClick={() => handleModeSelect('classic_cb')}>Carnival Gallery</Button>
+              <Button variant="secondary" className="w-full" onClick={() => handleModeSelect('classic_fc')}>Sky is Falling</Button>
             </motion.div>
           )}
         </div>
@@ -181,9 +188,10 @@ export default function SplashScreen() {
             {getModeLabel('blitz')}
           </Button>
           {selectedMode === 'blitz' && (
-            <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} className="flex gap-2">
-              <Button variant="secondary" className="flex-1" onClick={() => handleModeSelect('blitz_cb')}>Carnival Gallery</Button>
-              <Button variant="secondary" className="flex-1" onClick={() => handleModeSelect('blitz_fc')}>Sky is Falling</Button>
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="flex flex-col gap-2">
+              <Button variant="secondary" className="w-full" onClick={() => handleModeSelect('blitz_cb', 'sitting_duck')}>Sitting Duck</Button>
+              <Button variant="secondary" className="w-full" onClick={() => handleModeSelect('blitz_cb')}>Carnival Gallery</Button>
+              <Button variant="secondary" className="w-full" onClick={() => handleModeSelect('blitz_fc')}>Sky is Falling</Button>
             </motion.div>
           )}
         </div>

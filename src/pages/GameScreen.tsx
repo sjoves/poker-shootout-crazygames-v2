@@ -61,6 +61,7 @@ export default function GameScreen() {
   const isTestBonus = searchParams.get('testBonus') === 'true';
   const startLevelParam = searchParams.get('startLevel');
   const startLevel = startLevelParam ? parseInt(startLevelParam, 10) : undefined;
+  const phaseOverride = searchParams.get('phase') as 'sitting_duck' | 'conveyor' | 'falling' | null;
 
   // Start background music first, then show intro sequence
   useEffect(() => {
@@ -203,10 +204,17 @@ export default function GameScreen() {
   };
 
   const isBlitz = state.mode === 'blitz_fc' || state.mode === 'blitz_cb';
+  const isClassic = state.mode === 'classic_fc' || state.mode === 'classic_cb';
   const isBonusRound = isSSC && state.isBonusLevel && !state.isLevelComplete;
-  const isFalling = !isBonusRound && (state.mode === 'classic_fc' || state.mode === 'blitz_fc' || (isSSC && state.sscPhase === 'falling'));
-  const isConveyor = !isBonusRound && (state.mode === 'classic_cb' || state.mode === 'blitz_cb' || (isSSC && state.sscPhase === 'conveyor'));
-  const isStatic = !isBonusRound && isSSC && state.sscPhase === 'static';
+  
+  // Determine effective phase based on mode and phase override
+  const effectivePhase = phaseOverride || (state.mode === 'classic_fc' || state.mode === 'blitz_fc' ? 'falling' : 
+                                            state.mode === 'classic_cb' || state.mode === 'blitz_cb' ? 'conveyor' : 
+                                            state.sscPhase);
+  
+  const isFalling = !isBonusRound && (effectivePhase === 'falling');
+  const isConveyor = !isBonusRound && (effectivePhase === 'conveyor');
+  const isStatic = !isBonusRound && (effectivePhase === 'sitting_duck');
   const isOrbit = !isBonusRound && isSSC && state.sscPhase === 'orbit';
   
   // Final stretch bonus (last 10 seconds in Blitz/SSC)
@@ -367,7 +375,7 @@ export default function GameScreen() {
             onSelectCard={selectCard}
             speed={baseSpeed * (isBlitz ? 1.2 : isSSC ? sscSpeed : 1)}
             isPaused={state.isPaused || state.isLevelComplete}
-            isRecycling={isBlitz || (isSSC && state.sscPhase !== 'static')}
+            isRecycling={isBlitz || isSSC}
             reshuffleTrigger={state.reshuffleTrigger}
             gameMode={isSSC ? 'ssc' : isBlitz ? 'blitz' : 'classic'}
           />
@@ -379,7 +387,7 @@ export default function GameScreen() {
             onSelectCard={selectCard}
             speed={baseSpeed * (isBlitz ? 1.5 : isSSC ? sscSpeed : 1)}
             isPaused={state.isPaused || state.isLevelComplete}
-            isRecycling={isBlitz || (isSSC && state.sscPhase !== 'static')}
+            isRecycling={isBlitz || isSSC}
             reshuffleTrigger={state.reshuffleTrigger}
           />
         )}

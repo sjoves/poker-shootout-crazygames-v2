@@ -170,7 +170,7 @@ export function LootBoxReveal({
                 <p className="text-sm text-muted-foreground mb-4">
                   {powerUp.description}
                   {powerUp.id === 'reshuffle' && (
-                    <span className="text-primary block mt-1">(Static mode only)</span>
+                    <span className="text-primary block mt-1">(Sitting Duck mode only)</span>
                   )}
                 </p>
 

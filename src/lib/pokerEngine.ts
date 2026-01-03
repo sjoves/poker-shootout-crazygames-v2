@@ -154,16 +154,16 @@ export function calculateLeftoverPenalty(cards: Card[]): number {
 
 // SSC Level structure:
 // IMPORTANT: Bonus rounds are separate from numbered levels.
-// Cycle 1 (Levels 1-12): 9-level rotation (Static 1-3, Conveyor 4-6, Falling 7-9, then repeats 10-12 as Static)
+// Cycle 1 (Levels 1-12): 9-level rotation (Sitting Duck 1-3, Conveyor 4-6, Falling 7-9, then repeats 10-12 as Sitting Duck)
 // Cycle 2+ (Level 13 onwards): 12-level rotation with Orbit
-// - Static: 13-15, 25-27, etc.
+// - Sitting Duck: 13-15, 25-27, etc.
 // - Conveyor: 16-18, 28-30, etc.
 // - Falling: 19-21, 31-33, etc.
 // - Orbit: 22-24, 34-36, etc.
 // Bonus rounds occur AFTER every 3 levels but don't count as levels.
 
 export interface SSCLevelInfo {
-  phase: 'static' | 'conveyor' | 'falling' | 'orbit';
+  phase: 'sitting_duck' | 'conveyor' | 'falling' | 'orbit';
   round: number; // Which cycle we're in (1-indexed)
   difficultyMultiplier: number;
 }
@@ -173,7 +173,7 @@ export function getSSCLevelInfo(level: number): SSCLevelInfo {
   // Orbit mode starts at Level 13 (2nd cycle)
   const orbitStartLevel = 13;
   
-  let phase: 'static' | 'conveyor' | 'falling' | 'orbit';
+  let phase: 'sitting_duck' | 'conveyor' | 'falling' | 'orbit';
   let round: number;
   
   if (level < orbitStartLevel) {
@@ -182,7 +182,7 @@ export function getSSCLevelInfo(level: number): SSCLevelInfo {
     const cyclePosition = ((level - 1) % 9) + 1; // 1-9
     
     if (cyclePosition <= 3) {
-      phase = 'static';
+      phase = 'sitting_duck';
     } else if (cyclePosition <= 6) {
       phase = 'conveyor';
     } else {
@@ -196,7 +196,7 @@ export function getSSCLevelInfo(level: number): SSCLevelInfo {
     const cyclePosition = ((levelInOrbitEra - 1) % 12) + 1; // 1-12
     
     if (cyclePosition <= 3) {
-      phase = 'static';
+      phase = 'sitting_duck';
     } else if (cyclePosition <= 6) {
       phase = 'conveyor';
     } else if (cyclePosition <= 9) {
@@ -224,7 +224,7 @@ export function shouldTriggerBonusRound(levelJustCompleted: number): boolean {
   return levelJustCompleted > 0 && levelJustCompleted % 3 === 0;
 }
 
-export function getSSCPhase(level: number): 'static' | 'conveyor' | 'falling' | 'orbit' {
+export function getSSCPhase(level: number): 'sitting_duck' | 'conveyor' | 'falling' | 'orbit' {
   return getSSCLevelInfo(level).phase;
 }
 
@@ -238,7 +238,7 @@ export function calculateLevelGoal(level: number): number {
 export function getSSCSpeed(level: number): number {
   const info = getSSCLevelInfo(level);
   
-  if (info.phase === 'static') return 0;
+  if (info.phase === 'sitting_duck') return 0;
   
   // Base speeds for moving modes
   let baseSpeed: number;

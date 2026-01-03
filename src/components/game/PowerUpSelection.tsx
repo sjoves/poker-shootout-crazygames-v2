@@ -61,7 +61,7 @@ export function PowerUpSelection({ choices, onSelect, onDismiss }: PowerUpSelect
                 <p className="text-xs text-muted-foreground">
                   {powerUp!.description}
                   {powerUp!.id === 'reshuffle' && (
-                    <span className="text-primary ml-1">(Static mode only)</span>
+                    <span className="text-primary ml-1">(Sitting Duck mode only)</span>
                   )}
                 </p>
               </div>

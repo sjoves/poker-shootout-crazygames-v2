@@ -31,17 +31,17 @@ Uses a **9-level rotation** pattern:
 
 | Levels | Phase |
 |--------|-------|
-| 1-3 | Static |
+| 1-3 | Sitting Duck (SD) |
 | 4-6 | Conveyor |
 | 7-9 | Falling |
-| 10-12 | Static (repeats) |
+| 10-12 | Sitting Duck (repeats) |
 
 ### Cycle 2+: Level 13 onwards (With Orbit)
 Uses a **12-level rotation** pattern:
 
 | Levels | Phase |
 |--------|-------|
-| 13-15, 25-27, 37-39... | Static |
+| 13-15, 25-27, 37-39... | Sitting Duck (SD) |
 | 16-18, 28-30, 40-42... | Conveyor |
 | 19-21, 31-33, 43-45... | Falling |
 | 22-24, 34-36, 46-48... | Orbit |
@@ -55,7 +55,7 @@ Uses a **12-level rotation** pattern:
 
 ## Gameplay Phases
 
-### 1. Static Phase
+### 1. Sitting Duck (SD) Phase
 - Cards are displayed in a fixed grid
 - No movement - pure card selection
 - **Reshuffle power-up available** (only works in this phase)
@@ -92,7 +92,7 @@ Uses a **12-level rotation** pattern:
 ### Base Speeds by Phase
 | Phase | Base Speed |
 |-------|------------|
-| Static | 0 (no movement) |
+| Sitting Duck (SD) | 0 (no movement) |
 | Conveyor | 1.2 |
 | Falling (first cycle) | 1.53 |
 | Falling (later) | 1.8 |
@@ -187,7 +187,7 @@ Early bonus rounds use specially constructed decks with higher chances of good h
 #### Tier 1: Common (Bronze rewards, score < 500)
 | ID | Name | Emoji | Effect |
 |----|------|-------|--------|
-| reshuffle | Reshuffle | 🔀 | Shuffle and re-deal all cards (Static mode only, reusable) |
+| reshuffle | Reshuffle | 🔀 | Shuffle and re-deal all cards (Sitting Duck mode only, reusable) |
 | two_pair | Two Pair | 2️⃣ | Instantly form a Two Pair hand |
 | three_kind | Three of a Kind | 3️⃣ | Instantly form Three of a Kind |
 | add_time | Add Time | ⏰ | Add 15 seconds to the clock (reusable) |
@@ -212,7 +212,7 @@ Early bonus rounds use specially constructed decks with higher chances of good h
 - **Reusable power-ups**: Reshuffle and Add Time can be used multiple times
 
 ### Power-Up Restrictions
-- **Reshuffle**: Only visible and usable during Static phase levels
+- **Reshuffle**: Only visible and usable during Sitting Duck (SD) phase levels
 
 ---
 
@@ -248,7 +248,7 @@ interface GameState {
 ```typescript
 {
   sscLevel: number;         // Current level (1, 2, 3...)
-  sscPhase: SSCPhase;       // 'static' | 'conveyor' | 'falling' | 'orbit'
+  sscPhase: SSCPhase;       // 'sitting_duck' | 'conveyor' | 'falling' | 'orbit'
   sscRound: number;         // Which cycle (1, 2, 3...)
   levelGoal: number;        // Points needed to pass level
   levelScore: number;       // Points earned this level
@@ -288,7 +288,7 @@ interface GameState {
 
 ### Game Components
 - `src/pages/GameScreen.tsx` - Main game screen container
-- `src/components/game/StaticGrid.tsx` - Static phase card grid
+- `src/components/game/StaticGrid.tsx` - Sitting Duck (SD) phase card grid
 - `src/components/game/ConveyorBelt.tsx` - Conveyor phase animation
 - `src/components/game/FallingCards.tsx` - Falling cards animation
 - `src/components/game/OrbitCards.tsx` - Orbit phase with rotating rings

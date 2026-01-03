@@ -15,7 +15,7 @@ import { LevelCompleteModal } from '@/components/game/LevelCompleteModal';
 type MainMode = 'ssc' | 'classic' | 'blitz';
 type SubMode = 'fc' | 'cb';
 
-const PHASES: SSCPhase[] = ['static', 'conveyor', 'falling', 'orbit'];
+const PHASES: SSCPhase[] = ['sitting_duck', 'conveyor', 'falling', 'orbit'];
 
 const HAND_TYPES = [
   'Royal Flush', 'Straight Flush', 'Four of a Kind', 'Full House',
@@ -569,7 +569,7 @@ const DevSandbox = () => {
           </div>
         ) : (
           <>
-            {effectivePhase === 'static' && (
+            {effectivePhase === 'sitting_duck' && (
               <StaticGrid
                 deck={deck}
                 selectedCardIds={selectedCards.map(c => c.id)}
