@@ -251,11 +251,23 @@ export function getSSCSpeed(level: number): number {
     baseSpeed = 1.5;
   }
   
-  // Speed increases: 2% linear increase per level above 15
-  if (level >= 16) {
-    const levelsAbove15 = level - 15;
-    const speedIncrease = 1 + (levelsAbove15 * 0.02);
-    return baseSpeed * speedIncrease;
+  // Speed scaling logic:
+  // - Levels 1-10: No speed increase (use base speed)
+  // - Levels 11+: 
+  //   - Falling mode: 0.5% linear increase per level (reduced from 2%)
+  //   - Conveyor/Orbit: 2% linear increase per level
+  if (level >= 11) {
+    const levelsAbove10 = level - 10;
+    
+    if (info.phase === 'falling') {
+      // Falling mode gets slower acceleration (0.5% per level)
+      const speedIncrease = 1 + (levelsAbove10 * 0.005);
+      return baseSpeed * speedIncrease;
+    } else {
+      // Conveyor and Orbit maintain original 2% scaling
+      const speedIncrease = 1 + (levelsAbove10 * 0.02);
+      return baseSpeed * speedIncrease;
+    }
   }
   
   return baseSpeed;
