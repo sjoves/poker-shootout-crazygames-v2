@@ -79,11 +79,11 @@ export function getRewardTier(score: number): RewardTier {
 export function getTierDisplayInfo(tier: RewardTier): { name: string; color: string; emoji: string } {
   switch (tier) {
     case 'gold':
-      return { name: 'Gold', color: 'text-amber-400', emoji: '🥇' };
+      return { name: 'Gold', color: 'text-gold', emoji: '🥇' };
     case 'silver':
-      return { name: 'Silver', color: 'text-slate-300', emoji: '🥈' };
+      return { name: 'Silver', color: 'text-silver', emoji: '🥈' };
     case 'bronze':
-      return { name: 'Bronze', color: 'text-amber-600', emoji: '🥉' };
+      return { name: 'Bronze', color: 'text-bronze', emoji: '🥉' };
   }
 }
 

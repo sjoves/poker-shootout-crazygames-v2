@@ -81,9 +81,9 @@ export function LootBoxReveal({
               <motion.div
                 className={cn(
                   "w-32 h-32 mx-auto rounded-xl flex items-center justify-center relative overflow-hidden",
-                  tier === 'gold' && "bg-gradient-to-br from-amber-400 to-amber-600 shadow-[0_0_40px_rgba(251,191,36,0.5)]",
-                  tier === 'silver' && "bg-gradient-to-br from-slate-300 to-slate-500 shadow-[0_0_40px_rgba(148,163,184,0.5)]",
-                  tier === 'bronze' && "bg-gradient-to-br from-amber-600 to-amber-800 shadow-[0_0_40px_rgba(180,83,9,0.5)]",
+                  tier === 'gold' && "bg-gradient-to-br from-gold to-primary shadow-[var(--shadow-glow)]",
+                  tier === 'silver' && "bg-gradient-to-br from-silver to-muted-foreground shadow-[0_0_40px_hsl(var(--silver)/0.5)]",
+                  tier === 'bronze' && "bg-gradient-to-br from-bronze to-primary shadow-[0_0_40px_hsl(var(--bronze)/0.5)]",
                 )}
                 animate={phase === 'opening' ? {
                   scale: [1, 1.2, 0],
@@ -136,9 +136,9 @@ export function LootBoxReveal({
               <motion.div
                 className={cn(
                   "absolute inset-0 rounded-full blur-3xl opacity-30 mx-auto pointer-events-none",
-                  tier === 'gold' && "bg-amber-400",
-                  tier === 'silver' && "bg-slate-300",
-                  tier === 'bronze' && "bg-amber-600",
+                  tier === 'gold' && "bg-gold",
+                  tier === 'silver' && "bg-silver",
+                  tier === 'bronze' && "bg-bronze",
                 )}
                 animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.4, 0.2] }}
                 transition={{ repeat: Infinity, duration: 2 }}
@@ -148,17 +148,17 @@ export function LootBoxReveal({
               <motion.div
                 className={cn(
                   "relative bg-card border-2 rounded-2xl p-6 shadow-2xl",
-                  tier === 'gold' && "border-amber-400",
-                  tier === 'silver' && "border-slate-400",
-                  tier === 'bronze' && "border-amber-600",
+                  tier === 'gold' && "border-gold",
+                  tier === 'silver' && "border-silver",
+                  tier === 'bronze' && "border-bronze",
                 )}
               >
                 {/* Tier Badge */}
                 <div className={cn(
                   "absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-sm font-bold",
-                  tier === 'gold' && "bg-amber-400 text-amber-900",
-                  tier === 'silver' && "bg-slate-300 text-slate-900",
-                  tier === 'bronze' && "bg-amber-600 text-amber-100",
+                  tier === 'gold' && "bg-gold text-background",
+                  tier === 'silver' && "bg-silver text-background",
+                  tier === 'bronze' && "bg-bronze text-primary-foreground",
                 )}>
                   {tierInfo.name} Tier
                 </div>
@@ -208,7 +208,7 @@ export function LootBoxReveal({
                   </Button>
                 ) : (
                   <>
-                    <p className="text-amber-400 text-sm font-medium mb-3">
+                    <p className="text-gold text-sm font-medium mb-3">
                       ⚠️ Inventory Full! (3/3)
                     </p>
                     <p className="text-muted-foreground text-xs mb-3">
