@@ -16,33 +16,45 @@ const passwordSchema = z.string().min(6, { message: "Password must be at least 6
 const usernameSchema = z.string().trim().min(2, { message: "Username must be at least 2 characters" }).max(20, { message: "Username must be less than 20 characters" }).regex(/^[a-zA-Z0-9_]+$/, { message: "Username can only contain letters, numbers, and underscores" }).optional();
 
 export default function AuthScreen() {
-  const [mode, setMode] = useState<'signin' | 'signup' | 'forgot'>('signin');
+  const [mode, setMode] = useState<'signin' | 'signup' | 'forgot' | 'reset'>('signin');
   const [emailOrUsername, setEmailOrUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string; username?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string; username?: string; confirmPassword?: string }>({});
   const { signIn, signUp, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Redirect to home if already logged in
+  // Listen for PASSWORD_RECOVERY event to show reset form
   useEffect(() => {
-    if (user) {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setMode('reset');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Redirect to home if already logged in (but NOT if in reset mode)
+  useEffect(() => {
+    if (user && mode !== 'reset') {
       navigate('/');
     }
-  }, [user, navigate]);
+  }, [user, mode, navigate]);
 
   const validateForm = (): boolean => {
-    const newErrors: { email?: string; password?: string; username?: string } = {};
+    const newErrors: { email?: string; password?: string; username?: string; confirmPassword?: string } = {};
     
     if (mode === 'signin') {
       const result = emailOrUsernameSchema.safeParse(emailOrUsername);
       if (!result.success) {
         newErrors.email = result.error.errors[0].message;
       }
-    } else {
+    } else if (mode !== 'reset') {
       const emailResult = emailSchema.safeParse(email);
       if (!emailResult.success) {
         newErrors.email = emailResult.error.errors[0].message;
@@ -53,6 +65,12 @@ export default function AuthScreen() {
       const passwordResult = passwordSchema.safeParse(password);
       if (!passwordResult.success) {
         newErrors.password = passwordResult.error.errors[0].message;
+      }
+    }
+
+    if (mode === 'reset') {
+      if (password !== confirmPassword) {
+        newErrors.confirmPassword = "Passwords do not match";
       }
     }
     
@@ -84,11 +102,32 @@ export default function AuthScreen() {
     }
   };
 
+  const handleResetPassword = async () => {
+    if (!validateForm()) return;
+    
+    setLoading(true);
+    const { error } = await supabase.auth.updateUser({ password });
+    setLoading(false);
+
+    if (error) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Password updated!', description: 'You can now sign in with your new password.' });
+      setMode('signin');
+      setPassword('');
+      setConfirmPassword('');
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (mode === 'forgot') {
       return handleForgotPassword();
+    }
+
+    if (mode === 'reset') {
+      return handleResetPassword();
     }
     
     if (!validateForm()) {
@@ -152,6 +191,7 @@ export default function AuthScreen() {
     switch (mode) {
       case 'signup': return 'Create Account';
       case 'forgot': return 'Reset Password';
+      case 'reset': return 'Set New Password';
       default: return 'Welcome Back';
     }
   };
@@ -170,6 +210,12 @@ export default function AuthScreen() {
         {mode === 'forgot' && (
           <p className="text-sm text-muted-foreground text-center mb-4">
             Enter your email and we'll send you a reset link.
+          </p>
+        )}
+
+        {mode === 'reset' && (
+          <p className="text-sm text-muted-foreground text-center mb-4">
+            Enter your new password below.
           </p>
         )}
 
@@ -193,7 +239,7 @@ export default function AuthScreen() {
             </div>
           )}
           
-          {mode === 'signin' ? (
+          {mode === 'signin' && (
             <div>
               <Label htmlFor="emailOrUsername">Email or Username</Label>
               <Input
@@ -212,7 +258,9 @@ export default function AuthScreen() {
                 <p className="text-xs text-destructive mt-1">{errors.email}</p>
               )}
             </div>
-          ) : (
+          )}
+          
+          {(mode === 'signup' || mode === 'forgot') && (
             <div>
               <Label htmlFor="email">Email</Label>
               <Input
@@ -235,7 +283,7 @@ export default function AuthScreen() {
 
           {mode !== 'forgot' && (
             <div>
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{mode === 'reset' ? 'New Password' : 'Password'}</Label>
               <Input
                 id="password"
                 type="password"
@@ -254,10 +302,32 @@ export default function AuthScreen() {
             </div>
           )}
 
+          {mode === 'reset' && (
+            <div>
+              <Label htmlFor="confirmPassword">Confirm New Password</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  if (errors.confirmPassword) setErrors(prev => ({ ...prev, confirmPassword: undefined }));
+                }}
+                placeholder="••••••••"
+                required
+                className={`mt-1 ${errors.confirmPassword ? 'border-destructive' : ''}`}
+              />
+              {errors.confirmPassword && (
+                <p className="text-xs text-destructive mt-1">{errors.confirmPassword}</p>
+              )}
+            </div>
+          )}
+
           <Button type="submit" className="w-full" size="lg" disabled={loading}>
             {loading ? 'Loading...' : (
               mode === 'signup' ? 'Create Account' : 
-              mode === 'forgot' ? 'Send Reset Link' : 'Sign In'
+              mode === 'forgot' ? 'Send Reset Link' : 
+              mode === 'reset' ? 'Update Password' : 'Sign In'
             )}
           </Button>
         </form>
@@ -272,7 +342,7 @@ export default function AuthScreen() {
         )}
 
         <div className="mt-4 text-center">
-          {mode === 'forgot' ? (
+          {(mode === 'forgot' || mode === 'reset') ? (
             <button
               onClick={() => setMode('signin')}
               className="text-sm text-muted-foreground hover:text-primary"
