@@ -9,6 +9,7 @@ import { HandDisplay } from '@/components/game/HandDisplay';
 import { FallingCards } from '@/components/game/FallingCards';
 import { ConveyorBelt } from '@/components/game/ConveyorBelt';
 import { StaticGrid } from '@/components/game/StaticGrid';
+import { OrbitCards } from '@/components/game/OrbitCards';
 import { PowerUpBar } from '@/components/game/PowerUpBar';
 import { PowerUpSelection } from '@/components/game/PowerUpSelection';
 import { BonusRound } from '@/components/game/BonusRound';
@@ -202,6 +203,7 @@ export default function GameScreen() {
   const isFalling = !isBonusRound && (state.mode === 'classic_fc' || state.mode === 'blitz_fc' || (isSSC && state.sscPhase === 'falling'));
   const isConveyor = !isBonusRound && (state.mode === 'classic_cb' || state.mode === 'blitz_cb' || (isSSC && state.sscPhase === 'conveyor'));
   const isStatic = !isBonusRound && isSSC && state.sscPhase === 'static';
+  const isOrbit = !isBonusRound && isSSC && state.sscPhase === 'orbit';
   
   // Final stretch bonus (last 10 seconds in Blitz/SSC)
   const inFinalStretch = (isBlitz || isSSC) && state.timeRemaining <= 10 && state.timeRemaining > 0 && !state.isLevelComplete && !state.isGameOver;
@@ -383,6 +385,16 @@ export default function GameScreen() {
             onSelectCard={selectCard}
           />
         )}
+        {isOrbit && (
+          <OrbitCards
+            deck={state.deck}
+            selectedCardIds={selectedIds}
+            onSelectCard={selectCard}
+            level={state.sscLevel}
+            isPaused={state.isPaused || state.isLevelComplete}
+            reshuffleTrigger={state.reshuffleTrigger}
+          />
+        )}
         {isBonusRound && (
           <BonusRound
             deck={state.deck}
@@ -406,6 +418,7 @@ export default function GameScreen() {
               earnedPowerUps={state.earnedPowerUps}
               activePowerUps={state.activePowerUps}
               onUsePowerUp={usePowerUp}
+              currentPhase={state.sscPhase}
             />
           </div>
         )}

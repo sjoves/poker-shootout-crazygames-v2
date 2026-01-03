@@ -154,31 +154,57 @@ export function calculateLeftoverPenalty(cards: Card[]): number {
 
 // SSC Level structure:
 // IMPORTANT: Bonus rounds are separate from numbered levels.
-// Levels follow strict 3-3-3 rotation: 1-3 Static, 4-6 Conveyor, 7-9 Falling (repeats)
-// Bonus rounds occur AFTER levels 3, 6, 9, etc. but don't count as levels.
+// Levels follow strict 12-level rotation starting at cycle 4:
+// 1-3 Static, 4-6 Conveyor, 7-9 Falling, 10-12 Orbit (Orbit starts at Level 37, cycle 4)
+// Cycles 1-3 (Levels 1-36): 9-level rotation (Static, Conveyor, Falling)
+// Cycles 4+: 12-level rotation (Static, Conveyor, Falling, Orbit)
+// Bonus rounds occur AFTER every 3 levels but don't count as levels.
 
 export interface SSCLevelInfo {
-  phase: 'static' | 'conveyor' | 'falling';
-  round: number; // Which 9-level cycle we're in (1-indexed)
+  phase: 'static' | 'conveyor' | 'falling' | 'orbit';
+  round: number; // Which cycle we're in (1-indexed)
   difficultyMultiplier: number;
 }
 
 // Get level info for a numbered level (NOT bonus round)
 export function getSSCLevelInfo(level: number): SSCLevelInfo {
-  // Determine phase based on strict 9-level cycle (3 static, 3 conveyor, 3 falling)
-  const cyclePosition = ((level - 1) % 9) + 1; // 1-9
+  // Orbit mode starts at Level 37 (4th cycle)
+  const orbitStartLevel = 37;
   
-  let phase: 'static' | 'conveyor' | 'falling';
-  if (cyclePosition <= 3) {
-    phase = 'static';
-  } else if (cyclePosition <= 6) {
-    phase = 'conveyor';
+  let phase: 'static' | 'conveyor' | 'falling' | 'orbit';
+  let round: number;
+  
+  if (level < orbitStartLevel) {
+    // Cycles 1-3: 9-level rotation (no Orbit)
+    const cyclePosition = ((level - 1) % 9) + 1; // 1-9
+    
+    if (cyclePosition <= 3) {
+      phase = 'static';
+    } else if (cyclePosition <= 6) {
+      phase = 'conveyor';
+    } else {
+      phase = 'falling';
+    }
+    
+    round = Math.ceil(level / 9);
   } else {
-    phase = 'falling';
+    // Cycles 4+: 12-level rotation with Orbit
+    const levelInOrbitEra = level - orbitStartLevel + 1; // 1-indexed from Level 37
+    const cyclePosition = ((levelInOrbitEra - 1) % 12) + 1; // 1-12
+    
+    if (cyclePosition <= 3) {
+      phase = 'static';
+    } else if (cyclePosition <= 6) {
+      phase = 'conveyor';
+    } else if (cyclePosition <= 9) {
+      phase = 'falling';
+    } else {
+      phase = 'orbit';
+    }
+    
+    // Round 4 starts at Level 37
+    round = 3 + Math.ceil(levelInOrbitEra / 12);
   }
-  
-  // Which full cycle are we in (each cycle is 9 levels)
-  const round = Math.ceil(level / 9);
   
   // Difficulty multiplier increases slightly each cycle
   const difficultyMultiplier = 1 + (round - 1) * 0.1;
@@ -195,7 +221,7 @@ export function shouldTriggerBonusRound(levelJustCompleted: number): boolean {
   return levelJustCompleted > 0 && levelJustCompleted % 3 === 0;
 }
 
-export function getSSCPhase(level: number): 'static' | 'conveyor' | 'falling' {
+export function getSSCPhase(level: number): 'static' | 'conveyor' | 'falling' | 'orbit' {
   return getSSCLevelInfo(level).phase;
 }
 
@@ -212,20 +238,20 @@ export function getSSCSpeed(level: number): number {
   if (info.phase === 'static') return 0;
   
   // Base speeds for moving modes
-  // Conveyor stays at 1.2, Falling reduced by 15% from 1.8 to 1.53 for first cycle
   let baseSpeed: number;
   
   if (info.phase === 'conveyor') {
     baseSpeed = 1.2;
-  } else {
+  } else if (info.phase === 'falling') {
     // Falling mode: reduced speed (15% slower) for first cycle (levels 7-9)
-    // Resume normal speed with increases starting at level 16 (second falling cycle)
     const isFirstFallingCycle = level >= 7 && level <= 9;
-    baseSpeed = isFirstFallingCycle ? 1.53 : 1.8; // 1.8 * 0.85 = 1.53
+    baseSpeed = isFirstFallingCycle ? 1.53 : 1.8;
+  } else {
+    // Orbit mode: base speed of 1.5 (between conveyor and falling)
+    baseSpeed = 1.5;
   }
   
-  // Speed increases only apply starting at Level 16 (second falling cycle)
-  // 2% linear increase per level above 15
+  // Speed increases: 2% linear increase per level above 15
   if (level >= 16) {
     const levelsAbove15 = level - 15;
     const speedIncrease = 1 + (levelsAbove15 * 0.02);
@@ -233,6 +259,15 @@ export function getSSCSpeed(level: number): number {
   }
   
   return baseSpeed;
+}
+
+// Get orbital speed for a specific ring (outer rings move faster)
+export function getOrbitRingSpeed(level: number, ringIndex: number, totalRings: number): number {
+  const baseSpeed = getSSCSpeed(level);
+  // Outer rings (higher index) move faster
+  // Ring 0 (innermost) = baseSpeed, outer rings scale up
+  const ringMultiplier = 1 + (ringIndex / totalRings) * 0.5; // Up to 50% faster for outermost
+  return baseSpeed * ringMultiplier;
 }
 
 // Calculate star rating based on score vs goal

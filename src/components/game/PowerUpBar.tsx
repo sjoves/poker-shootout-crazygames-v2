@@ -8,17 +8,24 @@ interface PowerUpBarProps {
   earnedPowerUps: string[];
   activePowerUps: string[];
   onUsePowerUp: (id: string) => void;
+  currentPhase?: 'static' | 'conveyor' | 'falling' | 'orbit';
 }
 
 export function PowerUpBar({ 
   earnedPowerUps, 
   activePowerUps, 
-  onUsePowerUp 
+  onUsePowerUp,
+  currentPhase,
 }: PowerUpBarProps) {
   const isMobile = useIsMobile();
   
-  // Only show power-ups the player has earned
-  const earnedPowerUpData = POWER_UPS.filter(p => earnedPowerUps.includes(p.id));
+  // Filter power-ups: Reshuffle only visible during Static mode
+  const earnedPowerUpData = POWER_UPS.filter(p => {
+    if (!earnedPowerUps.includes(p.id)) return false;
+    // Hide Reshuffle during non-static modes
+    if (p.id === 'reshuffle' && currentPhase && currentPhase !== 'static') return false;
+    return true;
+  });
   
   if (earnedPowerUpData.length === 0) {
     return null;

@@ -27,7 +27,7 @@ export interface ConveyorCard extends Card {
 
 export type GameMode = 'classic_fc' | 'classic_cb' | 'blitz_fc' | 'blitz_cb' | 'ssc';
 
-export type SSCPhase = 'static' | 'conveyor' | 'falling';
+export type SSCPhase = 'static' | 'conveyor' | 'falling' | 'orbit';
 
 export interface PokerHand {
   name: string;
