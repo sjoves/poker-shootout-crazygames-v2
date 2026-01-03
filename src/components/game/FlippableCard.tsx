@@ -55,12 +55,6 @@ export function FlippableCard({ card, isKept, isFlippedExternal, onFlip, onKeep,
     };
   }, [isFlipped, isKept]);
 
-  const handleCardClick = () => {
-    if (disabled || isKept || isFlipped) return;
-    setIsFlipped(true);
-    playSound('cardFlip');
-    onFlip?.(card.id);
-  };
 
   const handleKeepToggle = () => {
     // Clear the auto-unflip timer when keeping
@@ -77,24 +71,47 @@ export function FlippableCard({ card, isKept, isFlippedExternal, onFlip, onKeep,
     }
   };
 
+  const [isTouched, setIsTouched] = useState(false);
+
+  const handlePointerDown = () => {
+    if (disabled || isKept || isFlipped) return;
+    setIsTouched(true);
+  };
+
+  const handlePointerUp = () => {
+    setIsTouched(false);
+    if (disabled || isKept || isFlipped) return;
+    setIsFlipped(true);
+    playSound('cardFlip');
+    onFlip?.(card.id);
+  };
+
   return (
-    <div className="relative perspective-1000">
+    <div className="relative perspective-1000 touch-manipulation">
       <motion.div
         className={cn(
           'w-[50px] h-[71px] cursor-pointer relative',
-          'transform-style-preserve-3d transition-transform duration-300',
+          'transform-style-preserve-3d will-change-transform',
           disabled && !isKept && 'opacity-50 cursor-not-allowed'
         )}
-        animate={{ rotateY: isFlipped || isKept ? 180 : 0 }}
-        transition={{ duration: 0.2 }}
+        animate={{ 
+          rotateY: isFlipped || isKept ? 180 : 0,
+          scale: isTouched ? 1.05 : 1
+        }}
+        transition={{ 
+          rotateY: { duration: 0.15, ease: 'easeOut' },
+          scale: { duration: 0.1, ease: 'easeOut' }
+        }}
       >
         {/* Card Back - Theme color */}
         <div
           className={cn(
             'absolute inset-0 rounded-lg backface-hidden overflow-hidden',
-            'shadow-lg bg-accent'
+            'shadow-lg bg-accent will-change-transform'
           )}
-          onClick={handleCardClick}
+          onPointerDown={handlePointerDown}
+          onPointerUp={handlePointerUp}
+          onPointerLeave={() => setIsTouched(false)}
         />
 
         {/* Card Front */}
@@ -103,7 +120,7 @@ export function FlippableCard({ card, isKept, isFlippedExternal, onFlip, onKeep,
             'absolute inset-0 rounded-lg backface-hidden rotate-y-180',
             'bg-white border border-gray-200',
             'flex flex-col items-center justify-center',
-            'shadow-lg',
+            'shadow-lg will-change-transform',
             colorClass,
             isKept && 'ring-2 ring-green-500'
           )}
@@ -130,15 +147,16 @@ export function FlippableCard({ card, isKept, isFlippedExternal, onFlip, onKeep,
                 initial={{ opacity: 0, scale: 0.5 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.5 }}
-                onClick={(e) => {
+                transition={{ duration: 0.1 }}
+                onPointerDown={(e) => {
                   e.stopPropagation();
                   handleKeepToggle();
                 }}
                 className={cn(
                   'absolute -bottom-2 -right-2 w-6 h-6 rounded-full',
                   'flex items-center justify-center',
-                  'border-2 transition-all duration-200',
-                  'shadow-md z-10',
+                  'border-2 transition-all duration-100',
+                  'shadow-md z-10 touch-manipulation',
                   isKept
                     ? 'bg-green-500 border-green-600 text-white'
                     : 'bg-white border-gray-300 hover:border-green-500'
