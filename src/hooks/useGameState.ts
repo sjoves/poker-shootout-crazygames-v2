@@ -61,8 +61,7 @@ const INITIAL_STATE: GameState = {
   inventoryFull: false,
 };
 
-// Maximum number of power-ups a player can hold
-const MAX_POWER_UPS = 3;
+// No inventory limit - players can hold unlimited power-ups
 
 // Determine reward tier based on bonus round score
 // Bronze: < 500 pts (Common/Tier 1)
@@ -322,9 +321,6 @@ export function useGameState() {
       // Determine reward tier and select power-up based on total score
       const tier = getRewardTier(totalPoints);
       const rewardPowerUp = selectRewardPowerUp(totalPoints);
-      
-      // Check if inventory is full
-      const isInventoryFull = prev.earnedPowerUps.length >= MAX_POWER_UPS;
 
       // Bonus round completes after one hand submission
       return {
@@ -342,7 +338,7 @@ export function useGameState() {
         pendingReward: rewardPowerUp,
         rewardTier: tier,
         showLootBox: rewardPowerUp !== null,
-        inventoryFull: isInventoryFull && rewardPowerUp !== null,
+        inventoryFull: false,
         // Clear old power-up selection system
         powerUpChoices: [],
         showPowerUpSelection: false,
@@ -361,7 +357,7 @@ export function useGameState() {
   // Claim the pending reward (add to inventory)
   const claimReward = useCallback(() => {
     setState(prev => {
-      if (!prev.pendingReward || prev.inventoryFull) return prev;
+      if (!prev.pendingReward) return prev;
       
       const newEarnedPowerUps = [...prev.earnedPowerUps, prev.pendingReward];
       const newActivePowerUps = [...prev.activePowerUps, prev.pendingReward];
