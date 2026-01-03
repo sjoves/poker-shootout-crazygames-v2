@@ -369,6 +369,7 @@ export default function GameScreen() {
             isPaused={state.isPaused || state.isLevelComplete}
             isRecycling={isBlitz || (isSSC && state.sscPhase !== 'static')}
             reshuffleTrigger={state.reshuffleTrigger}
+            gameMode={isSSC ? 'ssc' : isBlitz ? 'blitz' : 'classic'}
           />
         )}
         {isConveyor && (

@@ -13,6 +13,7 @@ interface FallingCardsProps {
   isPaused?: boolean;
   isRecycling?: boolean;
   reshuffleTrigger?: number;
+  gameMode?: 'ssc' | 'classic' | 'blitz';
 }
 
 type LocalFallingCard = FallingCard & { instanceKey: string; isTouched?: boolean };
@@ -25,7 +26,11 @@ export function FallingCards({
   isPaused = false,
   isRecycling = false,
   reshuffleTrigger = 0,
+  gameMode = 'classic',
 }: FallingCardsProps) {
+  // SSC mode gets 20% slower base velocity for better playability
+  // Speed scaling (0.5% per level > 10) is applied externally via the speed prop
+  const effectiveSpeed = gameMode === 'ssc' ? speed * 0.8 : speed;
   const [fallingCards, setFallingCards] = useState<LocalFallingCard[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number>();
@@ -93,14 +98,14 @@ export function FallingCards({
         instanceKey: `${picked.id}-${spawnCountRef.current}`,
         x: Math.random() * Math.max(0, containerWidth - cardWidth),
         y: -110,
-        speed: (1.2 + Math.random() * 1.4) * speed,
+        speed: (1.2 + Math.random() * 1.4) * effectiveSpeed,
         rotation: (Math.random() - 0.5) * 40,
         rotationSpeed: (Math.random() - 0.5) * 2.5,
         sway: 12 + Math.random() * 16,
         swaySpeed: 1.2 + Math.random() * 1.6,
       };
     },
-    [deck, selectedCardIds, speed, isRecycling]
+    [deck, selectedCardIds, effectiveSpeed, isRecycling]
   );
 
   // Seed a first card as soon as the deck becomes available
@@ -158,7 +163,7 @@ export function FallingCards({
           moved.push(updatedCard);
         });
 
-        const shouldSpawn = t - lastSpawnRef.current > 600 / speed;
+        const shouldSpawn = t - lastSpawnRef.current > 600 / effectiveSpeed;
         if (!shouldSpawn) return moved;
         if (moved.length >= 14) return moved;
         if (deck.length === 0) return moved;
@@ -178,7 +183,7 @@ export function FallingCards({
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [isPaused, speed, selectedCardIds, createSpawn, isRecycling, deck.length]);
+  }, [isPaused, effectiveSpeed, selectedCardIds, createSpawn, isRecycling, deck.length]);
 
   // Use pointerdown for instant response (bypasses mobile tap delay)
   const handleCardPointerDown = useCallback(
