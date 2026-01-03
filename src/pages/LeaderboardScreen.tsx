@@ -49,10 +49,19 @@ export default function LeaderboardScreen() {
   const { data: entries, isLoading } = useQuery({
     queryKey: ['leaderboard', selectedMode],
     queryFn: async () => {
+      // Only select safe public fields - explicitly exclude user_id to prevent account correlation attacks
       let query = supabase
         .from('leaderboard_entries')
         .select(`
-          *,
+          id,
+          profile_id,
+          game_mode,
+          score,
+          hands_played,
+          time_seconds,
+          best_hand,
+          ssc_level,
+          created_at,
           profiles:profile_id (
             username,
             avatar_url
