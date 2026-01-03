@@ -3,22 +3,26 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { GameState } from '@/types/game';
-import { Star, Shuffle, Crown, Play, Award, Clapperboard, Home, RotateCcw } from 'lucide-react';
+import { Star, Shuffle, Crown, Play, Award, Clapperboard, Home, RotateCcw, CloudUpload, CheckCircle } from 'lucide-react';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/hooks/useAuth';
 import { RewardedAd, useRewardedAd } from '@/components/ads/RewardedAd';
 import { supabase } from '@/integrations/supabase/client';
 import { useGuestScores } from '@/hooks/useGuestScores';
+import { AuthModal } from '@/components/auth/AuthModal';
 
 export default function GameOverScreen() {
   const location = useLocation();
   const navigate = useNavigate();
   const gameState = location.state?.gameState as GameState | undefined;
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { isPremium, openCheckout } = useSubscription();
   const rewardedAd = useRewardedAd();
   const { saveGuestScore } = useGuestScores();
   const scoreSavedRef = useRef(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [scoreSynced, setScoreSynced] = useState(false);
+  const [personalBest, setPersonalBest] = useState<number | null>(null);
 
   // Save score to leaderboard when component mounts
   useEffect(() => {
@@ -72,6 +76,7 @@ export default function GameOverScreen() {
           console.error('Error saving score:', insertError);
         } else {
           console.log('Score saved to leaderboard');
+          setScoreSynced(true);
         }
       } catch (error) {
         console.error('Error saving score:', error);
@@ -80,6 +85,42 @@ export default function GameOverScreen() {
     
     saveScore();
   }, [user, gameState, saveGuestScore]);
+
+  // Fetch personal best when user is authenticated
+  useEffect(() => {
+    const fetchPersonalBest = async () => {
+      if (!user || !gameState) return;
+      
+      try {
+        const { data } = await supabase
+          .from('leaderboard_entries')
+          .select('score')
+          .eq('user_id', user.id)
+          .eq('game_mode', gameState.mode)
+          .order('score', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        
+        if (data) {
+          setPersonalBest(data.score);
+        }
+      } catch (error) {
+        console.error('Error fetching personal best:', error);
+      }
+    };
+    
+    fetchPersonalBest();
+  }, [user, gameState]);
+
+  // Handle successful auth - sync score immediately
+  const handleAuthSuccess = async () => {
+    if (!gameState) return;
+    
+    // The useAuth hook already syncs guest scores on login
+    // Just mark as synced for UI
+    setScoreSynced(true);
+    scoreSavedRef.current = false; // Allow re-save with new user
+  };
 
   if (!gameState) {
     navigate('/');
@@ -120,6 +161,9 @@ export default function GameOverScreen() {
       }, String(gameState.sscLevel));
     }
   };
+
+  const isGuest = !authLoading && !user;
+  const isNewPersonalBest = personalBest !== null && displayScore > personalBest;
 
   return (
     <div className="min-h-screen modern-bg flex flex-col items-center justify-center p-6">
@@ -172,6 +216,56 @@ export default function GameOverScreen() {
             </>
           )}
         </div>
+
+        {/* Guest Sign-In Module */}
+        {isGuest && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="bg-gradient-to-br from-gold/10 to-primary/10 border border-gold/30 rounded-xl p-4 mb-6"
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <CloudUpload className="w-5 h-5 text-gold" />
+              <span className="font-display text-gold">Save Your Progress</span>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">
+              Don't lose your Legendary status! Sign in to save your scores and sync your Power-Ups to the Cloud.
+            </p>
+            <Button
+              onClick={() => setShowAuthModal(true)}
+              size="lg"
+              className="w-full bg-gold hover:bg-gold/90 text-background font-display text-lg h-14 gap-2"
+            >
+              <CloudUpload className="w-5 h-5" />
+              Sign In to Save Score
+            </Button>
+          </motion.div>
+        )}
+
+        {/* Authenticated User - Personal Best / Synced Status */}
+        {!isGuest && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="bg-card/60 border border-primary/30 rounded-xl p-4 mb-6"
+          >
+            <div className="flex items-center justify-center gap-2 text-primary">
+              <CheckCircle className="w-5 h-5" />
+              <span className="font-display">Score Saved to Cloud</span>
+            </div>
+            {personalBest !== null && (
+              <div className="mt-2 text-sm text-muted-foreground">
+                {isNewPersonalBest ? (
+                  <span className="text-gold font-medium">🎉 New Personal Best!</span>
+                ) : (
+                  <span>Personal Best: {personalBest.toLocaleString()}</span>
+                )}
+              </div>
+            )}
+          </motion.div>
+        )}
 
         <div className="flex flex-col gap-3 w-full max-w-md mx-auto">
           <Button 
@@ -252,6 +346,13 @@ export default function GameOverScreen() {
         onAdComplete={rewardedAd.onComplete}
         adType={rewardedAd.adType}
         modeName={rewardedAd.modeName}
+      />
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={handleAuthSuccess}
       />
     </div>
   );
