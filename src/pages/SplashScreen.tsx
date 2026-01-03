@@ -44,9 +44,10 @@ export default function SplashScreen() {
   const [showChallenges, setShowChallenges] = useState(false);
   const rewardedAd = useRewardedAd();
 
-  // Show daily reward prompt for logged in users
+  // Show daily reward prompt for logged in users - only when canClaimReward is true
+  // canClaimReward is now a boolean that accounts for loading state
   useEffect(() => {
-    if (user && canClaimReward) {
+    if (user && canClaimReward === true) {
       const timer = setTimeout(() => setShowRewardWheel(true), 1000);
       return () => clearTimeout(timer);
     }

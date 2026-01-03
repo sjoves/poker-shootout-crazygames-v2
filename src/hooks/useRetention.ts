@@ -410,14 +410,21 @@ export function useRetention() {
     }
   };
 
-  // Check if 24 hours have passed since last claim
-  const canClaimReward = (): boolean => {
+  // Check if 24 hours have passed since last claim - computed value, not function
+  // Returns false while loading to prevent popup from appearing prematurely
+  const canClaimReward = (() => {
+    // Don't allow claiming while data is still loading
+    if (loading) return false;
+    // If no user, can't claim
+    if (!user) return false;
+    // If no previous reward record exists, user can claim
     if (!todayReward || !todayReward.created_at) return true;
+    // Check if 24 hours have passed since last claim
     const lastClaimTime = new Date(todayReward.created_at).getTime();
     const now = Date.now();
     const hoursSinceLastClaim = (now - lastClaimTime) / (1000 * 60 * 60);
     return hoursSinceLastClaim >= 24;
-  };
+  })();
 
   // Get time remaining until next reward
   const getTimeUntilNextReward = (): { hours: number; minutes: number } | null => {
@@ -436,7 +443,7 @@ export function useRetention() {
 
   // Claim daily reward
   const claimDailyReward = async (): Promise<DailyReward | null> => {
-    if (!user || !canClaimReward()) return null;
+    if (!user || !canClaimReward) return null;
 
     // Weighted random selection
     const totalWeight = REWARD_OPTIONS.reduce((sum, opt) => sum + opt.weight, 0);
@@ -507,7 +514,7 @@ export function useRetention() {
     // Helpers
     isAchievementUnlocked: (id: string) => userAchievements.some(ua => ua.achievement_id === id),
     isUnlocked: (id: string) => userUnlocks.includes(id),
-    canClaimReward: canClaimReward(),
+    canClaimReward,
     allChallengesCompleted: challenges.length > 0 && challenges.every(c => c.completed),
   };
 }
