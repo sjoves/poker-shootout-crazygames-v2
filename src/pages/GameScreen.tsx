@@ -84,21 +84,25 @@ export default function GameScreen() {
     };
   }, [mode, isTestBonus, startLevel, startMusic, stopMusic]);
 
-  // Check if we need to show SSC explainer BEFORE intro sequence
+  // Show SSC explainer for first-time SSC players
+  useEffect(() => {
+    if (introPhase === 'ready' && mode === 'ssc' && !state.hasSeenSSCExplainer && !showSSCExplainer) {
+      setShowSSCExplainer(true);
+    }
+  }, [introPhase, mode, state.hasSeenSSCExplainer, showSSCExplainer]);
+
+  // Intro sequence: Ready -> Begin -> Playing
   useEffect(() => {
     if (introPhase === 'loading' || isLoadingMusic) return;
     
-    // For SSC mode, show explainer first if not seen
-    if (mode === 'ssc' && !state.hasSeenSSCExplainer && introPhase === 'ready') {
-      setShowSSCExplainer(true);
-      return; // Don't proceed with intro until explainer is dismissed
-    }
+    // Don't proceed if SSC explainer is showing
+    if (showSSCExplainer) return;
     
-    // Only proceed with intro if we're in 'ready' phase and explainer is not showing
-    if (introPhase === 'ready' && !showSSCExplainer) {
+    if (introPhase === 'ready') {
       const timer = setTimeout(() => setIntroPhase('begin'), 1200);
       return () => clearTimeout(timer);
     }
+    
     if (introPhase === 'begin') {
       const timer = setTimeout(() => {
         setIntroPhase('playing');
@@ -111,7 +115,7 @@ export default function GameScreen() {
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [introPhase, isTestBonus, mode, startLevel, startGame, isLoadingMusic, state.hasSeenSSCExplainer, showSSCExplainer]);
+  }, [introPhase, isTestBonus, mode, startLevel, startGame, isLoadingMusic, showSSCExplainer]);
 
   // Play sound when hand is submitted
   useEffect(() => {
