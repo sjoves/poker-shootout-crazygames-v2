@@ -60,6 +60,9 @@ export function PowerUpSelection({ choices, onSelect, onDismiss }: PowerUpSelect
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {powerUp!.description}
+                  {powerUp!.id === 'reshuffle' && (
+                    <span className="text-primary ml-1">(Static mode only)</span>
+                  )}
                 </p>
               </div>
               <div className="text-xs text-muted-foreground px-2 py-1 rounded bg-muted/50">
