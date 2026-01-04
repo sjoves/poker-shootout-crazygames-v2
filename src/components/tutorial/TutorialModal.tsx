@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { POKER_HANDS, Card as CardType } from '@/types/game';
 import { PlayingCard, EmptyCardSlot } from '@/components/game/PlayingCard';
+import { TutorialCard } from '@/components/tutorial/TutorialCard';
 import { evaluateHand } from '@/lib/pokerEngine';
 
 interface TutorialModalProps {
@@ -245,11 +246,9 @@ function GuidedInteractiveDemo({ onComplete }: { onComplete: () => void }) {
                 animate={{ scale: 1, y: 0, rotate: 0 }}
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
               >
-                <PlayingCard
+                <TutorialCard
                   card={selectedCards[i]}
                   size="ssc"
-                  animate={false}
-                  isDisabled
                 />
               </motion.div>
             ) : (
