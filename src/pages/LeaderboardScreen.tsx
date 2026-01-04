@@ -186,7 +186,10 @@ export default function LeaderboardScreen() {
                             {formatTime(entry.time_seconds)}
                           </span>
                         )}
-                        <span>{entry.hands_played} hands</span>
+                        {/* Hide hands count for Classic modes - only show for Blitz and SSC */}
+                        {entry.game_mode !== 'classic_fc' && entry.game_mode !== 'classic_cb' && (
+                          <span>{entry.hands_played} hands</span>
+                        )}
                       </div>
                     </div>
                   </div>

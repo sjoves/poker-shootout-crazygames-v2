@@ -256,7 +256,10 @@ export default function GameOverScreen() {
         </div>
 
         <div className="bg-card/80 rounded-xl p-4 mb-6 text-left space-y-1 w-full max-w-md mx-auto">
-          <p className="text-sm text-muted-foreground">Hands Played: {gameState.handsPlayed}</p>
+          {/* Hide hands played for Classic Mode - only show for Blitz and SSC */}
+          {!isClassicMode && (
+            <p className="text-sm text-muted-foreground">Hands Played: {gameState.handsPlayed}</p>
+          )}
           {isClassicMode && (
             <>
               <p className="text-sm text-muted-foreground">
