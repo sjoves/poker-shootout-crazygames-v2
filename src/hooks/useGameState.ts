@@ -20,7 +20,7 @@ export function useGameState() {
   const [state, setState] = useState<GameState>(INITIAL_GAME_STATE);
 
   // Compose smaller focused hooks
-  const timerRef = useGameTimer(state, setState);
+  const { timerRef, subscribe, getTimeRemaining, getTimeElapsed } = useGameTimer(state, setState);
   const { selectCard } = useCardSelection(setState);
   const { 
     usePowerUp, 
@@ -84,5 +84,9 @@ export function useGameState() {
     claimReward,
     swapPowerUp,
     discardReward,
+    // Timer subscription for UI components
+    timerSubscribe: subscribe,
+    getTimeRemaining,
+    getTimeElapsed,
   };
 }

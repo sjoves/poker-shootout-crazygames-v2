@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, ConveyorCard } from '@/types/game';
 import { PlayingCard } from './PlayingCard';
@@ -31,27 +31,34 @@ export function ConveyorBelt({
   isRecycling = false,
   reshuffleTrigger = 0,
 }: ConveyorBeltProps) {
-  const [conveyorCards, setConveyorCards] = useState<ConveyorCard[]>([]);
-  const [pendingReturns, setPendingReturns] = useState<PendingReturn[]>([]);
+  // Use refs for card positions to avoid React state updates every frame
+  const cardsRef = useRef<ConveyorCard[]>([]);
+  const cardElementsRef = useRef<Map<string, HTMLDivElement>>(new Map());
+  const pendingReturnsRef = useRef<PendingReturn[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number>();
   const initializedRef = useRef(false);
-  const returnDelayMs = 3000; // Cards return after 3 seconds
+  const returnDelayMs = 3000;
   const { playSound } = useAudio();
   const isMobile = useIsMobile();
   
-  // Card width with spacing to prevent overlapping
+  // Force re-render only when cards are added/removed
+  const [, setRenderTrigger] = useState(0);
+  const triggerRender = useCallback(() => setRenderTrigger(v => v + 1), []);
+  
   const cardWidth = isMobile ? 72 : 64;
-  const cardSpacing = isMobile ? 28 : 20; // Larger spacing on mobile to prevent overlap
+  const cardSpacing = isMobile ? 28 : 20;
 
-  // Reset and re-deal when reshuffleTrigger changes
+  // Reset on reshuffle
   useEffect(() => {
     if (reshuffleTrigger > 0) {
       initializedRef.current = false;
-      setConveyorCards([]);
-      setPendingReturns([]);
+      cardsRef.current = [];
+      cardElementsRef.current.clear();
+      pendingReturnsRef.current = [];
+      triggerRender();
     }
-  }, [reshuffleTrigger]);
+  }, [reshuffleTrigger, triggerRender]);
 
   // Initialize cards on tracks
   useEffect(() => {
@@ -63,11 +70,10 @@ export function ConveyorBelt({
     
     const cards: ConveyorCard[] = [];
     let deckIndex = 0;
-    const usedCardIds = new Set<string>(); // Track used cards to prevent duplicates
+    const usedCardIds = new Set<string>();
     
     for (let row = 0; row < rows; row++) {
       for (let i = 0; i < cardsPerRow; i++) {
-        // Find a card that hasn't been used yet
         let card = null;
         for (let j = 0; j < deck.length; j++) {
           const candidateIndex = (deckIndex + j) % deck.length;
@@ -97,10 +103,11 @@ export function ConveyorBelt({
       }
     }
     
-    setConveyorCards(cards);
-  }, [deck, rows, speed, reshuffleTrigger, cardWidth, cardSpacing]);
+    cardsRef.current = cards;
+    triggerRender();
+  }, [deck, rows, speed, reshuffleTrigger, cardWidth, cardSpacing, triggerRender]);
 
-  // Track when cards are selected and schedule their return
+  // Track selected cards for pending returns
   const prevSelectedRef = useRef<string[]>([]);
   useEffect(() => {
     const newlySelected = selectedCardIds.filter(id => !prevSelectedRef.current.includes(id));
@@ -111,12 +118,12 @@ export function ConveyorBelt({
         return card ? { card, returnTime: now + returnDelayMs } : null;
       }).filter(Boolean) as PendingReturn[];
       
-      setPendingReturns(prev => [...prev, ...newPending]);
+      pendingReturnsRef.current = [...pendingReturnsRef.current, ...newPending];
     }
     prevSelectedRef.current = selectedCardIds;
   }, [selectedCardIds, deck, returnDelayMs]);
 
-  // Animation loop
+  // Animation loop - direct DOM updates
   useEffect(() => {
     if (isPaused || !containerRef.current) return;
     
@@ -124,90 +131,106 @@ export function ConveyorBelt({
     
     const animate = () => {
       const now = Date.now();
+      let needsRender = false;
       
       // Check for cards ready to return
-      setPendingReturns(prev => {
-        const readyToReturn = prev.filter(p => now >= p.returnTime);
-        const stillPending = prev.filter(p => now < p.returnTime);
+      const readyToReturn = pendingReturnsRef.current.filter(p => now >= p.returnTime);
+      const stillPending = pendingReturnsRef.current.filter(p => now < p.returnTime);
+      
+      if (readyToReturn.length > 0) {
+        const currentCardsOnBelt = new Set(cardsRef.current.map(c => c.id.split('-row')[0]));
         
-        if (readyToReturn.length > 0) {
-          setConveyorCards(cards => {
-            const newCards = [...cards];
-            // Get IDs of cards currently on the belt to prevent duplicates
-            const currentCardsOnBelt = new Set(cards.map(c => c.id.split('-row')[0]));
-            
-            readyToReturn.forEach(({ card }) => {
-              // Skip if card is already on the belt (prevent duplicates)
-              if (currentCardsOnBelt.has(card.id)) return;
-              
-              // Find a random row and position to insert the card
-              const row = Math.floor(Math.random() * rows);
-              const isLeftToRight = row % 2 === 0;
-              const x = isLeftToRight ? -cardWidth : containerWidth;
-              
-              newCards.push({
-                ...card,
-                id: `${card.id}-row${row}-ret${now}`,
-                x,
-                y: 0,
-                row,
-                speed: speed * (isLeftToRight ? 1 : -1) * 0.5,
-              });
-              currentCardsOnBelt.add(card.id);
-            });
-            return newCards;
+        readyToReturn.forEach(({ card }) => {
+          if (currentCardsOnBelt.has(card.id)) return;
+          
+          const row = Math.floor(Math.random() * rows);
+          const isLeftToRight = row % 2 === 0;
+          const x = isLeftToRight ? -cardWidth : containerWidth;
+          
+          cardsRef.current.push({
+            ...card,
+            id: `${card.id}-row${row}-ret${now}`,
+            x,
+            y: 0,
+            row,
+            speed: speed * (isLeftToRight ? 1 : -1) * 0.5,
           });
+          currentCardsOnBelt.add(card.id);
+          needsRender = true;
+        });
+        
+        pendingReturnsRef.current = stillPending;
+      }
+      
+      // Update card positions directly
+      const updatedCards: ConveyorCard[] = [];
+      
+      for (const card of cardsRef.current) {
+        card.x += card.speed;
+        
+        // Update DOM element directly
+        const element = cardElementsRef.current.get(card.id);
+        if (element) {
+          element.style.transform = `translate3d(${card.x}px, 0, 0)`;
         }
         
-        return stillPending;
-      });
+        // Skip selected cards
+        if (selectedCardIds.includes(card.id.split('-row')[0])) {
+          needsRender = true;
+          continue;
+        }
+        
+        // Skip off-screen cards
+        if (card.speed > 0 && card.x >= containerWidth + cardWidth) {
+          needsRender = true;
+          continue;
+        }
+        if (card.speed < 0 && card.x <= -cardWidth * 2) {
+          needsRender = true;
+          continue;
+        }
+        
+        updatedCards.push(card);
+      }
       
-      setConveyorCards(prev => {
-        const updatedCards = prev
-          .map(card => ({ ...card, x: card.x + card.speed }))
-          .filter(card => !selectedCardIds.includes(card.id.split('-row')[0]))
-          // Remove cards that are fully off-screen
-          .filter(card => {
-            if (card.speed > 0) return card.x < containerWidth + cardWidth;
-            return card.x > -cardWidth * 2;
-          });
+      // Add new cards at entry points
+      const cardsOnBelt = new Set(updatedCards.map(c => c.id.split('-row')[0]));
+      const cardsPending = new Set(pendingReturnsRef.current.map(p => p.card.id));
+      
+      for (let row = 0; row < rows; row++) {
+        const rowCards = updatedCards.filter(c => c.row === row);
+        const isLeftToRight = row % 2 === 0;
+        const minCardsPerRow = Math.floor(containerWidth / (cardWidth + cardSpacing)) + 2;
         
-        // Get IDs of cards currently on the belt (base card IDs, not unique instance IDs)
-        const cardsOnBelt = new Set(updatedCards.map(c => c.id.split('-row')[0]));
-        const cardsPending = new Set(pendingReturns.map(p => p.card.id));
-        
-        // Count cards per row and add new ones at entry points
-        for (let row = 0; row < rows; row++) {
-          const rowCards = updatedCards.filter(c => c.row === row);
-          const isLeftToRight = row % 2 === 0;
-          const minCardsPerRow = Math.floor(containerWidth / (cardWidth + cardSpacing)) + 2;
+        if (rowCards.length < minCardsPerRow) {
+          const availableCards = deck.filter(c => 
+            !cardsOnBelt.has(c.id) && 
+            !selectedCardIds.includes(c.id) &&
+            !cardsPending.has(c.id)
+          );
           
-          if (rowCards.length < minCardsPerRow) {
-            // Find a card that's not already on the belt, not selected, and not pending return
-            const availableCards = deck.filter(c => 
-              !cardsOnBelt.has(c.id) && 
-              !selectedCardIds.includes(c.id) &&
-              !cardsPending.has(c.id)
-            );
-            
-            if (availableCards.length > 0) {
-              const entryX = isLeftToRight ? -cardWidth : containerWidth;
-              const deckCard = availableCards[Math.floor(Math.random() * availableCards.length)];
-              updatedCards.push({
-                ...deckCard,
-                id: `${deckCard.id}-row${row}-t${now}`,
-                x: entryX,
-                y: 0,
-                row,
-                speed: speed * (isLeftToRight ? 1 : -1) * 0.5,
-              });
-              cardsOnBelt.add(deckCard.id); // Mark as used for subsequent row checks
-            }
+          if (availableCards.length > 0) {
+            const entryX = isLeftToRight ? -cardWidth : containerWidth;
+            const deckCard = availableCards[Math.floor(Math.random() * availableCards.length)];
+            updatedCards.push({
+              ...deckCard,
+              id: `${deckCard.id}-row${row}-t${now}`,
+              x: entryX,
+              y: 0,
+              row,
+              speed: speed * (isLeftToRight ? 1 : -1) * 0.5,
+            });
+            cardsOnBelt.add(deckCard.id);
+            needsRender = true;
           }
         }
-        
-        return updatedCards;
-      });
+      }
+      
+      cardsRef.current = updatedCards;
+      
+      if (needsRender) {
+        triggerRender();
+      }
       
       animationRef.current = requestAnimationFrame(animate);
     };
@@ -219,7 +242,7 @@ export function ConveyorBelt({
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [isPaused, selectedCardIds, speed, rows, pendingReturns, cardWidth, cardSpacing, deck]);
+  }, [isPaused, selectedCardIds, speed, rows, cardWidth, cardSpacing, deck, triggerRender]);
 
   const handleCardClick = useCallback((card: ConveyorCard) => {
     const originalCard: Card = {
@@ -234,6 +257,7 @@ export function ConveyorBelt({
 
   const rowHeight = 120;
   const totalHeight = rows * rowHeight;
+  const visibleCards = cardsRef.current;
 
   return (
     <div 
@@ -244,45 +268,51 @@ export function ConveyorBelt({
         className="relative w-full"
         style={{ height: totalHeight }}
       >
-      {/* Track backgrounds */}
-      {Array(rows).fill(null).map((_, index) => (
-        <div
-          key={`track-${index}`}
-          className="absolute left-0 right-0 h-20 bg-muted/30 border-y border-border/20"
-          style={{ top: index * rowHeight }}
-        >
-          <div className="absolute inset-0 flex items-center opacity-20">
-            {Array(20).fill(null).map((_, i) => (
-              <div key={i} className="flex-1 border-r border-dashed border-muted-foreground/30" />
-            ))}
-          </div>
-        </div>
-      ))}
-      
-      {/* Cards */}
-      <AnimatePresence>
-        {conveyorCards.map(card => (
-          <motion.div
-            key={card.id}
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0, transition: { duration: 0.2 } }}
-            style={{
-              position: 'absolute',
-              left: card.x,
-              top: card.row * rowHeight + 10,
-            }}
+        {/* Track backgrounds */}
+        {Array(rows).fill(null).map((_, index) => (
+          <div
+            key={`track-${index}`}
+            className="absolute left-0 right-0 h-20 bg-muted/30 border-y border-border/20"
+            style={{ top: index * rowHeight }}
           >
-            <PlayingCard
-              card={card}
-              onClick={() => handleCardClick(card)}
-              size="md"
-              animate={false}
-              isSelected={selectedCardIds.includes(card.id.split('-row')[0])}
-            />
-          </motion.div>
+            <div className="absolute inset-0 flex items-center opacity-20">
+              {Array(20).fill(null).map((_, i) => (
+                <div key={i} className="flex-1 border-r border-dashed border-muted-foreground/30" />
+              ))}
+            </div>
+          </div>
         ))}
-      </AnimatePresence>
+        
+        {/* Cards */}
+        <AnimatePresence>
+          {visibleCards.map(card => (
+            <motion.div
+              key={card.id}
+              ref={(el) => {
+                if (el) cardElementsRef.current.set(card.id, el);
+                else cardElementsRef.current.delete(card.id);
+              }}
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0, transition: { duration: 0.2 } }}
+              style={{
+                position: 'absolute',
+                left: 0,
+                top: card.row * rowHeight + 10,
+                transform: `translate3d(${card.x}px, 0, 0)`,
+                willChange: 'transform',
+              }}
+            >
+              <PlayingCard
+                card={card}
+                onClick={() => handleCardClick(card)}
+                size="md"
+                animate={false}
+                isSelected={selectedCardIds.includes(card.id.split('-row')[0])}
+              />
+            </motion.div>
+          ))}
+        </AnimatePresence>
       </div>
     </div>
   );

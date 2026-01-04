@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { motion } from 'framer-motion';
 import { Card, Suit } from '@/types/game';
 import { cn } from '@/lib/utils';
@@ -25,25 +26,23 @@ const SIZE_CONFIG = {
   xs: { card: 'w-12 h-[67px]', rank: 'text-xs', corner: 'text-[8px]', center: 'text-base', pip: 'text-[6px]', gap: 'gap-0' },
   sm: { card: 'w-14 h-[79px]', rank: 'text-sm', corner: 'text-[10px]', center: 'text-lg', pip: 'text-[7px]', gap: 'gap-0' },
   ssc: { card: 'w-[68px] h-[95px]', rank: 'text-sm', corner: 'text-[10px]', center: 'text-xl', pip: 'text-[8px]', gap: 'gap-0' },
-  sdm: { card: 'w-[70px] h-[99px]', rank: 'text-sm', corner: 'text-[10px]', center: 'text-xl', pip: 'text-[8px]', gap: 'gap-0' }, // +25% vs sm for Sitting Duck on mobile
-  sd: { card: 'w-[85px] h-[119px]', rank: 'text-base', corner: 'text-xs', center: 'text-2xl', pip: 'text-[9px]', gap: 'gap-0' }, // +25% vs ssc for Sitting Duck on desktop
+  sdm: { card: 'w-[70px] h-[99px]', rank: 'text-sm', corner: 'text-[10px]', center: 'text-xl', pip: 'text-[8px]', gap: 'gap-0' },
+  sd: { card: 'w-[85px] h-[119px]', rank: 'text-base', corner: 'text-xs', center: 'text-2xl', pip: 'text-[9px]', gap: 'gap-0' },
   md: { card: 'w-[76px] h-[106px]', rank: 'text-base', corner: 'text-xs', center: 'text-2xl', pip: 'text-[10px]', gap: 'gap-0.5' },
-  hand: { card: 'w-[80px] h-[110px]', rank: 'text-base', corner: 'text-xs', center: 'text-2xl', pip: 'text-[10px]', gap: 'gap-0.5' }, // 30% smaller than lg
+  hand: { card: 'w-[80px] h-[110px]', rank: 'text-base', corner: 'text-xs', center: 'text-2xl', pip: 'text-[10px]', gap: 'gap-0.5' },
   lg: { card: 'w-[115px] h-[158px]', rank: 'text-xl', corner: 'text-sm', center: 'text-4xl', pip: 'text-xs', gap: 'gap-1' },
 };
 
-// Number of pips to show based on card rank
 const PIP_LAYOUTS: Record<string, number> = {
   'A': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10,
 };
 
-function CenterPips({ rank, suit, size }: { rank: string; suit: Suit; size: 'xs' | 'sm' | 'ssc' | 'sdm' | 'sd' | 'md' | 'hand' | 'lg' }) {
+const CenterPips = memo(function CenterPips({ rank, suit, size }: { rank: string; suit: Suit; size: 'xs' | 'sm' | 'ssc' | 'sdm' | 'sd' | 'md' | 'hand' | 'lg' }) {
   const symbol = SUIT_SYMBOLS[suit];
   const count = PIP_LAYOUTS[rank];
   const config = SIZE_CONFIG[size];
   
   if (!count) {
-    // Face card (J, Q, K)
     return (
       <div className={cn('flex flex-col items-center justify-center', config.center)}>
         <span className="font-bold">{rank}</span>
@@ -56,7 +55,6 @@ function CenterPips({ rank, suit, size }: { rank: string; suit: Suit; size: 'xs'
     return <span className={cn(config.center, 'font-normal')}>{symbol}</span>;
   }
 
-  // Simple grid layout for pips
   return (
     <div className={cn('grid grid-cols-2 gap-x-1', config.pip, config.gap)}>
       {Array.from({ length: count }).map((_, i) => (
@@ -64,9 +62,10 @@ function CenterPips({ rank, suit, size }: { rank: string; suit: Suit; size: 'xs'
       ))}
     </div>
   );
-}
+});
 
-export function PlayingCard({
+// Memoized PlayingCard to prevent re-renders when only position changes
+export const PlayingCard = memo(function PlayingCard({
   card,
   onClick,
   isSelected,
@@ -116,7 +115,16 @@ export function PlayingCard({
       </div>
     </motion.button>
   );
-}
+}, (prevProps, nextProps) => {
+  // Custom comparison: only re-render if these props actually change
+  return (
+    prevProps.card.id === nextProps.card.id &&
+    prevProps.isSelected === nextProps.isSelected &&
+    prevProps.isDisabled === nextProps.isDisabled &&
+    prevProps.size === nextProps.size &&
+    prevProps.className === nextProps.className
+  );
+});
 
 const EMPTY_SLOT_SIZES = {
   xs: 'w-12 h-[67px]',
