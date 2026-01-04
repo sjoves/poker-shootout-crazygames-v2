@@ -43,7 +43,7 @@ export function ConveyorBelt({
   const isMobile = useIsMobile();
   
   // Force re-render only when cards are added/removed
-  const [renderKey, setRenderTrigger] = useState(0);
+  const [, setRenderTrigger] = useState(0);
   const triggerRender = useCallback(() => setRenderTrigger(v => v + 1), []);
   
   // Track when cards are ready for animation
@@ -138,7 +138,6 @@ export function ConveyorBelt({
     const containerWidth = containerRef.current.offsetWidth;
     // Start cards further off-screen to ensure smooth entry
     const offScreenBuffer = cardWidth * 2;
-    let lastTime = performance.now();
     
     const animate = () => {
       const now = Date.now();
