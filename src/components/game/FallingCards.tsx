@@ -1,5 +1,4 @@
 import React, { useEffect, useCallback, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import type { Card, FallingCard } from "@/types/game";
 import { PlayingCard } from "./PlayingCard";
 import { useAudio } from "@/contexts/AudioContext";
@@ -212,50 +211,38 @@ export function FallingCards({
 
   return (
     <div ref={containerRef} className="absolute inset-0 overflow-hidden touch-none">
-      <AnimatePresence>
-        {visibleCards.map((card) => (
-          <motion.div
-            key={card.instanceKey}
-            ref={(el) => {
-              if (el) cardElementsRef.current.set(card.instanceKey, el);
-              else cardElementsRef.current.delete(card.instanceKey);
-            }}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ 
-              opacity: 1, 
-              scale: card.isTouched ? 1.15 : 1, 
-            }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            transition={{ 
-              duration: 0.12,
-              scale: { duration: 0.08 },
-            }}
-            style={{
-              position: "absolute",
-              left: 0,
-              top: 0,
-              transform: `translate3d(${card.x}px, ${card.y}px, 0) rotate(${card.rotation}deg)`,
-              willChange: "transform",
-            }}
-            className="z-10"
+      {visibleCards.map((card) => (
+        <div
+          key={card.instanceKey}
+          ref={(el) => {
+            if (el) cardElementsRef.current.set(card.instanceKey, el);
+            else cardElementsRef.current.delete(card.instanceKey);
+          }}
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            transform: `translate3d(${card.x}px, ${card.y}px, 0) rotate(${card.rotation}deg)`,
+            willChange: "transform",
+          }}
+          className="z-10"
+        >
+          <div
+            onPointerDown={(e) => handleCardPointerDown(card, e)}
+            className={`relative cursor-pointer ${hitboxPadding} select-none touch-none`}
+            role="button"
+            aria-label={`Select ${card.rank} of ${card.suit}`}
           >
-            <div
-              onPointerDown={(e) => handleCardPointerDown(card, e)}
-              className={`relative cursor-pointer ${hitboxPadding} select-none touch-none`}
-              role="button"
-              aria-label={`Select ${card.rank} of ${card.suit}`}
-            >
-              <div className={`transition-all duration-75 ${card.isTouched ? 'ring-4 ring-primary ring-opacity-80 rounded-lg shadow-lg shadow-primary/50' : ''}`}>
-                <PlayingCard
-                  card={card}
-                  size="md"
-                  animate={false}
-                />
-              </div>
+            <div className={`transition-all duration-75 ${card.isTouched ? 'ring-4 ring-primary ring-opacity-80 rounded-lg shadow-lg shadow-primary/50' : ''}`}>
+              <PlayingCard
+                card={card}
+                size="md"
+                animate={false}
+              />
             </div>
-          </motion.div>
-        ))}
-      </AnimatePresence>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
