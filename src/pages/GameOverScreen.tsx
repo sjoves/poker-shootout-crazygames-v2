@@ -15,13 +15,10 @@ import { AuthModal } from '@/components/auth/AuthModal';
 // Map hand names from evaluateHand to the keys expected by updateStats
 function mapHandTypesToStats(handHistory: HandResult[]): Record<string, number> {
   const stats: Record<string, number> = {};
-  
-  console.log('[mapHandTypesToStats] Processing hand history:', handHistory?.length, 'hands');
-  
+
   for (const result of handHistory) {
     const handName = result.hand.name.toLowerCase().replace(/\s+/g, '');
-    console.log('[mapHandTypesToStats] Hand:', result.hand.name, '-> normalized:', handName);
-    
+
     // Map to the expected keys
     switch (handName) {
       case 'flush':
@@ -32,7 +29,6 @@ function mapHandTypesToStats(handHistory: HandResult[]): Record<string, number> 
         break;
       case 'fullhouse':
         stats.fullHouse = (stats.fullHouse || 0) + 1;
-        console.log('[mapHandTypesToStats] Counted Full House! Total:', stats.fullHouse);
         break;
       case 'fourofakind':
         stats.fourOfAKind = (stats.fourOfAKind || 0) + 1;
@@ -45,8 +41,7 @@ function mapHandTypesToStats(handHistory: HandResult[]): Record<string, number> 
         break;
     }
   }
-  
-  console.log('[mapHandTypesToStats] Final stats:', stats);
+
   return stats;
 }
 
@@ -68,8 +63,6 @@ export default function GameOverScreen() {
 
   // Update retention stats (challenges, achievements, streak) when game ends
   useEffect(() => {
-    console.log('[GameOverScreen] Received handHistory:', handHistory?.length, 'hands', handHistory?.map(h => h?.hand?.name));
-    
     const updateRetentionStats = async () => {
       if (!gameState || !user || statsUpdatedRef.current) return;
       

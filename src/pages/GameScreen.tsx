@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useGameState } from '@/hooks/useGameState';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAudio } from '@/contexts/AudioContext';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { ScorePanel } from '@/components/game/ScoreDisplay';
 import { HandDisplay } from '@/components/game/HandDisplay';
 import { FallingCards } from '@/components/game/FallingCards';
@@ -63,6 +65,52 @@ export default function GameScreen() {
   const startLevelParam = searchParams.get('startLevel');
   const startLevel = startLevelParam ? parseInt(startLevelParam, 10) : undefined;
   const phaseOverride = searchParams.get('phase') as 'sitting_duck' | 'conveyor' | 'falling' | null;
+
+  const { user } = useAuth();
+  const lastTrackedChallengeHandRef = useRef<string | null>(null);
+
+  // Hand Detection Event Hook: update daily challenge progress immediately on each submitted hand
+  useEffect(() => {
+    if (!user) return;
+    if (!state.currentHand) return;
+
+    const handName = state.currentHand.hand.name;
+    const challengeType = handName === 'Straight'
+      ? 'make_straight'
+      : handName === 'Full House'
+        ? 'make_full_house'
+        : null;
+
+    if (!challengeType) return;
+
+    const dedupeKey = `${state.handsPlayed}-${handName}-${state.currentHand.totalPoints}`;
+    if (lastTrackedChallengeHandRef.current === dedupeKey) return;
+    lastTrackedChallengeHandRef.current = dedupeKey;
+
+    const today = new Date().toISOString().split('T')[0];
+
+    (async () => {
+      const { data: challenge, error } = await supabase
+        .from('daily_challenges')
+        .select('id, current_value, target_value, completed')
+        .eq('user_id', user.id)
+        .eq('challenge_date', today)
+        .eq('challenge_type', challengeType)
+        .maybeSingle();
+
+      if (error || !challenge || challenge.completed) return;
+
+      const currentValue = typeof challenge.current_value === 'number' ? challenge.current_value : 0;
+      const targetValue = typeof challenge.target_value === 'number' ? challenge.target_value : 1;
+      const newValue = Math.min(currentValue + 1, targetValue);
+      const completed = newValue >= targetValue;
+
+      await supabase
+        .from('daily_challenges')
+        .update({ current_value: newValue, completed })
+        .eq('id', challenge.id);
+    })();
+  }, [user, state.currentHand, state.handsPlayed]);
 
   // Start background music first, then show intro sequence
   useEffect(() => {
@@ -226,7 +274,6 @@ export default function GameScreen() {
 
   if (state.isGameOver) {
     const handHistory = getHandResults();
-    console.log('[GameScreen] Navigating to game-over with handHistory:', handHistory?.length, 'hands', handHistory?.map(h => h.hand.name));
     navigate('/game-over', { state: { gameState: state, handHistory } });
   }
 
