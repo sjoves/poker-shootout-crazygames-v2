@@ -48,8 +48,8 @@ export function useGameStateZustand() {
               isGameOver: true,
               isPlaying: false,
             });
-          } else if (timeElapsedRef.current % 5 === 0) {
-            // Sync to store every 5 seconds
+          } else {
+            // Sync to store every second for precise timer display
             useGameStore.setState({ 
               timeRemaining: timeRemainingRef.current,
               timeElapsed: timeElapsedRef.current,
@@ -60,9 +60,8 @@ export function useGameStateZustand() {
           timeElapsedRef.current += 1;
           subscribersRef.current.forEach(cb => cb());
           
-          if (timeElapsedRef.current % 5 === 0) {
-            useGameStore.setState({ timeElapsed: timeElapsedRef.current });
-          }
+          // Sync to store every second for precise timer display
+          useGameStore.setState({ timeElapsed: timeElapsedRef.current });
         }
       }, 1000);
     }

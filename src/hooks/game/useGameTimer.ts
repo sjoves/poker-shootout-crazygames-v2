@@ -66,14 +66,12 @@ export function useGameTimer(
               }));
             }
           } else {
-            // Just update refs, only sync to state every 5 seconds to reduce re-renders
-            if (timeElapsedRef.current % 5 === 0) {
-              setState(prev => ({ 
-                ...prev, 
-                timeRemaining: timeRemainingRef.current,
-                timeElapsed: timeElapsedRef.current 
-              }));
-            }
+            // Sync to state every second for precise timer display
+            setState(prev => ({ 
+              ...prev, 
+              timeRemaining: timeRemainingRef.current,
+              timeElapsed: timeElapsedRef.current 
+            }));
           }
         } else {
           // Classic mode
@@ -98,8 +96,8 @@ export function useGameTimer(
               timeBonus,
               leftoverPenalty,
             }));
-          } else if (timeElapsedRef.current % 5 === 0) {
-            // Sync to state every 5 seconds
+          } else {
+            // Sync to state every second for precise timer display
             setState(prev => ({ ...prev, timeElapsed: timeElapsedRef.current }));
           }
         }
