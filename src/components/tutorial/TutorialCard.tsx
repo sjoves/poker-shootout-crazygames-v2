@@ -9,7 +9,12 @@ const SUIT_SYMBOLS: Record<Suit, string> = {
   spades: "♠",
 };
 
-const isRedSuit = (suit: Suit) => suit === "hearts" || suit === "diamonds";
+const SUIT_COLOR_CLASS: Record<Suit, string> = {
+  hearts: "text-[hsl(var(--suit-hearts))]",
+  diamonds: "text-[hsl(var(--suit-diamonds))]",
+  clubs: "text-[hsl(var(--suit-clubs))]",
+  spades: "text-[hsl(var(--suit-spades))]",
+};
 
 const SIZE_CONFIG = {
   ssc: { card: "w-[68px] h-[95px]", rank: "text-sm", corner: "text-[10px]", center: "text-2xl" },
@@ -27,41 +32,35 @@ interface TutorialCardProps {
 export const TutorialCard = memo(function TutorialCard({ card, size = "ssc", className }: TutorialCardProps) {
   const suitSymbol = SUIT_SYMBOLS[card.suit];
   const config = SIZE_CONFIG[size];
-  const colorClass = isRedSuit(card.suit) ? "text-destructive" : "text-foreground";
+  const suitColorClass = SUIT_COLOR_CLASS[card.suit];
 
   return (
     <div
       className={cn(
         config.card,
-        "relative rounded-lg bg-background shadow-lg",
+        "relative rounded-lg bg-primary-foreground shadow-lg",
         "flex items-center justify-center",
-        "border border-border",
+        "border border-border/30",
         "select-none",
-        colorClass,
+        suitColorClass,
         className
       )}
       aria-label={`${card.rank} of ${card.suit}`}
     >
       {/* Top-left corner */}
-      <div className={cn("absolute top-0.5 left-1 flex flex-col items-center leading-none")}
-        aria-hidden="true"
-      >
+      <div className={cn("absolute top-0.5 left-1 flex flex-col items-center leading-none")} aria-hidden="true">
         <span className={cn("font-bold", config.rank)}>{card.rank}</span>
         <span className={cn("font-bold", config.corner)}>{suitSymbol}</span>
       </div>
 
       {/* Center suit */}
-      <span className={cn(config.center, "font-normal")}
-        aria-hidden="true"
-      >
+      <span className={cn(config.center, "font-normal")} aria-hidden="true">
         {suitSymbol}
       </span>
 
       {/* Bottom-right corner (inverted) */}
       <div
-        className={cn(
-          "absolute bottom-0.5 right-1 flex flex-col items-center leading-none rotate-180"
-        )}
+        className={cn("absolute bottom-0.5 right-1 flex flex-col items-center leading-none rotate-180")}
         aria-hidden="true"
       >
         <span className={cn("font-bold", config.rank)}>{card.rank}</span>
@@ -70,3 +69,4 @@ export const TutorialCard = memo(function TutorialCard({ card, size = "ssc", cla
     </div>
   );
 });
+
