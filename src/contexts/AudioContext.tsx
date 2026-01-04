@@ -206,8 +206,8 @@ function playCountdownUrgent(audioCtx: AudioContext, volume: number): void {
 }
 
 function playBonusCountdown(audioCtx: AudioContext, volume: number): void {
-  // Play the uploaded pulsed 808 bass drum sound
-  loadAudioBuffer(audioCtx, '/sounds/countdown-tick.wav').then((buffer) => {
+  // Play the countdown pulse sound
+  loadAudioBuffer(audioCtx, '/sounds/countdown-tick.mp3').then((buffer) => {
     const source = audioCtx.createBufferSource();
     const gainNode = audioCtx.createGain();
     
