@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import React, { useEffect, useCallback, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Card, FallingCard } from "@/types/game";
 import { PlayingCard } from "./PlayingCard";
@@ -28,46 +28,45 @@ export function FallingCards({
   reshuffleTrigger = 0,
   gameMode = 'classic',
 }: FallingCardsProps) {
-  // SSC mode gets 20% slower base velocity for better playability
-  // Speed scaling (0.5% per level > 10) is applied externally via the speed prop
   const effectiveSpeed = gameMode === 'ssc' ? speed * 0.8 : speed;
-  const [fallingCards, setFallingCards] = useState<LocalFallingCard[]>([]);
+  
+  // Use refs for card positions to avoid React state updates on every frame
+  const cardsRef = useRef<LocalFallingCard[]>([]);
+  const cardElementsRef = useRef<Map<string, HTMLDivElement>>(new Map());
   const containerRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number>();
   const lastSpawnRef = useRef<number>(0);
-  const deckIndexRef = useRef<number>(0);
   const spawnCountRef = useRef<number>(0);
   const { playSound } = useAudio();
   const isMobile = useIsMobile();
   
-  // 20% larger hitbox on mobile - applied to pointerdown event area
+  // Force re-render only when cards are added/removed
+  const [, setRenderTrigger] = useState(0);
+  const triggerRender = useCallback(() => setRenderTrigger(v => v + 1), []);
+  
   const hitboxPadding = isMobile ? 'p-6 -m-6' : 'p-4 -m-4';
-
-  // Track which cards have already been spawned (by card id) so we don't re-spawn them
   const spawnedCardIdsRef = useRef<Set<string>>(new Set());
 
-  // Reset and re-deal when reshuffleTrigger changes or deck resets
+  // Reset on reshuffle
   useEffect(() => {
-    // Clear all spawned cards and reset for a fresh re-deal
     spawnedCardIdsRef.current.clear();
-    deckIndexRef.current = 0;
-    setFallingCards([]); // Clear screen to trigger re-deal animation
-  }, [reshuffleTrigger]);
+    cardsRef.current = [];
+    cardElementsRef.current.clear();
+    triggerRender();
+  }, [reshuffleTrigger, triggerRender]);
 
-  // Reset spawned tracking when deck changes significantly (new game)
+  // Reset on new game
   useEffect(() => {
     if (deck.length === 52) {
       spawnedCardIdsRef.current.clear();
-      deckIndexRef.current = 0;
+      cardsRef.current = [];
+      cardElementsRef.current.clear();
+      triggerRender();
     }
-  }, [deck.length]);
+  }, [deck.length, triggerRender]);
 
   const createSpawn = useCallback(
     (containerWidth: number): LocalFallingCard | null => {
-      // For non-recycling modes, we need cards that:
-      // 1. Are still in the deck
-      // 2. Haven't been selected
-      // 3. Haven't already been spawned (for non-recycling mode)
       const availableCards = deck.filter((c) => {
         if (selectedCardIds.includes(c.id)) return false;
         if (!isRecycling && spawnedCardIdsRef.current.has(c.id)) return false;
@@ -78,19 +77,16 @@ export function FallingCards({
 
       const pickIndex = isRecycling
         ? Math.floor(Math.random() * availableCards.length)
-        : 0; // For non-recycling, always pick the first available (sequential from deck)
+        : 0;
 
       const picked = availableCards[pickIndex];
       if (!picked) return null;
 
-      // Mark this card as spawned for non-recycling mode
       if (!isRecycling) {
         spawnedCardIdsRef.current.add(picked.id);
       }
 
-      deckIndexRef.current += 1;
       spawnCountRef.current += 1;
-
       const cardWidth = 64;
 
       return {
@@ -108,25 +104,22 @@ export function FallingCards({
     [deck, selectedCardIds, effectiveSpeed, isRecycling]
   );
 
-  // Seed a first card as soon as the deck becomes available
-  // (prevents an empty screen when the container measures 0px briefly on mount)
+  // Seed first card
   useEffect(() => {
-    if (isPaused) return;
-    if (deck.length === 0) return;
+    if (isPaused || deck.length === 0) return;
+    if (cardsRef.current.length > 0) return;
 
-    setFallingCards((prev) => {
-      if (prev.length > 0) return prev;
-
-      const measuredWidth = containerRef.current?.offsetWidth ?? 0;
-      const effectiveWidth = measuredWidth > 0 ? measuredWidth : 480;
-      const next = createSpawn(effectiveWidth);
-      if (!next) return prev;
-
+    const measuredWidth = containerRef.current?.offsetWidth ?? 0;
+    const effectiveWidth = measuredWidth > 0 ? measuredWidth : 480;
+    const next = createSpawn(effectiveWidth);
+    if (next) {
+      cardsRef.current = [next];
       lastSpawnRef.current = performance.now();
-      return [next];
-    });
-  }, [deck.length, isPaused, createSpawn]);
+      triggerRender();
+    }
+  }, [deck.length, isPaused, createSpawn, triggerRender]);
 
+  // Main animation loop - updates DOM directly via refs
   useEffect(() => {
     if (isPaused) return;
 
@@ -135,45 +128,55 @@ export function FallingCards({
       const measuredWidth = containerRef.current?.offsetWidth ?? 0;
       const effectiveWidth = measuredWidth > 0 ? measuredWidth : 480;
 
-      setFallingCards((prev) => {
-        const moved: LocalFallingCard[] = [];
+      let needsRender = false;
+      const movedCards: LocalFallingCard[] = [];
+      
+      for (const card of cardsRef.current) {
+        // Update position directly
+        card.y += card.speed;
+        card.rotation += card.rotationSpeed;
+        card.x += Math.sin((t / 1000) * card.swaySpeed) * 0.35;
         
-        prev.forEach((card) => {
-          const updatedCard = {
-            ...card,
-            y: card.y + card.speed,
-            rotation: card.rotation + card.rotationSpeed,
-            x: card.x + Math.sin((t / 1000) * card.swaySpeed) * 0.35,
-          };
-          
-          // Check if card fell off screen
-          if (updatedCard.y > containerHeight + 60) {
-            // Card fell off - remove from spawned set so it can respawn
-            if (!isRecycling) {
-              spawnedCardIdsRef.current.delete(card.id);
-            }
-            return; // Don't add to moved array
+        // Update DOM element directly if it exists
+        const element = cardElementsRef.current.get(card.instanceKey);
+        if (element) {
+          element.style.transform = `translate3d(${card.x}px, ${card.y}px, 0) rotate(${card.rotation}deg)`;
+        }
+        
+        // Check bounds
+        if (card.y > containerHeight + 60) {
+          if (!isRecycling) {
+            spawnedCardIdsRef.current.delete(card.id);
           }
-          
-          // Check if card was selected
-          if (selectedCardIds.includes(card.id)) {
-            return; // Don't add to moved array
-          }
-          
-          moved.push(updatedCard);
-        });
+          needsRender = true;
+          continue;
+        }
+        
+        if (selectedCardIds.includes(card.id)) {
+          needsRender = true;
+          continue;
+        }
+        
+        movedCards.push(card);
+      }
 
-        const shouldSpawn = t - lastSpawnRef.current > 600 / effectiveSpeed;
-        if (!shouldSpawn) return moved;
-        if (moved.length >= 14) return moved;
-        if (deck.length === 0) return moved;
-
+      // Check if we need to spawn
+      const shouldSpawn = t - lastSpawnRef.current > 600 / effectiveSpeed;
+      if (shouldSpawn && movedCards.length < 14 && deck.length > 0) {
         const next = createSpawn(effectiveWidth);
-        if (!next) return moved;
+        if (next) {
+          movedCards.push(next);
+          lastSpawnRef.current = t;
+          needsRender = true;
+        }
+      }
 
-        lastSpawnRef.current = t;
-        return [...moved, next];
-      });
+      cardsRef.current = movedCards;
+      
+      // Only trigger React render when cards added/removed
+      if (needsRender) {
+        triggerRender();
+      }
 
       rafRef.current = requestAnimationFrame(tick);
     };
@@ -183,60 +186,59 @@ export function FallingCards({
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [isPaused, effectiveSpeed, selectedCardIds, createSpawn, isRecycling, deck.length]);
+  }, [isPaused, effectiveSpeed, selectedCardIds, createSpawn, isRecycling, deck.length, triggerRender]);
 
-  // Use pointerdown for instant response (bypasses mobile tap delay)
   const handleCardPointerDown = useCallback(
     (card: LocalFallingCard, e: React.PointerEvent) => {
-      e.preventDefault(); // Prevent any default behavior
+      e.preventDefault();
       e.stopPropagation();
       
-      // Immediate visual feedback - mark as touched before removing
-      setFallingCards((prev) => 
-        prev.map((c) => 
-          c.instanceKey === card.instanceKey ? { ...c, isTouched: true } : c
-        )
-      );
+      // Update touched state
+      card.isTouched = true;
       
-      // Play sound and select immediately
       playSound('cardSelect');
       onSelectCard(card);
       
-      // Remove card after brief touch feedback
-      requestAnimationFrame(() => {
-        setFallingCards((prev) => prev.filter((c) => c.instanceKey !== card.instanceKey));
-      });
+      // Remove from refs
+      cardsRef.current = cardsRef.current.filter((c) => c.instanceKey !== card.instanceKey);
+      cardElementsRef.current.delete(card.instanceKey);
+      triggerRender();
     },
-    [onSelectCard, playSound]
+    [onSelectCard, playSound, triggerRender]
   );
+
+  // Get current cards for render
+  const visibleCards = cardsRef.current;
 
   return (
     <div ref={containerRef} className="absolute inset-0 overflow-hidden touch-none">
       <AnimatePresence>
-        {fallingCards.map((card) => (
+        {visibleCards.map((card) => (
           <motion.div
             key={card.instanceKey}
-            initial={{ opacity: 0, scale: 0.9, rotate: card.rotation }}
+            ref={(el) => {
+              if (el) cardElementsRef.current.set(card.instanceKey, el);
+              else cardElementsRef.current.delete(card.instanceKey);
+            }}
+            initial={{ opacity: 0, scale: 0.9 }}
             animate={{ 
               opacity: 1, 
               scale: card.isTouched ? 1.15 : 1, 
-              rotate: card.rotation,
             }}
             exit={{ opacity: 0, scale: 0.8 }}
             transition={{ 
               duration: 0.12,
-              scale: { duration: 0.08 }, // Fast pulse on touch
-              rotate: { duration: 0.1, ease: "linear" }
+              scale: { duration: 0.08 },
             }}
             style={{
               position: "absolute",
-              left: card.x,
-              top: card.y,
-              willChange: "transform, top, left",
+              left: 0,
+              top: 0,
+              transform: `translate3d(${card.x}px, ${card.y}px, 0) rotate(${card.rotation}deg)`,
+              willChange: "transform",
             }}
             className="z-10"
           >
-            {/* Larger hit zone with pointerdown for instant mobile response */}
             <div
               onPointerDown={(e) => handleCardPointerDown(card, e)}
               className={`relative cursor-pointer ${hitboxPadding} select-none touch-none`}

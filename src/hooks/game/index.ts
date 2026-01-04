@@ -1,4 +1,4 @@
-export { useGameTimer } from './useGameTimer';
+export { useGameTimer, useTimerDisplay } from './useGameTimer';
 export { useCardSelection } from './useCardSelection';
 export { usePowerUps, getRewardTier, getTierDisplayInfo, selectRewardPowerUp, type RewardTier } from './usePowerUps';
 export { useHandSubmission } from './useHandSubmission';
