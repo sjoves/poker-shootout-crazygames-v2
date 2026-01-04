@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, forwardRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -14,14 +14,14 @@ interface DailyRewardWheelProps {
   timeUntilNext: { hours: number; minutes: number } | null;
 }
 
-export function DailyRewardWheel({ 
+export const DailyRewardWheel = forwardRef<HTMLDivElement, DailyRewardWheelProps>(function DailyRewardWheel({ 
   isOpen, 
   onClose, 
   canClaim, 
   onClaim,
   todayReward,
   timeUntilNext
-}: DailyRewardWheelProps) {
+}, ref) {
   const [spinning, setSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
   const [result, setResult] = useState<DailyReward | null>(null);
@@ -200,4 +200,4 @@ export function DailyRewardWheel({
       </DialogContent>
     </Dialog>
   );
-}
+});

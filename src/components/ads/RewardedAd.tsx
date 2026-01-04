@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, forwardRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Play, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -18,7 +18,7 @@ interface RewardedAdProps {
   modeName?: string;
 }
 
-export function RewardedAd({ isOpen, onClose, onAdComplete, adType, modeName }: RewardedAdProps) {
+export const RewardedAd = forwardRef<HTMLDivElement, RewardedAdProps>(function RewardedAd({ isOpen, onClose, onAdComplete, adType, modeName }, ref) {
   const [adState, setAdState] = useState<'loading' | 'ready' | 'playing' | 'complete' | 'error'>('loading');
   const [countdown, setCountdown] = useState(5);
 
@@ -200,7 +200,7 @@ export function RewardedAd({ isOpen, onClose, onAdComplete, adType, modeName }: 
       </motion.div>
     </AnimatePresence>
   );
-}
+});
 
 // Hook to manage ad state
 export function useRewardedAd() {

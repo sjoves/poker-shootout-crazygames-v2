@@ -1,0 +1,112 @@
+import { useCallback, useRef } from 'react';
+import { GameMode, GameState } from '@/types/game';
+import { 
+  createDeck, 
+  shuffleDeck, 
+  calculateTimeBonus, 
+  calculateLeftoverPenalty,
+  calculateLevelGoal,
+  getSSCLevelInfo,
+  createBonusFriendlyDeck,
+} from '@/lib/pokerEngine';
+import { INITIAL_GAME_STATE } from './gameConstants';
+
+export function useGameControls(
+  setState: React.Dispatch<React.SetStateAction<GameState>>,
+  timerRef: React.MutableRefObject<NodeJS.Timeout | null>,
+  resetHandResults: () => void
+) {
+  const startGame = useCallback((mode: GameMode, forceBonus: boolean = false, startLevel: number = 1, phaseOverride?: string) => {
+    const isBlitz = mode === 'blitz_fc' || mode === 'blitz_cb';
+    const isSSC = mode === 'ssc';
+    
+    const level = isSSC ? startLevel : 1;
+    const levelInfo = isSSC ? getSSCLevelInfo(level) : null;
+    const isBonusLevel = forceBonus;
+    const initialBonusCount = isBonusLevel ? 1 : 0;
+    
+    const deck = isBonusLevel ? createBonusFriendlyDeck(initialBonusCount) : shuffleDeck(createDeck());
+
+    setState({
+      ...INITIAL_GAME_STATE,
+      mode,
+      deck,
+      isPlaying: true,
+      timeRemaining: isBlitz ? 60 : (isSSC ? 60 : 9999),
+      sscLevel: level,
+      sscPhase: levelInfo?.phase || 'sitting_duck',
+      sscRound: levelInfo?.round || 1,
+      isBonusLevel,
+      levelGoal: isSSC ? calculateLevelGoal(level) : 0,
+      earnedPowerUps: [],
+      activePowerUps: [],
+      powerUpChoices: [],
+      showPowerUpSelection: false,
+      bonusRoundCount: initialBonusCount,
+      pendingBonusRound: false,
+      phaseOverride,
+    });
+    resetHandResults();
+  }, [setState, resetHandResults]);
+
+  const pauseGame = useCallback(() => {
+    setState(prev => ({ ...prev, isPaused: !prev.isPaused }));
+  }, [setState]);
+
+  const setPaused = useCallback((paused: boolean) => {
+    setState(prev => ({ ...prev, isPaused: paused }));
+  }, [setState]);
+
+  const endGame = useCallback(() => {
+    setState(prev => {
+      let finalScore = prev.score;
+
+      if (prev.mode === 'classic_fc' || prev.mode === 'classic_cb') {
+        finalScore += calculateTimeBonus(prev.timeElapsed);
+        finalScore -= calculateLeftoverPenalty(prev.deck);
+      }
+
+      return {
+        ...prev,
+        score: finalScore,
+        isPlaying: false,
+        isGameOver: true,
+      };
+    });
+  }, [setState]);
+
+  const resetGame = useCallback(() => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+    resetHandResults();
+    setState(INITIAL_GAME_STATE);
+  }, [setState, timerRef, resetHandResults]);
+
+  const reshuffleUnselected = useCallback(() => {
+    setState(prev => {
+      const shuffledDeck = shuffleDeck([...prev.deck]);
+      return {
+        ...prev,
+        deck: shuffledDeck,
+      };
+    });
+  }, [setState]);
+
+  const markExplainerSeen = useCallback(() => {
+    setState(prev => ({
+      ...prev,
+      hasSeenSSCExplainer: true,
+    }));
+  }, [setState]);
+
+  return {
+    startGame,
+    pauseGame,
+    setPaused,
+    endGame,
+    resetGame,
+    reshuffleUnselected,
+    markExplainerSeen,
+  };
+}
