@@ -267,6 +267,11 @@ export default function GameOverScreen() {
                   + Time Bonus: {gameState.timeBonus.toLocaleString()}
                 </p>
               )}
+              {gameState.timeBonus < 0 && (
+                <p className="text-sm text-destructive">
+                  - Time Penalty: {Math.abs(gameState.timeBonus).toLocaleString()}
+                </p>
+              )}
               {gameState.leftoverPenalty > 0 && (
                 <p className="text-sm text-destructive">
                   - Leftover Cards: {gameState.leftoverPenalty.toLocaleString()}
