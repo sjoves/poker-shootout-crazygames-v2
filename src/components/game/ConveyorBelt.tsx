@@ -128,6 +128,8 @@ export function ConveyorBelt({
     if (isPaused || !containerRef.current) return;
     
     const containerWidth = containerRef.current.offsetWidth;
+    // Start cards further off-screen to ensure smooth entry
+    const offScreenBuffer = cardWidth * 2;
     
     const animate = () => {
       const now = Date.now();
@@ -145,7 +147,8 @@ export function ConveyorBelt({
           
           const row = Math.floor(Math.random() * rows);
           const isLeftToRight = row % 2 === 0;
-          const x = isLeftToRight ? -cardWidth : containerWidth;
+          // Start further off-screen for smooth entry
+          const x = isLeftToRight ? -offScreenBuffer : containerWidth + offScreenBuffer - cardWidth;
           
           cardsRef.current.push({
             ...card,
@@ -180,12 +183,12 @@ export function ConveyorBelt({
           continue;
         }
         
-        // Skip off-screen cards
-        if (card.speed > 0 && card.x >= containerWidth + cardWidth) {
+        // Skip off-screen cards (with buffer)
+        if (card.speed > 0 && card.x >= containerWidth + offScreenBuffer) {
           needsRender = true;
           continue;
         }
-        if (card.speed < 0 && card.x <= -cardWidth * 2) {
+        if (card.speed < 0 && card.x <= -offScreenBuffer) {
           needsRender = true;
           continue;
         }
@@ -210,7 +213,8 @@ export function ConveyorBelt({
           );
           
           if (availableCards.length > 0) {
-            const entryX = isLeftToRight ? -cardWidth : containerWidth;
+            // Start further off-screen for smooth entry
+            const entryX = isLeftToRight ? -offScreenBuffer : containerWidth + offScreenBuffer - cardWidth;
             const deckCard = availableCards[Math.floor(Math.random() * availableCards.length)];
             updatedCards.push({
               ...deckCard,
