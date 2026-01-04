@@ -291,7 +291,14 @@ export function useRetention() {
   }) => {
     if (!user) return;
 
-    const currentStats = stats || {
+    // Fetch fresh stats directly from DB in case local state is stale
+    const { data: freshStats } = await supabase
+      .from('user_stats')
+      .select('*')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    const currentStats = freshStats || {
       total_games: 0,
       total_hands: 0,
       total_score: 0,
@@ -318,11 +325,17 @@ export function useRetention() {
       highest_score: Math.max(currentStats.highest_score, gameStats.score),
     };
 
-    const { data } = await supabase
+    console.log('updateStats: writing newStats', newStats);
+
+    const { data, error } = await supabase
       .from('user_stats')
       .upsert(newStats, { onConflict: 'user_id' })
       .select()
       .single();
+
+    if (error) {
+      console.error('updateStats upsert error:', error);
+    }
 
     if (data) {
       setStats(data);
