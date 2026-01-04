@@ -62,6 +62,7 @@ export default function GameScreen() {
   const prevHandsPlayed = useRef(state.handsPlayed);
   const gameInitializedRef = useRef(false);
   const didStartGameRef = useRef(false);
+  const didForceUnpauseRef = useRef(false);
 
   const isTestBonus = searchParams.get('testBonus') === 'true';
   const startLevelParam = searchParams.get('startLevel');
@@ -207,6 +208,17 @@ export default function GameScreen() {
       console.error('Failed to start game (failsafe):', e);
     }
   }, [introPhase, state.isPlaying, isTestBonus, mode, startLevel, phaseOverride, startGame]);
+
+  // Failsafe: prevent getting stuck paused after intro (would freeze timer + animations)
+  useEffect(() => {
+    if (introPhase !== 'playing') return;
+    if (!state.isPlaying || state.isGameOver || state.isLevelComplete) return;
+    if (!state.isPaused) return;
+    if (didForceUnpauseRef.current) return;
+
+    didForceUnpauseRef.current = true;
+    setPaused(false);
+  }, [introPhase, state.isPlaying, state.isGameOver, state.isLevelComplete, state.isPaused, setPaused]);
 
   // Signal CrazyGames when gameplay stops (game over or level complete)
   useEffect(() => {
