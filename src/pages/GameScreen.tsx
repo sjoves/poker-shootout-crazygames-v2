@@ -61,7 +61,8 @@ export default function GameScreen() {
   const [introPhase, setIntroPhase] = useState<'loading' | 'ready' | 'begin' | 'playing'>('loading');
   const prevHandsPlayed = useRef(state.handsPlayed);
   const gameInitializedRef = useRef(false);
-  
+  const didStartGameRef = useRef(false);
+
   const isTestBonus = searchParams.get('testBonus') === 'true';
   const startLevelParam = searchParams.get('startLevel');
   const startLevel = startLevelParam ? parseInt(startLevelParam, 10) : undefined;
@@ -117,12 +118,12 @@ export default function GameScreen() {
   // Start background music first, then show intro sequence
   useEffect(() => {
     if (gameInitializedRef.current) return;
-    
+
     const initGame = async () => {
       console.log('Game init effect:', { mode, isTestBonus, startLevel });
       setIsLoadingMusic(true);
       setIntroPhase('loading');
-      
+
       // Wait for music to load with a timeout to prevent hanging
       try {
         await Promise.race([
@@ -132,48 +133,80 @@ export default function GameScreen() {
       } catch (err) {
         console.log('Music failed to start, continuing anyway:', err);
       }
-      
+
       setIsLoadingMusic(false);
-      
+
+      // Pre-start the game (populate deck) but keep it paused until intro completes
+      if (!didStartGameRef.current) {
+        try {
+          if (isTestBonus) {
+            didStartGameRef.current = true;
+            startGame('ssc', true);
+            setPaused(true);
+          } else if (mode) {
+            didStartGameRef.current = true;
+            startGame(mode as GameMode, false, startLevel ?? 1, phaseOverride || undefined);
+            setPaused(true);
+          }
+        } catch (e) {
+          didStartGameRef.current = false;
+          console.error('Failed to pre-start game:', e);
+        }
+      }
+
       // Start intro sequence
       setIntroPhase('ready');
-      
+
       gameInitializedRef.current = true;
     };
-    
+
     initGame();
-    
+
     // Stop music when component unmounts
     return () => {
       stopMusic();
     };
-  }, [mode, isTestBonus, startLevel, startMusic, stopMusic]);
+  }, [mode, isTestBonus, startLevel, phaseOverride, startGame, setPaused, startMusic, stopMusic]);
 
 
   // Intro sequence: Ready -> Begin -> Playing
   useEffect(() => {
     if (introPhase === 'loading' || isLoadingMusic) return;
-    
+
     if (introPhase === 'ready') {
       const timer = setTimeout(() => setIntroPhase('begin'), 1200);
       return () => clearTimeout(timer);
     }
-    
+
     if (introPhase === 'begin') {
       const timer = setTimeout(() => {
         setIntroPhase('playing');
-        // Signal CrazyGames that gameplay has started
         gameplayStart();
-        // Start the actual game after intro completes
-        if (isTestBonus) {
-          startGame('ssc', true);
-        } else if (mode) {
-          startGame(mode as GameMode, false, startLevel, phaseOverride || undefined);
-        }
+        // Unpause now that gameplay is visible
+        setPaused(false);
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [introPhase, isTestBonus, mode, startLevel, startGame, isLoadingMusic, gameplayStart]);
+  }, [introPhase, isLoadingMusic, gameplayStart, setPaused]);
+
+  // Failsafe: if we reach the playing phase but game state didn't start, start it once.
+  useEffect(() => {
+    if (introPhase !== 'playing') return;
+    if (state.isPlaying) return;
+
+    try {
+      if (isTestBonus) {
+        didStartGameRef.current = true;
+        startGame('ssc', true);
+      } else if (mode) {
+        didStartGameRef.current = true;
+        startGame(mode as GameMode, false, startLevel ?? 1, phaseOverride || undefined);
+      }
+    } catch (e) {
+      didStartGameRef.current = false;
+      console.error('Failed to start game (failsafe):', e);
+    }
+  }, [introPhase, state.isPlaying, isTestBonus, mode, startLevel, phaseOverride, startGame]);
 
   // Signal CrazyGames when gameplay stops (game over or level complete)
   useEffect(() => {
