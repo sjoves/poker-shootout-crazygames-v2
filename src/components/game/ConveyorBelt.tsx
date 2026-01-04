@@ -43,8 +43,11 @@ export function ConveyorBelt({
   const isMobile = useIsMobile();
   
   // Force re-render only when cards are added/removed
-  const [, setRenderTrigger] = useState(0);
+  const [renderKey, setRenderTrigger] = useState(0);
   const triggerRender = useCallback(() => setRenderTrigger(v => v + 1), []);
+  
+  // Track when cards are ready for animation
+  const [cardsReady, setCardsReady] = useState(false);
   
   const cardWidth = isMobile ? 72 : 64;
   const cardSpacing = isMobile ? 28 : 20;
@@ -56,6 +59,7 @@ export function ConveyorBelt({
       cardsRef.current = [];
       cardElementsRef.current.clear();
       pendingReturnsRef.current = [];
+      setCardsReady(false);
       triggerRender();
     }
   }, [reshuffleTrigger, triggerRender]);
@@ -104,6 +108,7 @@ export function ConveyorBelt({
     }
     
     cardsRef.current = cards;
+    setCardsReady(true);
     triggerRender();
   }, [deck, rows, speed, reshuffleTrigger, cardWidth, cardSpacing, triggerRender]);
 
@@ -125,11 +130,15 @@ export function ConveyorBelt({
 
   // Animation loop - direct DOM updates
   useEffect(() => {
-    if (isPaused || !containerRef.current) return;
+    // Don't start animation if paused, no container, or no cards initialized yet
+    if (isPaused || !containerRef.current || !cardsReady) {
+      return;
+    }
     
     const containerWidth = containerRef.current.offsetWidth;
     // Start cards further off-screen to ensure smooth entry
     const offScreenBuffer = cardWidth * 2;
+    let lastTime = performance.now();
     
     const animate = () => {
       const now = Date.now();
@@ -246,7 +255,7 @@ export function ConveyorBelt({
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [isPaused, selectedCardIds, speed, rows, cardWidth, cardSpacing, deck, triggerRender]);
+  }, [isPaused, cardsReady, selectedCardIds, speed, rows, cardWidth, cardSpacing, deck, triggerRender]);
 
   const handleCardClick = useCallback((card: ConveyorCard) => {
     const originalCard: Card = {
