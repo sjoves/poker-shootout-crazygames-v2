@@ -83,8 +83,8 @@ async function loadAudioBuffer(audioCtx: AudioContext, url: string): Promise<Aud
 }
 
 function playCardSelect(audioCtx: AudioContext, volume: number): void {
-  // Play the card-hit.wav sound file
-  loadAudioBuffer(audioCtx, '/sounds/card-hit.wav').then((buffer) => {
+  // Play the card-hit.mp3 sound file
+  loadAudioBuffer(audioCtx, '/sounds/card-hit.mp3').then((buffer) => {
     const source = audioCtx.createBufferSource();
     const gainNode = audioCtx.createGain();
     
