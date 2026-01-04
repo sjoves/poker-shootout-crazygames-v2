@@ -246,9 +246,7 @@ export function getSSCSpeed(level: number): number {
   if (info.phase === 'conveyor') {
     baseSpeed = 1.2;
   } else if (info.phase === 'falling') {
-    // Falling mode: reduced speed (15% slower) for first cycle (levels 7-9)
-    const isFirstFallingCycle = level >= 7 && level <= 9;
-    baseSpeed = isFirstFallingCycle ? 1.53 : 1.8;
+    baseSpeed = 1.3;
   } else {
     // Orbit mode: 30% slower base speed for better playability (1.5 * 0.7 = 1.05)
     baseSpeed = 1.05;
