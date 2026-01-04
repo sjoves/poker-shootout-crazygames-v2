@@ -143,31 +143,6 @@ export default function SplashScreen() {
         )}
       </motion.div>
 
-      {/* Streak & Daily Reward Row */}
-      {user && streak && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-md mb-4 flex gap-3"
-        >
-          <div className="flex-1">
-            <StreakDisplay 
-              currentStreak={streak.current_streak} 
-              longestStreak={streak.longest_streak} 
-            />
-          </div>
-          <Button
-            variant="outline"
-            size="lg"
-            className="h-auto border-primary/30 bg-primary/10 hover:bg-primary/20"
-            onClick={() => setShowRewardWheel(true)}
-          >
-            <Gift className={`w-6 h-6 ${canClaimReward ? 'text-primary animate-pulse' : 'text-muted-foreground'}`} />
-          </Button>
-        </motion.div>
-      )}
-
-
       {/* Game Mode Buttons */}
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
@@ -254,8 +229,8 @@ export default function SplashScreen() {
           </Button>
         )}
 
-        {/* Daily Challenges - Collapsible */}
-        {user && challenges.length > 0 && (
+        {/* Daily Challenges - Contains Streak, Reward, and Challenges */}
+        {user && (
           <div className="space-y-2">
             <Button
               variant="outline"
@@ -265,17 +240,43 @@ export default function SplashScreen() {
             >
               <Target className="w-5 h-5 text-primary" />
               Daily Challenges
-              <span className="ml-2 text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">
-                {challenges.filter(c => c.completed).length}/{challenges.length}
-              </span>
+              {challenges.length > 0 && (
+                <span className="ml-2 text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">
+                  {challenges.filter(c => c.completed).length}/{challenges.length}
+                </span>
+              )}
             </Button>
             {showChallenges && (
               <motion.div 
                 initial={{ height: 0, opacity: 0 }} 
                 animate={{ height: 'auto', opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
+                className="space-y-3"
               >
-                <DailyChallenges challenges={challenges} getChallengeInfo={getChallengeInfo} />
+                {/* Streak & Daily Reward Row */}
+                {streak && (
+                  <div className="flex gap-3">
+                    <div className="flex-1">
+                      <StreakDisplay 
+                        currentStreak={streak.current_streak} 
+                        longestStreak={streak.longest_streak} 
+                      />
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="h-auto border-primary/30 bg-primary/10 hover:bg-primary/20"
+                      onClick={() => setShowRewardWheel(true)}
+                    >
+                      <Gift className={`w-6 h-6 ${canClaimReward ? 'text-primary animate-pulse' : 'text-muted-foreground'}`} />
+                    </Button>
+                  </div>
+                )}
+                
+                {/* Challenges List */}
+                {challenges.length > 0 && (
+                  <DailyChallenges challenges={challenges} getChallengeInfo={getChallengeInfo} />
+                )}
               </motion.div>
             )}
           </div>
