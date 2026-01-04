@@ -18,6 +18,18 @@ interface FallingCardsProps {
 
 type LocalFallingCard = FallingCard & { instanceKey: string; isTouched?: boolean };
 
+// Fisher-Yates shuffle using crypto for high-entropy randomness
+function fisherYatesShuffle<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const randomValues = new Uint32Array(1);
+    crypto.getRandomValues(randomValues);
+    const j = randomValues[0] % (i + 1);
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
 export function FallingCards({
   deck,
   selectedCards,
@@ -46,50 +58,78 @@ export function FallingCards({
   const triggerRender = useCallback(() => setRenderTrigger(v => v + 1), []);
   
   const hitboxPadding = isMobile ? 'p-6 -m-6' : 'p-4 -m-4';
-  const spawnedCardIdsRef = useRef<Set<string>>(new Set());
+  
+  // Exhaustive deck system: shuffled queue of cards to deal
+  const shuffledDeckRef = useRef<Card[]>([]);
+  const dealtCardIdsRef = useRef<Set<string>>(new Set());
 
-  // Reset on reshuffle
+  // Initialize/reshuffle the deck
+  const reshuffleDeck = useCallback(() => {
+    shuffledDeckRef.current = fisherYatesShuffle(deck);
+    dealtCardIdsRef.current.clear();
+  }, [deck]);
+
+  // Reset on reshuffle trigger or new game
   useEffect(() => {
-    spawnedCardIdsRef.current.clear();
+    reshuffleDeck();
     cardsRef.current = [];
     cardElementsRef.current.clear();
     triggerRender();
-  }, [reshuffleTrigger, triggerRender]);
+  }, [reshuffleTrigger, reshuffleDeck, triggerRender]);
 
-  // Reset on new game
+  // Reset on new game (full deck)
   useEffect(() => {
     if (deck.length === 52) {
-      spawnedCardIdsRef.current.clear();
+      reshuffleDeck();
       cardsRef.current = [];
       cardElementsRef.current.clear();
       triggerRender();
     }
-  }, [deck.length, triggerRender]);
+  }, [deck.length, reshuffleDeck, triggerRender]);
 
-  // True randomization: uses crypto.getRandomValues for high-entropy randomness
-  const createSpawn = useCallback(
+  // Deal next card from shuffled deck - completely hand-blind
+  const dealNextCard = useCallback(
     (containerWidth: number): LocalFallingCard | null => {
-      const availableCards = deck.filter((c) => {
-        if (selectedCardIds.includes(c.id)) return false;
-        if (!isRecycling && spawnedCardIdsRef.current.has(c.id)) return false;
-        return true;
-      });
+      // Find next card in shuffled deck that hasn't been dealt or selected
+      let picked: Card | null = null;
       
-      if (availableCards.length === 0) return null;
-
-      // Pure random selection - every available card has equal probability
-      // Uses crypto.getRandomValues for high-entropy randomness
-      const randomValues = new Uint32Array(1);
-      crypto.getRandomValues(randomValues);
-      const pickIndex = randomValues[0] % availableCards.length;
-
-      const picked = availableCards[pickIndex];
+      while (shuffledDeckRef.current.length > 0) {
+        const candidate = shuffledDeckRef.current.shift()!;
+        
+        // Skip if already selected by player
+        if (selectedCardIds.includes(candidate.id)) {
+          continue;
+        }
+        
+        // Skip if currently on screen (already dealt but not collected)
+        if (dealtCardIdsRef.current.has(candidate.id)) {
+          continue;
+        }
+        
+        picked = candidate;
+        break;
+      }
+      
+      // If deck exhausted, reshuffle and try again
+      if (!picked && shuffledDeckRef.current.length === 0) {
+        // Reshuffle: get all cards not currently selected
+        const availableForReshuffle = deck.filter(c => !selectedCardIds.includes(c.id));
+        shuffledDeckRef.current = fisherYatesShuffle(availableForReshuffle);
+        dealtCardIdsRef.current.clear();
+        
+        // Try to get next card from reshuffled deck
+        while (shuffledDeckRef.current.length > 0) {
+          const candidate = shuffledDeckRef.current.shift()!;
+          if (!selectedCardIds.includes(candidate.id)) {
+            picked = candidate;
+            break;
+          }
+        }
+      }
+      
       if (!picked) return null;
 
-      if (!isRecycling) {
-        spawnedCardIdsRef.current.add(picked.id);
-      }
-
+      dealtCardIdsRef.current.add(picked.id);
       spawnCountRef.current += 1;
       const cardWidth = 64;
 
@@ -105,7 +145,7 @@ export function FallingCards({
         swaySpeed: 1.2 + Math.random() * 1.6,
       };
     },
-    [deck, selectedCardIds, effectiveSpeed, isRecycling]
+    [deck, selectedCardIds, effectiveSpeed]
   );
 
   // Seed first card
@@ -115,13 +155,13 @@ export function FallingCards({
 
     const measuredWidth = containerRef.current?.offsetWidth ?? 0;
     const effectiveWidth = measuredWidth > 0 ? measuredWidth : 480;
-    const next = createSpawn(effectiveWidth);
+    const next = dealNextCard(effectiveWidth);
     if (next) {
       cardsRef.current = [next];
       lastSpawnRef.current = performance.now();
       triggerRender();
     }
-  }, [deck.length, isPaused, createSpawn, triggerRender]);
+  }, [deck.length, isPaused, dealNextCard, triggerRender]);
 
   // Main animation loop - updates DOM directly via refs
   useEffect(() => {
@@ -147,11 +187,9 @@ export function FallingCards({
           element.style.transform = `translate3d(${card.x}px, ${card.y}px, 0) rotate(${card.rotation}deg)`;
         }
         
-        // Check bounds
+        // Check bounds - card fell off screen, allow it to be dealt again
         if (card.y > containerHeight + 60) {
-          if (!isRecycling) {
-            spawnedCardIdsRef.current.delete(card.id);
-          }
+          dealtCardIdsRef.current.delete(card.id);
           needsRender = true;
           continue;
         }
@@ -167,7 +205,7 @@ export function FallingCards({
       // Check if we need to spawn
       const shouldSpawn = t - lastSpawnRef.current > 600 / effectiveSpeed;
       if (shouldSpawn && movedCards.length < 14 && deck.length > 0) {
-        const next = createSpawn(effectiveWidth);
+        const next = dealNextCard(effectiveWidth);
         if (next) {
           movedCards.push(next);
           lastSpawnRef.current = t;
@@ -190,7 +228,7 @@ export function FallingCards({
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [isPaused, effectiveSpeed, selectedCardIds, createSpawn, isRecycling, deck.length, triggerRender]);
+  }, [isPaused, effectiveSpeed, selectedCardIds, dealNextCard, deck.length, triggerRender]);
 
   const handleCardPointerDown = useCallback(
     (card: LocalFallingCard, e: React.PointerEvent) => {
