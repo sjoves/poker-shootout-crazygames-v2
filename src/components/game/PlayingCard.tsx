@@ -25,7 +25,7 @@ const SIZE_CONFIG = {
   xs: { card: 'w-12 h-[67px]', rank: 'text-xs', corner: 'text-[8px]', center: 'text-base', pip: 'text-[6px]', gap: 'gap-0' },
   sm: { card: 'w-14 h-[79px]', rank: 'text-sm', corner: 'text-[10px]', center: 'text-lg', pip: 'text-[7px]', gap: 'gap-0' },
   ssc: { card: 'w-[68px] h-[95px]', rank: 'text-sm', corner: 'text-[10px]', center: 'text-xl', pip: 'text-[8px]', gap: 'gap-0' },
-  sd: { card: 'w-[78px] h-[109px]', rank: 'text-sm', corner: 'text-[10px]', center: 'text-xl', pip: 'text-[8px]', gap: 'gap-0' }, // 15% larger than ssc for Sitting Duck
+  sd: { card: 'w-[85px] h-[119px]', rank: 'text-base', corner: 'text-xs', center: 'text-2xl', pip: 'text-[9px]', gap: 'gap-0' }, // 25% larger than ssc for Sitting Duck
   md: { card: 'w-[76px] h-[106px]', rank: 'text-base', corner: 'text-xs', center: 'text-2xl', pip: 'text-[10px]', gap: 'gap-0.5' },
   hand: { card: 'w-[80px] h-[110px]', rank: 'text-base', corner: 'text-xs', center: 'text-2xl', pip: 'text-[10px]', gap: 'gap-0.5' }, // 30% smaller than lg
   lg: { card: 'w-[115px] h-[158px]', rank: 'text-xl', corner: 'text-sm', center: 'text-4xl', pip: 'text-xs', gap: 'gap-1' },
@@ -121,7 +121,7 @@ const EMPTY_SLOT_SIZES = {
   xs: 'w-12 h-[67px]',
   sm: 'w-14 h-[79px]',
   ssc: 'w-[68px] h-[95px]',
-  sd: 'w-[78px] h-[109px]',
+  sd: 'w-[85px] h-[119px]',
   md: 'w-[76px] h-[106px]',
   hand: 'w-[80px] h-[110px]',
   lg: 'w-[115px] h-[158px]',

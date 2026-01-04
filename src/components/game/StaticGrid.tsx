@@ -34,7 +34,7 @@ export function StaticGrid({ deck, selectedCardIds, onSelectCard }: StaticGridPr
         className="grid p-2 sm:p-4"
         style={{ 
           gridTemplateColumns: `repeat(${GRID_COLUMNS}, minmax(0, 1fr))`,
-          gap: isMobile ? '0.34rem' : '0.61rem' // 5% increased spacing
+          gap: isMobile ? '0.37rem' : '0.67rem' // 10% increased spacing
         }}
       >
         {visibleCards.map((card, index) => {
