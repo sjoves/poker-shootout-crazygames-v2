@@ -236,7 +236,7 @@ function GuidedInteractiveDemo({ onComplete }: { onComplete: () => void }) {
         <p className="text-xs text-muted-foreground mb-2 text-center font-medium">
           YOUR HAND
         </p>
-        <div className="flex justify-center gap-2 min-h-[80px]">
+        <div className="flex justify-center gap-2 min-h-[100px]">
           {Array.from({ length: 5 }).map((_, i) => (
             selectedCards[i] ? (
               <motion.div
@@ -247,9 +247,9 @@ function GuidedInteractiveDemo({ onComplete }: { onComplete: () => void }) {
               >
                 <PlayingCard
                   card={selectedCards[i]}
-                  size="sm"
+                  size="ssc"
                   animate={false}
-                  isSelected
+                  isDisabled
                 />
               </motion.div>
             ) : (
@@ -261,7 +261,7 @@ function GuidedInteractiveDemo({ onComplete }: { onComplete: () => void }) {
                 } : {}}
                 transition={{ repeat: Infinity, duration: 1 }}
               >
-                <EmptyCardSlot size="sm" />
+                <EmptyCardSlot size="ssc" />
               </motion.div>
             )
           ))}
