@@ -27,10 +27,10 @@ export function StaticGrid({ deck, selectedCardIds, onSelectCard }: StaticGridPr
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="flex flex-col items-center justify-center w-full h-full flex-1 gap-4"
+      className="absolute inset-0 flex items-center justify-center pt-20 pb-36"
     >
       <div 
-        className="grid gap-1 sm:gap-2 p-2 sm:p-4 place-content-center my-auto"
+        className="grid gap-1 sm:gap-2 p-2 sm:p-4"
         style={{ gridTemplateColumns: `repeat(${GRID_COLUMNS}, minmax(0, 1fr))` }}
       >
         {visibleCards.map((card, index) => {
