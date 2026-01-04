@@ -1,16 +1,14 @@
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { TrophyIcon, ClockIcon, Cog6ToothIcon, SpeakerWaveIcon, SpeakerXMarkIcon, HandRaisedIcon } from '@heroicons/react/24/outline';
+import { TrophyIcon, ClockIcon, Cog6ToothIcon, SpeakerWaveIcon, SpeakerXMarkIcon, HandRaisedIcon, MusicalNoteIcon, HomeIcon, ArrowPathIcon, PauseIcon, PlayIcon } from '@heroicons/react/24/outline';
 import { RectangleVertical } from 'lucide-react';
 import { HandResult } from '@/types/game';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAudio } from '@/contexts/AudioContext';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Slider } from '@/components/ui/slider';
+import { Switch } from '@/components/ui/switch';
 
 interface ScoreDisplayProps {
   score: number;
@@ -84,132 +82,260 @@ export function ScorePanel({
   isPaused,
   gameMode = 'classic'
 }: ScorePanelProps) {
-  const { sfxEnabled, setSfxEnabled, musicEnabled, setMusicEnabled, stopMusic, startMusic } = useAudio();
-  const isSoundOn = sfxEnabled || musicEnabled;
-  
-  const toggleAllSounds = () => {
-    if (isSoundOn) {
-      setSfxEnabled(false);
-      setMusicEnabled(false);
-      stopMusic();
-    } else {
-      setSfxEnabled(true);
-      setMusicEnabled(true);
-      startMusic();
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const {
+    masterVolume,
+    sfxEnabled,
+    sfxVolume,
+    musicEnabled,
+    setMasterVolume,
+    setSfxEnabled,
+    setSfxVolume,
+    setMusicEnabled,
+    playSound,
+  } = useAudio();
+
+  const handleSfxToggle = (enabled: boolean) => {
+    setSfxEnabled(enabled);
+    if (enabled) {
+      setTimeout(() => playSound('buttonClick'), 50);
     }
+  };
+
+  const handleSettingsClose = () => {
+    setIsSettingsOpen(false);
+  };
+
+  const handlePause = () => {
+    handleSettingsClose();
+    onPause?.();
+  };
+
+  const handleRestart = () => {
+    handleSettingsClose();
+    onRestart?.();
+  };
+
+  const handleHome = () => {
+    handleSettingsClose();
+    onHome?.();
   };
   
   return (
-    <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3">
-      {/* Main stats pill */}
-      <div className="flex items-center gap-4 bg-transparent rounded-full px-5 py-2.5 border border-primary">
-        {/* Score */}
-        <div className="flex items-center gap-2">
-          <TrophyIcon className="w-5 h-5 text-primary" />
-          <motion.span
-            key={score}
-            initial={{ scale: 1.1 }}
-            animate={{ scale: 1 }}
-            className="text-lg font-bold text-foreground tabular-nums"
+    <>
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3">
+        {/* Main stats pill */}
+        <div className="flex items-center gap-4 bg-transparent rounded-full px-5 py-2.5 border border-primary">
+          {/* Score */}
+          <div className="flex items-center gap-2">
+            <TrophyIcon className="w-5 h-5 text-primary" />
+            <motion.span
+              key={score}
+              initial={{ scale: 1.1 }}
+              animate={{ scale: 1 }}
+              className="text-lg font-bold text-foreground tabular-nums"
+            >
+              {goalScore ? `${score}/${goalScore}` : score.toLocaleString()}
+            </motion.span>
+          </div>
+
+          {/* Divider */}
+          <div className="w-px h-5 bg-border" />
+
+          {/* Time */}
+          <motion.div 
+            className="flex items-center gap-2"
+            animate={isUrgent ? { 
+              scale: [1, 1.1, 1],
+            } : {}}
+            transition={isUrgent ? { 
+              duration: 0.5, 
+              repeat: Infinity,
+              ease: 'easeInOut'
+            } : {}}
           >
-            {goalScore ? `${score}/${goalScore}` : score.toLocaleString()}
-          </motion.span>
+            <ClockIcon className={cn("w-5 h-5", isUrgent ? "text-destructive" : "text-accent")} />
+            <span className={cn(
+              "text-lg font-mono tabular-nums",
+              isUrgent ? "text-destructive font-bold" : "text-foreground"
+            )}>
+              {timeDisplay}
+            </span>
+          </motion.div>
+
+          {/* Divider */}
+          <div className="w-px h-5 bg-border" />
+
+          {/* Level or Bonus Round indicator */}
+          {isBonusRound ? (
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-semibold text-accent uppercase tracking-wide whitespace-nowrap">BONUS ROUND</span>
+            </div>
+          ) : level !== undefined && (
+            <div className="flex items-center justify-center w-8 h-8 rounded-full border-2 border-accent bg-transparent">
+              <span className="text-lg font-bold text-accent">{level}</span>
+            </div>
+          )}
+
+          {/* Progress - cards/hands (Classic & Blitz modes only, hidden during bonus round) */}
+          {level === undefined && !isBonusRound && (
+            <div className="flex items-center gap-2">
+              {gameMode === 'blitz' ? (
+                <HandRaisedIcon className="w-5 h-5 text-accent" />
+              ) : (
+                <RectangleVertical className="w-5 h-5 text-accent" />
+              )}
+              <span className="text-lg font-semibold text-foreground tabular-nums">{progressValue}</span>
+            </div>
+          )}
         </div>
 
-        {/* Divider */}
-        <div className="w-px h-5 bg-border" />
-
-        {/* Time */}
-        <motion.div 
-          className="flex items-center gap-2"
-          animate={isUrgent ? { 
-            scale: [1, 1.1, 1],
-          } : {}}
-          transition={isUrgent ? { 
-            duration: 0.5, 
-            repeat: Infinity,
-            ease: 'easeInOut'
-          } : {}}
+        {/* Settings button only (audio button removed) */}
+        <Button 
+          variant="outline" 
+          size="icon" 
+          className="w-11 h-11 border-primary bg-transparent hover:bg-primary/10 hover:text-foreground"
+          onClick={() => setIsSettingsOpen(true)}
         >
-          <ClockIcon className={cn("w-5 h-5", isUrgent ? "text-destructive" : "text-accent")} />
-          <span className={cn(
-            "text-lg font-mono tabular-nums",
-            isUrgent ? "text-destructive font-bold" : "text-foreground"
-          )}>
-            {timeDisplay}
-          </span>
-        </motion.div>
-
-        {/* Divider */}
-        <div className="w-px h-5 bg-border" />
-
-        {/* Level or Bonus Round indicator */}
-        {isBonusRound ? (
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-semibold text-accent uppercase tracking-wide whitespace-nowrap">BONUS ROUND</span>
-          </div>
-        ) : level !== undefined && (
-          <div className="flex items-center justify-center w-8 h-8 rounded-full border-2 border-accent bg-transparent">
-            <span className="text-lg font-bold text-accent">{level}</span>
-          </div>
-        )}
-
-        {/* Progress - cards/hands (Classic & Blitz modes only, hidden during bonus round) */}
-        {level === undefined && !isBonusRound && (
-          <div className="flex items-center gap-2">
-            {gameMode === 'blitz' ? (
-              <HandRaisedIcon className="w-5 h-5 text-accent" />
-            ) : (
-              <RectangleVertical className="w-5 h-5 text-accent" />
-            )}
-            <span className="text-lg font-semibold text-foreground tabular-nums">{progressValue}</span>
-          </div>
-        )}
+          <Cog6ToothIcon className="w-5 h-5 text-primary" />
+        </Button>
       </div>
 
-      {/* Sound toggle button */}
-      <Button
-        variant="outline"
-        size="icon"
-        className="w-11 h-11 border-primary bg-transparent hover:bg-primary/10 hover:text-foreground"
-        onClick={toggleAllSounds}
-      >
-        {isSoundOn ? (
-          <SpeakerWaveIcon className="w-5 h-5 text-primary" />
-        ) : (
-          <SpeakerXMarkIcon className="w-5 h-5 text-muted-foreground" />
-        )}
-      </Button>
+      {/* Settings Modal */}
+      <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+        <DialogContent className="sm:max-w-md bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-display">Settings</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-6 py-4">
+            {/* Action Buttons */}
+            <div className="flex justify-center gap-4">
+              {onPause && (
+                <Button
+                  variant="outline"
+                  className="flex-1 gap-2 border-primary"
+                  onClick={handlePause}
+                >
+                  {isPaused ? (
+                    <>
+                      <PlayIcon className="w-5 h-5" />
+                      Resume
+                    </>
+                  ) : (
+                    <>
+                      <PauseIcon className="w-5 h-5" />
+                      Pause
+                    </>
+                  )}
+                </Button>
+              )}
+              {onRestart && (
+                <Button
+                  variant="outline"
+                  className="flex-1 gap-2 border-primary"
+                  onClick={handleRestart}
+                >
+                  <ArrowPathIcon className="w-5 h-5" />
+                  Restart
+                </Button>
+              )}
+              {onHome && (
+                <Button
+                  variant="outline"
+                  className="flex-1 gap-2 border-primary"
+                  onClick={handleHome}
+                >
+                  <HomeIcon className="w-5 h-5" />
+                  Home
+                </Button>
+              )}
+            </div>
 
-      {/* Settings button */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button 
-            variant="outline" 
-            size="icon" 
-            className="w-11 h-11 border-primary bg-transparent hover:bg-primary/10 hover:text-foreground"
-          >
-            <Cog6ToothIcon className="w-5 h-5 text-primary" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="bg-card border-border">
-          {onPause && (
-            <DropdownMenuItem onClick={onPause}>
-              {isPaused ? 'Resume' : 'Pause'}
-            </DropdownMenuItem>
-          )}
-          {onRestart && (
-            <DropdownMenuItem onClick={onRestart}>
-              Restart
-            </DropdownMenuItem>
-          )}
-          {onHome && (
-            <DropdownMenuItem onClick={onHome}>
-              Home
-            </DropdownMenuItem>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
+            {/* Divider */}
+            <div className="border-t border-border" />
+
+            {/* Audio Settings */}
+            <div>
+              <h3 className="text-sm font-medium text-muted-foreground mb-4">Audio</h3>
+              
+              {/* Master Volume */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <SpeakerWaveIcon className="w-5 h-5 text-muted-foreground" />
+                    <span className="text-sm font-medium">Master Volume</span>
+                  </div>
+                  <span className="text-sm text-muted-foreground w-12 text-right">
+                    {Math.round(masterVolume * 100)}%
+                  </span>
+                </div>
+                <Slider
+                  value={[masterVolume * 100]}
+                  onValueChange={([value]) => setMasterVolume(value / 100)}
+                  max={100}
+                  step={5}
+                  className="w-full"
+                />
+              </div>
+
+              {/* Sound Effects */}
+              <div className="mt-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    {sfxEnabled ? (
+                      <SpeakerWaveIcon className="w-5 h-5 text-primary" />
+                    ) : (
+                      <SpeakerXMarkIcon className="w-5 h-5 text-muted-foreground" />
+                    )}
+                    <span className="text-sm font-medium">Sound Effects</span>
+                  </div>
+                  <Switch
+                    checked={sfxEnabled}
+                    onCheckedChange={handleSfxToggle}
+                  />
+                </div>
+                {sfxEnabled && (
+                  <div className="pl-7">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs text-muted-foreground">Volume</span>
+                      <span className="text-xs text-muted-foreground">
+                        {Math.round(sfxVolume * 100)}%
+                      </span>
+                    </div>
+                    <Slider
+                      value={[sfxVolume * 100]}
+                      onValueChange={([value]) => {
+                        setSfxVolume(value / 100);
+                      }}
+                      onValueCommit={() => playSound('buttonClick')}
+                      max={100}
+                      step={5}
+                      className="w-full"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Music (Future Feature) */}
+              <div className="mt-6 space-y-4 opacity-50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <MusicalNoteIcon className="w-5 h-5 text-muted-foreground" />
+                    <span className="text-sm font-medium">Music</span>
+                    <span className="text-xs text-muted-foreground">(Coming Soon)</span>
+                  </div>
+                  <Switch
+                    checked={musicEnabled}
+                    onCheckedChange={setMusicEnabled}
+                    disabled
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
