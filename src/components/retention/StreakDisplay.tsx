@@ -13,10 +13,10 @@ export function StreakDisplay({ currentStreak, longestStreak, compact = false }:
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="flex items-center gap-1.5 bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 rounded-full px-3 py-1"
+        className="flex items-center gap-1.5 bg-primary/20 border border-primary/30 rounded-full px-3 py-1"
       >
-        <Flame className="w-4 h-4 text-orange-400" />
-        <span className="font-bold text-orange-400">{currentStreak}</span>
+        <Flame className="w-4 h-4 text-primary" />
+        <span className="font-bold text-primary">{currentStreak}</span>
       </motion.div>
     );
   }
@@ -25,7 +25,7 @@ export function StreakDisplay({ currentStreak, longestStreak, compact = false }:
     <motion.div
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      className="bg-gradient-to-br from-orange-500/20 to-red-600/20 border border-orange-500/30 rounded-xl p-4"
+      className="bg-primary/10 border border-primary/30 rounded-xl p-4"
     >
       <div className="flex items-center gap-3">
         <div className="relative">
@@ -40,13 +40,13 @@ export function StreakDisplay({ currentStreak, longestStreak, compact = false }:
               ease: "easeInOut"
             }}
           >
-            <Flame className="w-10 h-10 text-orange-400" />
+            <Flame className="w-10 h-10 text-primary" />
           </motion.div>
           {currentStreak >= 7 && (
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              className="absolute -top-1 -right-1 bg-yellow-500 text-black text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center"
+              className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center"
             >
               🔥
             </motion.div>
@@ -55,7 +55,7 @@ export function StreakDisplay({ currentStreak, longestStreak, compact = false }:
         <div>
           <p className="text-sm text-muted-foreground">Daily Streak</p>
           <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-bold text-orange-400">{currentStreak}</span>
+            <span className="text-3xl font-bold text-primary">{currentStreak}</span>
             <span className="text-sm text-muted-foreground">day{currentStreak !== 1 ? 's' : ''}</span>
           </div>
         </div>
@@ -74,7 +74,7 @@ export function StreakDisplay({ currentStreak, longestStreak, compact = false }:
             key={milestone}
             className={`flex-1 h-1.5 rounded-full transition-colors ${
               currentStreak >= milestone 
-                ? 'bg-gradient-to-r from-orange-400 to-red-500' 
+                ? 'bg-primary' 
                 : 'bg-muted'
             }`}
           />
