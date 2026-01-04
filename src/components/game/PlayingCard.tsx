@@ -80,18 +80,18 @@ export function PlayingCard({
 
   return (
     <motion.button
-      onClick={onClick}
+      onPointerDown={!isDisabled && !isSelected ? onClick : undefined}
       disabled={isDisabled || isSelected}
-      whileHover={!isDisabled && !isSelected ? { scale: 1.05, y: -5 } : {}}
-      whileTap={!isDisabled && !isSelected ? { scale: 0.95 } : {}}
+      whileHover={!isDisabled && !isSelected ? { scale: 1.05, y: -5, transition: { duration: 0.1 } } : {}}
+      whileTap={!isDisabled && !isSelected ? { scale: 0.95, transition: { duration: 0.05 } } : {}}
       initial={animate ? { scale: 0.8, opacity: 0 } : false}
-      animate={{ scale: 1, opacity: 1 }}
+      animate={{ scale: 1, opacity: 1, transition: { duration: 0.1 } }}
       className={cn(
         config.card,
-        'relative rounded-lg bg-white shadow-lg cursor-pointer select-none',
+        'relative rounded-lg bg-white shadow-lg cursor-pointer select-none touch-manipulation',
         'flex flex-col items-center justify-center',
         'border border-gray-200',
-        'transition-all duration-200',
+        'transition-all duration-100',
         colorClass,
         isSelected && 'ring-2 ring-primary opacity-50 cursor-not-allowed',
         isDisabled && 'opacity-50 cursor-not-allowed',
