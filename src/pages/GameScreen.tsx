@@ -333,19 +333,21 @@ export default function GameScreen() {
   // Show loading screen while music is loading
   if (isLoadingMusic || introPhase === 'loading') {
     return (
-      <div className="h-screen max-h-screen flex flex-col items-center justify-center overflow-hidden modern-bg">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center"
-        >
+      <div className="h-screen w-screen flex items-center justify-center overflow-hidden modern-bg">
+        <div className="relative w-full h-full max-w-[177.78vh] max-h-[56.25vw] flex items-center justify-center">
           <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-            className="w-16 h-16 border-4 border-primary/30 border-t-primary rounded-full mx-auto mb-4"
-          />
-          <p className="text-lg font-display text-foreground">Loading...</p>
-        </motion.div>
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center"
+          >
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+              className="w-16 h-16 border-4 border-primary/30 border-t-primary rounded-full mx-auto mb-4"
+            />
+            <p className="text-lg font-display text-foreground">Loading...</p>
+          </motion.div>
+        </div>
       </div>
     );
   }
@@ -353,54 +355,58 @@ export default function GameScreen() {
   // Show intro sequence (Ready? / Begin!)
   if (introPhase === 'ready' || introPhase === 'begin') {
     return (
-      <div className="h-screen max-h-screen flex flex-col items-center justify-center overflow-hidden modern-bg">
-        <AnimatePresence mode="wait">
-          {introPhase === 'ready' && (
-            <motion.div
-              key="ready"
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.5 }}
-              transition={{ duration: 0.3, ease: 'easeOut' }}
-              className="text-center"
-            >
-              <motion.h1
-                animate={{ scale: [1, 1.1, 1] }}
-                transition={{ duration: 0.6, repeat: Infinity }}
-                className="text-6xl font-display text-accent drop-shadow-lg"
+      <div className="h-screen w-screen flex items-center justify-center overflow-hidden modern-bg">
+        <div className="relative w-full h-full max-w-[177.78vh] max-h-[56.25vw] flex items-center justify-center">
+          <AnimatePresence mode="wait">
+            {introPhase === 'ready' && (
+              <motion.div
+                key="ready"
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.5 }}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+                className="text-center"
               >
-                Ready?
-              </motion.h1>
-            </motion.div>
-          )}
+                <motion.h1
+                  animate={{ scale: [1, 1.1, 1] }}
+                  transition={{ duration: 0.6, repeat: Infinity }}
+                  className="text-6xl font-display text-accent drop-shadow-lg"
+                >
+                  Ready?
+                </motion.h1>
+              </motion.div>
+            )}
 
-          {introPhase === 'begin' && (
-            <motion.div
-              key="begin"
-              initial={{ opacity: 0, scale: 0.3, rotate: -10 }}
-              animate={{ opacity: 1, scale: 1, rotate: 0 }}
-              exit={{ opacity: 0, scale: 2 }}
-              transition={{ duration: 0.3, type: 'spring', stiffness: 300 }}
-              className="text-center"
-            >
-              <motion.h1
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 0.4 }}
-                className="text-7xl font-display text-primary drop-shadow-lg"
+            {introPhase === 'begin' && (
+              <motion.div
+                key="begin"
+                initial={{ opacity: 0, scale: 0.3, rotate: -10 }}
+                animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                exit={{ opacity: 0, scale: 2 }}
+                transition={{ duration: 0.3, type: 'spring', stiffness: 300 }}
+                className="text-center"
               >
-                BEGIN!
-              </motion.h1>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                <motion.h1
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 0.4 }}
+                  className="text-7xl font-display text-primary drop-shadow-lg"
+                >
+                  BEGIN!
+                </motion.h1>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="h-screen max-h-screen flex flex-col overflow-hidden modern-bg relative">
-      {/* Main game area - takes full screen */}
-      <div className="flex-1 min-h-0 relative overflow-hidden">
+    <div className="h-screen w-screen flex items-center justify-center overflow-hidden modern-bg relative">
+      {/* 16:9 aspect ratio container */}
+      <div className="relative w-full h-full max-w-[177.78vh] max-h-[56.25vw] flex flex-col overflow-hidden">
+        {/* Main game area - takes full screen */}
+        <div className="flex-1 min-h-0 relative overflow-hidden">
         {/* ScorePanel overlay */}
         {!isBonusRound && (
           <>
@@ -586,6 +592,7 @@ export default function GameScreen() {
           onStartBonusRound={startBonusRound}
         />
 
+        </div>
       </div>
     </div>
   );
