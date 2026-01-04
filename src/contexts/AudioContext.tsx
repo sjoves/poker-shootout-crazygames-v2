@@ -82,21 +82,8 @@ async function loadAudioBuffer(audioCtx: AudioContext, url: string): Promise<Aud
   return audioBuffer;
 }
 
-function playCardSelect(audioCtx: AudioContext, volume: number): void {
-  // Play the card-hit.mp3 sound file
-  loadAudioBuffer(audioCtx, '/sounds/card-hit.mp3').then((buffer) => {
-    const source = audioCtx.createBufferSource();
-    const gainNode = audioCtx.createGain();
-    
-    source.buffer = buffer;
-    gainNode.gain.setValueAtTime(volume, audioCtx.currentTime);
-    
-    source.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-    source.start();
-  }).catch((err) => {
-    console.error('Failed to play card select sound:', err);
-  });
+function playCardSelect(_audioCtx: AudioContext, _volume: number): void {
+  // Card hit sound disabled
 }
 
 function playCardFlip(audioCtx: AudioContext, volume: number): void {
