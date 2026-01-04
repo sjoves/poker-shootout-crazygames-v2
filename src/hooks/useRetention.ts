@@ -361,11 +361,21 @@ export function useRetention() {
     score: number; 
     handTypes: Record<string, number> 
   }) => {
-    if (!user || challenges.length === 0) return;
+    if (!user) return;
+
+    // Fetch fresh challenges from database to ensure we have the latest data
+    const today = new Date().toISOString().split('T')[0];
+    const { data: currentChallenges } = await supabase
+      .from('daily_challenges')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('challenge_date', today);
+
+    if (!currentChallenges || currentChallenges.length === 0) return;
 
     const updates: DailyChallenge[] = [];
 
-    for (const challenge of challenges) {
+    for (const challenge of currentChallenges) {
       if (challenge.completed) continue;
 
       let increment = 0;
