@@ -20,9 +20,8 @@ export function StaticGrid({ deck, selectedCardIds, onSelectCard }: StaticGridPr
   const isMobile = useIsMobile();
   const { playSound } = useAudio();
 
-  // Use 'sd' size (5% larger than ssc) for Sitting Duck mode
-  const cardSize = isMobile ? 'sm' : 'sd';
-  
+  // Sitting Duck: larger cards on both mobile + desktop
+  const cardSize = isMobile ? 'sdm' : 'sd';
   return (
     <motion.div
       initial={{ opacity: 0 }}
