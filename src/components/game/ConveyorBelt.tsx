@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+
 import { Card, ConveyorCard } from '@/types/game';
 import { PlayingCard } from './PlayingCard';
 import { useAudio } from '@/contexts/AudioContext';
@@ -283,36 +283,31 @@ export function ConveyorBelt({
           </div>
         ))}
         
-        {/* Cards */}
-        <AnimatePresence>
-          {visibleCards.map(card => (
-            <motion.div
-              key={card.id}
-              ref={(el) => {
-                if (el) cardElementsRef.current.set(card.id, el);
-                else cardElementsRef.current.delete(card.id);
-              }}
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0, transition: { duration: 0.2 } }}
-              style={{
-                position: 'absolute',
-                left: 0,
-                top: card.row * rowHeight + 10,
-                transform: `translate3d(${card.x}px, 0, 0)`,
-                willChange: 'transform',
-              }}
-            >
-              <PlayingCard
-                card={card}
-                onClick={() => handleCardClick(card)}
-                size="md"
-                animate={false}
-                isSelected={selectedCardIds.includes(card.id.split('-row')[0])}
-              />
-            </motion.div>
-          ))}
-        </AnimatePresence>
+        {/* Cards - no AnimatePresence to avoid layout thrashing */}
+        {visibleCards.map(card => (
+          <div
+            key={card.id}
+            ref={(el) => {
+              if (el) cardElementsRef.current.set(card.id, el);
+              else cardElementsRef.current.delete(card.id);
+            }}
+            style={{
+              position: 'absolute',
+              left: 0,
+              top: card.row * rowHeight + 10,
+              transform: `translate3d(${card.x}px, 0, 0)`,
+              willChange: 'transform',
+            }}
+          >
+            <PlayingCard
+              card={card}
+              onClick={() => handleCardClick(card)}
+              size="md"
+              animate={false}
+              isSelected={selectedCardIds.includes(card.id.split('-row')[0])}
+            />
+          </div>
+        ))}
       </div>
     </div>
   );
