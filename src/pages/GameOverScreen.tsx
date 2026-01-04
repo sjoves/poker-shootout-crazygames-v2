@@ -16,8 +16,11 @@ import { AuthModal } from '@/components/auth/AuthModal';
 function mapHandTypesToStats(handHistory: HandResult[]): Record<string, number> {
   const stats: Record<string, number> = {};
   
+  console.log('[mapHandTypesToStats] Processing hand history:', handHistory?.length, 'hands');
+  
   for (const result of handHistory) {
     const handName = result.hand.name.toLowerCase().replace(/\s+/g, '');
+    console.log('[mapHandTypesToStats] Hand:', result.hand.name, '-> normalized:', handName);
     
     // Map to the expected keys
     switch (handName) {
@@ -29,6 +32,7 @@ function mapHandTypesToStats(handHistory: HandResult[]): Record<string, number> 
         break;
       case 'fullhouse':
         stats.fullHouse = (stats.fullHouse || 0) + 1;
+        console.log('[mapHandTypesToStats] Counted Full House! Total:', stats.fullHouse);
         break;
       case 'fourofakind':
         stats.fourOfAKind = (stats.fourOfAKind || 0) + 1;
@@ -42,6 +46,7 @@ function mapHandTypesToStats(handHistory: HandResult[]): Record<string, number> 
     }
   }
   
+  console.log('[mapHandTypesToStats] Final stats:', stats);
   return stats;
 }
 
