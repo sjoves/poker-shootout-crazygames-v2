@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { StarIcon, TrophyIcon } from '@heroicons/react/24/solid';
 import { StarIcon as StarOutlineIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button';
+import { useCrazyGames } from '@/contexts/CrazyGamesContext';
 
 interface LevelCompleteModalProps {
   isOpen: boolean;
@@ -35,6 +37,8 @@ export function LevelCompleteModal({
   onStartBonusRound,
 }: LevelCompleteModalProps) {
   const stars = [1, 2, 3];
+  const { showMidgameAd, isAvailable: isCrazyGamesAvailable } = useCrazyGames();
+  const [isShowingAd, setIsShowingAd] = useState(false);
   
   // Calculate thresholds for display
   const twoStarThreshold = Math.floor(goalScore * 1.25);
@@ -59,6 +63,20 @@ export function LevelCompleteModal({
   };
 
   const buttonConfig = getButtonConfig();
+
+  // Handle button click with midgame ad
+  const handleButtonClick = async () => {
+    // Show midgame ad every 3 levels (on levels 3, 6, 9, etc.)
+    const shouldShowAd = isCrazyGamesAvailable && level % 3 === 0 && !isBonusRound && !isBonusFailed;
+    
+    if (shouldShowAd) {
+      setIsShowingAd(true);
+      await showMidgameAd();
+      setIsShowingAd(false);
+    }
+    
+    buttonConfig.action();
+  };
 
   return (
     <AnimatePresence>
@@ -180,11 +198,12 @@ export function LevelCompleteModal({
               transition={{ delay: 0.8 }}
             >
               <Button
-                onClick={buttonConfig.action}
+                onClick={handleButtonClick}
                 size="lg"
                 className="w-full font-display text-lg"
+                disabled={isShowingAd}
               >
-                {buttonConfig.text}
+                {isShowingAd ? 'Loading...' : buttonConfig.text}
               </Button>
             </motion.div>
           </motion.div>

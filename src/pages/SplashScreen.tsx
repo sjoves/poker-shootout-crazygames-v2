@@ -7,6 +7,7 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useRetention } from '@/hooks/useRetention';
+import { useCrazyGames } from '@/contexts/CrazyGamesContext';
 import { RewardedAd, useRewardedAd } from '@/components/ads/RewardedAd';
 import { TutorialModal } from '@/components/tutorial/TutorialModal';
 import { SettingsModal } from '@/components/settings/SettingsModal';
@@ -22,6 +23,7 @@ export default function SplashScreen() {
   const { user, profile } = useAuth();
   const { isPremium, requiresAdForMode, markAdWatchedForMode, openCheckout, loading } = useSubscription();
   const { currentLogo } = useTheme();
+  const { user: crazyGamesUser, isAvailable: isCrazyGamesAvailable, showAuthPrompt } = useCrazyGames();
   const {
     streak,
     achievements,
@@ -43,6 +45,11 @@ export default function SplashScreen() {
   const [showRewardWheel, setShowRewardWheel] = useState(false);
   const [showChallenges, setShowChallenges] = useState(false);
   const rewardedAd = useRewardedAd();
+
+  // Use CrazyGames user if available, otherwise fall back to Supabase user
+  const displayUsername = crazyGamesUser?.username || profile?.username;
+  const displayAvatar = crazyGamesUser?.profilePictureUrl || profile?.avatar_url;
+  const isLoggedIn = !!crazyGamesUser || !!user;
 
   // Show daily reward prompt for logged in users - only when canClaimReward is true
   // Uses sessionStorage to prevent re-triggering on page navigation/refresh within the same session
@@ -314,8 +321,26 @@ export default function SplashScreen() {
         transition={{ delay: 0.4 }}
         className="mt-6 flex justify-center gap-3"
       >
-        <Button variant="ghost" size="icon" className="w-10 h-10" onClick={() => navigate(user ? '/account' : '/auth')}>
-          <User className="w-5 h-5 text-primary" />
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="w-10 h-10" 
+          onClick={async () => {
+            // On CrazyGames, use their auth prompt
+            if (isCrazyGamesAvailable && !crazyGamesUser) {
+              await showAuthPrompt();
+            } else if (user) {
+              navigate('/account');
+            } else {
+              navigate('/auth');
+            }
+          }}
+        >
+          {displayAvatar ? (
+            <img src={displayAvatar} alt="Profile" className="w-8 h-8 rounded-full" />
+          ) : (
+            <User className="w-5 h-5 text-primary" />
+          )}
         </Button>
         <Button variant="ghost" size="icon" className="w-10 h-10" onClick={() => navigate('/leaderboard')}>
           <Trophy className="w-5 h-5 text-primary" />
@@ -326,9 +351,11 @@ export default function SplashScreen() {
         <Button variant="ghost" size="icon" className="w-10 h-10" onClick={() => setShowSettings(true)}>
           <Settings className="w-5 h-5 text-primary" />
         </Button>
-        <Button variant="ghost" size="icon" className="w-10 h-10" onClick={() => navigate('/dev-sandbox')}>
-          <Zap className="w-5 h-5 text-primary" />
-        </Button>
+        {!isCrazyGamesAvailable && (
+          <Button variant="ghost" size="icon" className="w-10 h-10" onClick={() => navigate('/dev-sandbox')}>
+            <Zap className="w-5 h-5 text-primary" />
+          </Button>
+        )}
       </motion.div>
 
       {/* Modals */}

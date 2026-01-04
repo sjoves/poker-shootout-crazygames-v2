@@ -7,6 +7,7 @@ import { Crown, Play, Award, Clapperboard, Home, RotateCcw, CloudUpload, CheckCi
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/hooks/useAuth';
 import { useRetention } from '@/hooks/useRetention';
+import { useCrazyGames } from '@/contexts/CrazyGamesContext';
 import { RewardedAd, useRewardedAd } from '@/components/ads/RewardedAd';
 import { supabase } from '@/integrations/supabase/client';
 import { useGuestScores } from '@/hooks/useGuestScores';
@@ -53,13 +54,27 @@ export default function GameOverScreen() {
   const { user, loading: authLoading } = useAuth();
   const { isPremium, openCheckout } = useSubscription();
   const { updateStats, updateStreak } = useRetention();
+  const { showMidgameAd, isAvailable: isCrazyGamesAvailable } = useCrazyGames();
   const rewardedAd = useRewardedAd();
   const { saveGuestScore } = useGuestScores();
   const scoreSavedRef = useRef(false);
   const statsUpdatedRef = useRef(false);
+  const adShownRef = useRef(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [scoreSynced, setScoreSynced] = useState(false);
   const [personalBest, setPersonalBest] = useState<number | null>(null);
+
+  // Show midgame ad when game over screen loads (once per session)
+  useEffect(() => {
+    if (isCrazyGamesAvailable && gameState && !adShownRef.current) {
+      adShownRef.current = true;
+      // Delay slightly to let the screen render first
+      const timer = setTimeout(() => {
+        showMidgameAd();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isCrazyGamesAvailable, gameState, showMidgameAd]);
 
   // Update retention stats (challenges, achievements, streak) when game ends
   useEffect(() => {

@@ -5,6 +5,7 @@ import { useGameState } from '@/hooks/useGameState';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAudio } from '@/contexts/AudioContext';
 import { useAuth } from '@/hooks/useAuth';
+import { useCrazyGames } from '@/contexts/CrazyGamesContext';
 import { supabase } from '@/integrations/supabase/client';
 import { ScorePanel } from '@/components/game/ScoreDisplay';
 import { HandDisplay } from '@/components/game/HandDisplay';
@@ -67,6 +68,7 @@ export default function GameScreen() {
   const phaseOverride = searchParams.get('phase') as 'sitting_duck' | 'conveyor' | 'falling' | null;
 
   const { user } = useAuth();
+  const { gameplayStart, gameplayStop, happytime, showMidgameAd } = useCrazyGames();
   const lastTrackedChallengeHandRef = useRef<string | null>(null);
 
   // Hand Detection Event Hook: update daily challenge progress immediately on each submitted hand
@@ -160,6 +162,8 @@ export default function GameScreen() {
     if (introPhase === 'begin') {
       const timer = setTimeout(() => {
         setIntroPhase('playing');
+        // Signal CrazyGames that gameplay has started
+        gameplayStart();
         // Start the actual game after intro completes
         if (isTestBonus) {
           startGame('ssc', true);
@@ -169,7 +173,21 @@ export default function GameScreen() {
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [introPhase, isTestBonus, mode, startLevel, startGame, isLoadingMusic]);
+  }, [introPhase, isTestBonus, mode, startLevel, startGame, isLoadingMusic, gameplayStart]);
+
+  // Signal CrazyGames when gameplay stops (game over or level complete)
+  useEffect(() => {
+    if (state.isGameOver || state.isLevelComplete) {
+      gameplayStop();
+    }
+  }, [state.isGameOver, state.isLevelComplete, gameplayStop]);
+
+  // Trigger happytime on high-value hands (achievement moment)
+  useEffect(() => {
+    if (state.currentHand && state.currentHand.totalPoints >= 200) {
+      happytime();
+    }
+  }, [state.currentHand, happytime]);
 
   // Play sound when hand is submitted
   useEffect(() => {
