@@ -374,6 +374,7 @@ export default function GameScreen() {
         {isFalling && (
           <FallingCards
             deck={state.deck}
+            selectedCards={state.selectedCards}
             selectedCardIds={selectedIds}
             onSelectCard={selectCard}
             speed={baseSpeed * (isBlitz ? 1.2 : isSSC ? sscSpeed : 1)}

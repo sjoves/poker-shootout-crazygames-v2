@@ -590,6 +590,7 @@ const DevSandbox = () => {
             {effectivePhase === 'falling' && (
               <FallingCards
                 deck={deck}
+                selectedCards={selectedCards}
                 selectedCardIds={selectedCards.map(c => c.id)}
                 onSelectCard={handleSelectCard}
                 speed={effectiveSpeed}

@@ -3,9 +3,11 @@ import type { Card, FallingCard } from "@/types/game";
 import { PlayingCard } from "./PlayingCard";
 import { useAudio } from "@/contexts/AudioContext";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { analyzeOneAwayHand, getSmartDropDelay } from "@/lib/smartDrop";
 
 interface FallingCardsProps {
   deck: Card[];
+  selectedCards: Card[];
   selectedCardIds: string[];
   onSelectCard: (card: Card) => void;
   speed?: number;
@@ -19,6 +21,7 @@ type LocalFallingCard = FallingCard & { instanceKey: string; isTouched?: boolean
 
 export function FallingCards({
   deck,
+  selectedCards,
   selectedCardIds,
   onSelectCard,
   speed = 1,
@@ -39,6 +42,11 @@ export function FallingCards({
   const { playSound } = useAudio();
   const isMobile = useIsMobile();
   
+  // Smart Drop state
+  const smartDropTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const smartDropTriggeredRef = useRef<boolean>(false);
+  const lastSelectedCountRef = useRef<number>(0);
+  
   // Force re-render only when cards are added/removed
   const [, setRenderTrigger] = useState(0);
   const triggerRender = useCallback(() => setRenderTrigger(v => v + 1), []);
@@ -51,6 +59,11 @@ export function FallingCards({
     spawnedCardIdsRef.current.clear();
     cardsRef.current = [];
     cardElementsRef.current.clear();
+    smartDropTriggeredRef.current = false;
+    if (smartDropTimeoutRef.current) {
+      clearTimeout(smartDropTimeoutRef.current);
+      smartDropTimeoutRef.current = null;
+    }
     triggerRender();
   }, [reshuffleTrigger, triggerRender]);
 
@@ -60,9 +73,36 @@ export function FallingCards({
       spawnedCardIdsRef.current.clear();
       cardsRef.current = [];
       cardElementsRef.current.clear();
+      smartDropTriggeredRef.current = false;
+      lastSelectedCountRef.current = 0;
+      if (smartDropTimeoutRef.current) {
+        clearTimeout(smartDropTimeoutRef.current);
+        smartDropTimeoutRef.current = null;
+      }
       triggerRender();
     }
   }, [deck.length, triggerRender]);
+
+  // Create a specific card spawn for Smart Drop
+  const createSmartDropSpawn = useCallback(
+    (containerWidth: number, specificCard: Card): LocalFallingCard => {
+      spawnCountRef.current += 1;
+      const cardWidth = 64;
+
+      return {
+        ...specificCard,
+        instanceKey: `${specificCard.id}-smart-${spawnCountRef.current}`,
+        x: Math.random() * Math.max(0, containerWidth - cardWidth),
+        y: -110,
+        speed: (1.0 + Math.random() * 0.8) * effectiveSpeed, // Slightly slower for visibility
+        rotation: (Math.random() - 0.5) * 20, // Less rotation for easier selection
+        rotationSpeed: (Math.random() - 0.5) * 1.5,
+        sway: 8 + Math.random() * 10, // Less sway for easier selection
+        swaySpeed: 1.0 + Math.random() * 1.2,
+      };
+    },
+    [effectiveSpeed]
+  );
 
   const createSpawn = useCallback(
     (containerWidth: number): LocalFallingCard | null => {
@@ -102,6 +142,76 @@ export function FallingCards({
     },
     [deck, selectedCardIds, effectiveSpeed, isRecycling]
   );
+
+  // Smart Drop: Monitor when player has exactly 4 cards that are "one away" from high-ranking hand
+  useEffect(() => {
+    // Only trigger in SSC mode (which uses falling phase)
+    if (gameMode !== 'ssc') return;
+    if (isPaused) return;
+    
+    // Reset Smart Drop trigger when selection changes significantly
+    if (selectedCards.length !== 4) {
+      // If no longer at 4 cards, clear any pending Smart Drop
+      if (smartDropTimeoutRef.current) {
+        clearTimeout(smartDropTimeoutRef.current);
+        smartDropTimeoutRef.current = null;
+      }
+      // Reset triggered flag if we've collected 5 or gone below 4
+      if (selectedCards.length === 5 || selectedCards.length < lastSelectedCountRef.current) {
+        smartDropTriggeredRef.current = false;
+      }
+      lastSelectedCountRef.current = selectedCards.length;
+      return;
+    }
+    
+    // Already triggered Smart Drop for this set of 4 cards
+    if (smartDropTriggeredRef.current) return;
+    
+    // Get available cards from deck (not already selected)
+    const availableDeck = deck.filter(c => !selectedCardIds.includes(c.id));
+    
+    // Analyze if current 4 cards are "one away" from a high-ranking hand
+    const analysis = analyzeOneAwayHand(selectedCards, availableDeck);
+    
+    if (analysis.isOneAway && analysis.neededCards.length > 0) {
+      console.log(`[Smart Drop] Detected one-away from ${analysis.targetHand}!`);
+      
+      // Set up delayed spawn
+      const delay = getSmartDropDelay();
+      console.log(`[Smart Drop] Will spawn needed card in ${(delay / 1000).toFixed(1)}s`);
+      
+      smartDropTimeoutRef.current = setTimeout(() => {
+        const containerWidth = containerRef.current?.offsetWidth ?? 480;
+        const neededCard = analysis.neededCards[0];
+        
+        // Check if the needed card is still available (not already on screen or selected)
+        const stillAvailable = !selectedCardIds.includes(neededCard.id) && 
+          !cardsRef.current.some(c => c.id === neededCard.id);
+        
+        if (stillAvailable) {
+          console.log(`[Smart Drop] Spawning ${neededCard.rank} of ${neededCard.suit} for ${analysis.targetHand}!`);
+          const smartCard = createSmartDropSpawn(containerWidth, neededCard);
+          cardsRef.current.push(smartCard);
+          triggerRender();
+        }
+        
+        smartDropTimeoutRef.current = null;
+      }, delay);
+      
+      smartDropTriggeredRef.current = true;
+    }
+    
+    lastSelectedCountRef.current = selectedCards.length;
+  }, [selectedCards, selectedCardIds, deck, gameMode, isPaused, createSmartDropSpawn, triggerRender]);
+
+  // Cleanup Smart Drop timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (smartDropTimeoutRef.current) {
+        clearTimeout(smartDropTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Seed first card
   useEffect(() => {
