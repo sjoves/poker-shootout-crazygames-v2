@@ -261,9 +261,23 @@ export function ConveyorBelt({
   }, [isPaused, cardsReady, selectedCardIds, speed, rows, cardWidth, cardSpacing, deck, triggerRender]);
 
   const handleCardPointerDown = useCallback((card: ConveyorCard, e: React.PointerEvent) => {
+    // Global hand guard: never visually "kill" a card if the hand is already full
+    if (selectedCardIds.length >= 5) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+
     // Prevent ghost taps: block if busy
     const now = performance.now();
     if (now < busyUntilRef.current) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+
+    const baseId = card.id.split('-row')[0];
+    if (selectedCardIds.includes(baseId)) {
       e.preventDefault();
       e.stopPropagation();
       return;
@@ -273,7 +287,6 @@ export function ConveyorBelt({
     busyUntilRef.current = now + BUSY_MS;
 
     // Stop all event propagation first
-    e.preventDefault();
     e.stopPropagation();
     (e.nativeEvent as any)?.stopImmediatePropagation?.();
 
@@ -281,6 +294,11 @@ export function ConveyorBelt({
     const el = e.currentTarget as HTMLElement;
     el.style.opacity = '0';
     el.style.pointerEvents = 'none';
+
+    // Remove from active list in the same frame
+    cardsRef.current = cardsRef.current.filter((c) => c.id !== card.id);
+    cardElementsRef.current.delete(card.id);
+    triggerRender();
 
     // Pointer capture to prevent multi-target / ghost interactions
     try {
@@ -290,7 +308,7 @@ export function ConveyorBelt({
     }
 
     const originalCard: Card = {
-      id: card.id.split('-row')[0],
+      id: baseId,
       suit: card.suit,
       rank: card.rank,
       value: card.value,
@@ -298,9 +316,9 @@ export function ConveyorBelt({
     playSound('cardSelect');
     onSelectCard(originalCard);
 
-    // Final preventDefault to stop any click event from firing
+    // No Ghost Taps: prevent click synthesis after pointerdown
     e.preventDefault();
-  }, [onSelectCard, playSound]);
+  }, [onSelectCard, playSound, selectedCardIds, triggerRender]);
 
   const rowHeight = 120;
   const totalHeight = rows * rowHeight;
@@ -344,7 +362,6 @@ export function ConveyorBelt({
               top: card.row * rowHeight + 10,
               transform: `translate3d(${card.x}px, 0, 0)`,
               willChange: 'transform, opacity',
-              opacity: 1,
             }}
             onPointerDown={(e) => handleCardPointerDown(card, e)}
             className="cursor-pointer select-none touch-none"

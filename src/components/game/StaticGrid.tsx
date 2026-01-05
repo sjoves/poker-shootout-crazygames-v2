@@ -1,4 +1,4 @@
-import React, { useRef, useCallback } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card } from '@/types/game';
 import { PlayingCard } from './PlayingCard';
@@ -17,62 +17,63 @@ const GRID_COLUMNS = 5;
 const BUSY_MS = 300;
 
 export function StaticGrid({ deck, selectedCardIds, onSelectCard }: StaticGridProps) {
-  // Only show up to MAX_VISIBLE_CARDS
   const visibleCards = deck.slice(0, MAX_VISIBLE_CARDS);
   const isMobile = useIsMobile();
   const { playSound } = useAudio();
 
   // Busy flag to prevent multi-touch / ghost taps
   const busyUntilRef = useRef<number>(0);
-  // Track which cards have been tapped this session (for instant hide)
-  const tappedCardsRef = useRef<Set<string>>(new Set());
+  const [hiddenByUser, setHiddenByUser] = useState<Record<string, true>>({});
 
   // Sitting Duck: larger cards on both mobile + desktop
   const cardSize = isMobile ? 'sdm' : 'sd';
 
-  const handleCardPointerDown = useCallback((card: Card, e: React.PointerEvent) => {
-    // Prevent ghost taps: block if busy
-    const now = performance.now();
-    if (now < busyUntilRef.current) {
-      e.preventDefault();
+  const handleCardPointerDown = useCallback(
+    (card: Card, e: React.PointerEvent) => {
+      // Global hand guard
+      if (selectedCardIds.length >= 5) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+
+      // Prevent ghost taps: block if busy
+      const now = performance.now();
+      if (now < busyUntilRef.current) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+
+      // Already selected / already hidden
+      if (selectedCardIds.includes(card.id) || hiddenByUser[card.id]) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+
+      busyUntilRef.current = now + BUSY_MS;
+
+      // Stop all event propagation first
       e.stopPropagation();
-      return;
-    }
+      (e.nativeEvent as any)?.stopImmediatePropagation?.();
 
-    // Already selected? Ignore
-    if (selectedCardIds.includes(card.id) || tappedCardsRef.current.has(card.id)) {
+      // Immediate feedback: kill the card instantly
+      const el = e.currentTarget as HTMLElement;
+      el.style.opacity = '0';
+      el.style.pointerEvents = 'none';
+
+      // Persist hide across React re-renders (so it can't pop back)
+      setHiddenByUser((prev) => ({ ...prev, [card.id]: true }));
+
+      playSound('cardSelect');
+      onSelectCard(card);
+
+      // No Ghost Taps: prevent click synthesis after pointerdown
       e.preventDefault();
-      e.stopPropagation();
-      return;
-    }
-
-    // Set busy flag immediately
-    busyUntilRef.current = now + BUSY_MS;
-    tappedCardsRef.current.add(card.id);
-
-    // Stop all event propagation first
-    e.preventDefault();
-    e.stopPropagation();
-    (e.nativeEvent as any)?.stopImmediatePropagation?.();
-
-    // Instant visual removal (opacity: 0 for hardware-accelerated hide)
-    const el = e.currentTarget as HTMLElement;
-    el.style.opacity = '0';
-    el.style.pointerEvents = 'none';
-
-    // Pointer capture to prevent multi-target / ghost interactions
-    try {
-      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-    } catch {
-      // ignore
-    }
-
-    playSound('cardSelect');
-    onSelectCard(card);
-
-    // Final preventDefault to stop any click event from firing
-    e.preventDefault();
-  }, [selectedCardIds, onSelectCard, playSound]);
+    },
+    [hiddenByUser, onSelectCard, playSound, selectedCardIds]
+  );
 
   return (
     <motion.div
@@ -88,20 +89,22 @@ export function StaticGrid({ deck, selectedCardIds, onSelectCard }: StaticGridPr
           gap: isMobile ? '0.37rem' : '0.67rem',
         }}
       >
-        {visibleCards.map((card, index) => {
-          const isSelected = selectedCardIds.includes(card.id) || tappedCardsRef.current.has(card.id);
+        {visibleCards.map((card) => {
+          const isSelected = selectedCardIds.includes(card.id);
+          const isHidden = !!hiddenByUser[card.id];
+
           return (
-            <motion.div
+            <div
               key={card.id}
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.01, duration: 0.1 }}
               onPointerDown={(e) => handleCardPointerDown(card, e)}
               style={{
                 willChange: 'transform, opacity',
                 cursor: isSelected ? 'not-allowed' : 'pointer',
                 touchAction: 'none',
+                opacity: isHidden ? 0 : undefined,
+                pointerEvents: isHidden ? 'none' : undefined,
               }}
+              className="select-none"
             >
               <PlayingCard
                 card={card}
@@ -111,10 +114,11 @@ export function StaticGrid({ deck, selectedCardIds, onSelectCard }: StaticGridPr
                 animate={false}
                 className="pointer-events-none"
               />
-            </motion.div>
+            </div>
           );
         })}
       </div>
     </motion.div>
   );
 }
+

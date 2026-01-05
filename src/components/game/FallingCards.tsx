@@ -452,7 +452,6 @@ export function FallingCards({
             transform: `translate3d(${card.x}px, ${card.y}px, 0) rotate(${card.rotation}deg)`,
             willChange: "transform, opacity",
             pointerEvents: 'none', // all pointer events handled by container
-            opacity: 1,
           }}
           className="z-10 relative"
         >
