@@ -50,6 +50,7 @@ export function FallingCards({
   const rafRef = useRef<number>();
   const lastSpawnRef = useRef<number>(0);
   const spawnCountRef = useRef<number>(0);
+  const selectionLockRef = useRef<number>(0);
   const { playSound } = useAudio();
   const isMobile = useIsMobile();
   
@@ -236,6 +237,11 @@ export function FallingCards({
     (card: LocalFallingCard, e: React.PointerEvent) => {
       e.preventDefault();
       e.stopPropagation();
+      
+      // Selection lock guard - prevent double-selection within 100ms
+      const now = Date.now();
+      if (now - selectionLockRef.current < 100) return;
+      selectionLockRef.current = now;
       
       // Update touched state
       card.isTouched = true;

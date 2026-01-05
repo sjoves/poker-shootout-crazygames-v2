@@ -38,6 +38,7 @@ export function ConveyorBelt({
   const containerRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number>();
   const initializedRef = useRef(false);
+  const selectionLockRef = useRef<number>(0);
   const returnDelayMs = 3000;
   const { playSound } = useAudio();
   const isMobile = useIsMobile();
@@ -256,7 +257,15 @@ export function ConveyorBelt({
     };
   }, [isPaused, cardsReady, selectedCardIds, speed, rows, cardWidth, cardSpacing, deck, triggerRender]);
 
-  const handleCardClick = useCallback((card: ConveyorCard) => {
+  const handleCardPointerDown = useCallback((card: ConveyorCard, e: React.PointerEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Selection lock guard - prevent double-selection within 100ms
+    const now = Date.now();
+    if (now - selectionLockRef.current < 100) return;
+    selectionLockRef.current = now;
+    
     const originalCard: Card = {
       id: card.id.split('-row')[0],
       suit: card.suit,
@@ -310,10 +319,11 @@ export function ConveyorBelt({
               transform: `translate3d(${card.x}px, 0, 0)`,
               willChange: 'transform',
             }}
+            onPointerDown={(e) => handleCardPointerDown(card, e)}
+            className="cursor-pointer select-none touch-none"
           >
             <PlayingCard
               card={card}
-              onClick={() => handleCardClick(card)}
               size="md"
               animate={false}
               isSelected={selectedCardIds.includes(card.id.split('-row')[0])}
