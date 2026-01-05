@@ -10,9 +10,9 @@ interface StaticGridProps {
   onSelectCard: (card: Card) => void;
 }
 
-// Show at most 25 cards in a 5x5 grid
-const MAX_VISIBLE_CARDS = 25;
-const GRID_COLUMNS = 5;
+// Show at most 24 cards in a 6x4 grid (or 30 for 6x5)
+const MAX_VISIBLE_CARDS = 24;
+const GRID_COLUMNS = 6;
 
 // Memoized card slot - only re-renders when its specific card changes
 interface CardSlotProps {
