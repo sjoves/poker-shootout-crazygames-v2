@@ -106,7 +106,7 @@ export const useGameStore = create<GameStore>()(
     selectCard: (card: Card) => {
       // Global synchronous gate (must be first)
       const t = Date.now();
-      if (t - lastPickTime < 150 || get().selectedCards.length >= 5) return;
+      if (t - lastPickTime < 80 || get().selectedCards.length >= 5) return;
 
       const state = get();
       const now = t;

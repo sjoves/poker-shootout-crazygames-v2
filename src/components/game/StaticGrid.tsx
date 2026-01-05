@@ -14,7 +14,7 @@ interface StaticGridProps {
 // Show at most 25 cards in a 5x5 grid
 const MAX_VISIBLE_CARDS = 25;
 const GRID_COLUMNS = 5;
-const BUSY_MS = 150; // Reduced from 300ms for faster response
+const BUSY_MS = 80; // Fast response for same-spot clicking
 
 // Memoized card slot - only re-renders when its specific card changes
 interface CardSlotProps {
