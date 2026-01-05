@@ -104,17 +104,12 @@ export const useGameStore = create<GameStore>()(
     // ATOMIC CARD SELECTION - Only updates selectedCards and deck
     // ========================================================================
     selectCard: (card: Card) => {
-      // Fast timing gate only - no lock mechanism
-      const t = Date.now();
-      if (t - lastPickTime < 50) return;
-      
       const state = get();
+      
+      // All validation in one place
       if (state.selectedCards.length >= 5) return;
       if (!state.isPlaying || state.isPaused) return;
       if (state.selectedCards.some((c) => c.id === card.id)) return;
-
-      // Update gate immediately
-      lastPickTime = t;
 
       const isBlitz = state.mode === 'blitz_fc' || state.mode === 'blitz_cb';
       const isSSC = state.mode === 'ssc';

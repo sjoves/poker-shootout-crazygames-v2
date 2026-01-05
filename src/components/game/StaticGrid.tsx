@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, memo } from 'react';
+import React, { useCallback, memo } from 'react';
 import { Card } from '@/types/game';
 import { PlayingCard } from './PlayingCard';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -13,31 +13,29 @@ interface StaticGridProps {
 // Show at most 25 cards in a 5x5 grid
 const MAX_VISIBLE_CARDS = 25;
 const GRID_COLUMNS = 5;
-const BUSY_MS = 50; // Minimal gate for rapid clicking
 
 // Memoized card slot - only re-renders when its specific card changes
 interface CardSlotProps {
   card: Card;
-  isSelected: boolean;
   cardSize: 'sdm' | 'sd';
   onPointerDown: (card: Card, e: React.PointerEvent) => void;
 }
 
 const CardSlot = memo(
-  function CardSlot({ card, isSelected, cardSize, onPointerDown }: CardSlotProps) {
+  function CardSlot({ card, cardSize, onPointerDown }: CardSlotProps) {
     return (
       <div
         onPointerDown={(e) => onPointerDown(card, e)}
         style={{
-          cursor: isSelected ? 'not-allowed' : 'pointer',
+          cursor: 'pointer',
           touchAction: 'none',
         }}
         className="select-none"
       >
         <PlayingCard
           card={card}
-          isSelected={isSelected}
-          isDisabled={isSelected}
+          isSelected={false}
+          isDisabled={false}
           size={cardSize}
           animate={false}
           className="pointer-events-none"
@@ -45,11 +43,8 @@ const CardSlot = memo(
       </div>
     );
   },
-  // Custom comparison: only re-render if card.id or isSelected changes
-  (prev, next) =>
-    prev.card.id === next.card.id &&
-    prev.isSelected === next.isSelected &&
-    prev.cardSize === next.cardSize
+  // Only re-render if the card in this slot changes
+  (prev, next) => prev.card.id === next.card.id && prev.cardSize === next.cardSize
 );
 
 export function StaticGrid({ deck, selectedCardIds, onSelectCard }: StaticGridProps) {
@@ -57,40 +52,19 @@ export function StaticGrid({ deck, selectedCardIds, onSelectCard }: StaticGridPr
   const isMobile = useIsMobile();
   const { playSound } = useAudio();
 
-  const busyUntilRef = useRef<number>(0);
   const cardSize = isMobile ? 'sdm' : 'sd';
 
+  // Simple handler - let the store handle all validation
   const handleCardPointerDown = useCallback(
     (card: Card, e: React.PointerEvent) => {
-      if (selectedCardIds.length >= 5) {
-        e.preventDefault();
-        e.stopPropagation();
-        return;
-      }
-
-      const now = performance.now();
-      if (now < busyUntilRef.current) {
-        e.preventDefault();
-        e.stopPropagation();
-        return;
-      }
-
-      if (selectedCardIds.includes(card.id)) {
-        e.preventDefault();
-        e.stopPropagation();
-        return;
-      }
-
-      busyUntilRef.current = now + BUSY_MS;
-
+      e.preventDefault();
       e.stopPropagation();
       (e.nativeEvent as any)?.stopImmediatePropagation?.();
 
       playSound('cardSelect');
       onSelectCard(card);
-      e.preventDefault();
     },
-    [onSelectCard, playSound, selectedCardIds]
+    [onSelectCard, playSound]
   );
 
   return (
@@ -109,7 +83,6 @@ export function StaticGrid({ deck, selectedCardIds, onSelectCard }: StaticGridPr
           <CardSlot
             key={`slot-${index}`}
             card={card}
-            isSelected={selectedCardIds.includes(card.id)}
             cardSize={cardSize}
             onPointerDown={handleCardPointerDown}
           />
