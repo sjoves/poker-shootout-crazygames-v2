@@ -333,7 +333,7 @@ export function getSSCSpeed(level: number): number {
   if (info.phase === 'conveyor') {
     baseSpeed = 1.2;
   } else if (info.phase === 'falling') {
-    baseSpeed = 1.3;
+    baseSpeed = 1.2;
   } else {
     // Orbit mode: 30% slower base speed for better playability (1.5 * 0.7 = 1.05)
     baseSpeed = 1.05;
