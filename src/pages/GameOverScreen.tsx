@@ -305,8 +305,8 @@ export default function GameOverScreen() {
           )}
         </div>
 
-        {/* Guest Sign-In Module */}
-        {isGuest && (
+        {/* Guest Sign-In Module - Hide on CrazyGames */}
+        {isGuest && !isCrazyGamesAvailable && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -398,7 +398,8 @@ export default function GameOverScreen() {
             {isSSC ? 'Start From Level 1' : 'Play Again'}
           </Button>
           
-          {!isPremium && (
+          {/* Go Premium - Hide on CrazyGames */}
+          {!isPremium && !isCrazyGamesAvailable && (
             <Button
               onClick={async () => {
                 if (!user) {
