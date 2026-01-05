@@ -1,7 +1,7 @@
-import { useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { GameState, GameMode } from '@/types/game';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 
 interface GuestScore {
   game_mode: GameMode;
@@ -16,6 +16,7 @@ interface GuestScore {
 const GUEST_SCORES_KEY = 'poker_shootout_guest_scores';
 
 export function useGuestScores() {
+  const { toast } = useToast();
   // Save a guest score to localStorage
   const saveGuestScore = useCallback((gameState: GameState) => {
     const existingScores = getGuestScores();
@@ -96,7 +97,7 @@ export function useGuestScores() {
       
       // Clear local storage after successful sync
       clearGuestScores();
-      toast.success(`Synced ${guestScores.length} score${guestScores.length > 1 ? 's' : ''} to your account!`);
+      toast({ title: `Synced ${guestScores.length} score${guestScores.length > 1 ? 's' : ''} to your account!` });
       console.log(`Synced ${guestScores.length} guest scores to database`);
     } catch (error) {
       console.error('Error syncing guest scores:', error);
