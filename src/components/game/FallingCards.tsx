@@ -31,8 +31,12 @@ function fisherYatesShuffle<T>(array: T[]): T[] {
 }
 
 // Module-level global pick lock (prevents a single tap from selecting multiple cards)
-const PICK_LOCK_MS = 250;
+const PICK_LOCK_MS = 400;
 let globalPickLockUntil = 0;
+
+// Card dimensions for hit-testing
+const CARD_WIDTH = 76;
+const CARD_HEIGHT = 106;
 
 export function FallingCards({
   deck,
@@ -245,75 +249,89 @@ export function FallingCards({
     };
   }, [isPaused, effectiveSpeed, selectedCardIds, dealNextCard, deck.length, triggerRender]);
 
-  const handleCardPointerDown = useCallback(
-    (card: LocalFallingCard, e: React.PointerEvent) => {
-      // Ensure one selection per press (some browsers can retarget quickly when elements move)
+  // =========================================================================
+  // DELEGATED TAP HANDLER: single container-level listener, hit-test cards
+  // =========================================================================
+  const handleContainerPointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      // Block if we're already processing a tap
       if (activePointerIdRef.current !== null) return;
-      activePointerIdRef.current = e.pointerId;
 
+      // Global time lock
+      const tNow = performance.now();
+      if (tNow < globalPickLockUntil) return;
+
+      // Hand is full
+      if (selectedCountRef.current >= 5) return;
+
+      // Get pointer position relative to container
+      const containerRect = containerRef.current?.getBoundingClientRect();
+      if (!containerRect) return;
+      const pointerX = e.clientX - containerRect.left;
+      const pointerY = e.clientY - containerRect.top;
+
+      // Hit-test: find the top-most card under the pointer (highest z-index = last in array)
+      let hitCard: LocalFallingCard | null = null;
+      for (let i = cardsRef.current.length - 1; i >= 0; i--) {
+        const card = cardsRef.current[i];
+        // Already picked?
+        if (pickedInstanceKeysRef.current.has(card.instanceKey)) continue;
+        // Bounding box test (ignore rotation for simplicity)
+        if (
+          pointerX >= card.x &&
+          pointerX <= card.x + CARD_WIDTH &&
+          pointerY >= card.y &&
+          pointerY <= card.y + CARD_HEIGHT
+        ) {
+          hitCard = card;
+          break; // top-most wins
+        }
+      }
+
+      if (!hitCard) return; // tapped empty space
+
+      // Lock pointer
+      activePointerIdRef.current = e.pointerId;
       const releasePointer = () => {
         activePointerIdRef.current = null;
       };
       window.addEventListener('pointerup', releasePointer, { once: true });
       window.addEventListener('pointercancel', releasePointer, { once: true });
 
-      // Capture the pointer so other cards can't receive events for this press
-      try {
-        (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-      } catch {
-        // ignore
-      }
-
-      // Synchronous per-instance guard (works even if multiple events fire before React re-renders)
-      if (pickedInstanceKeysRef.current.has(card.instanceKey)) return;
-
-      // Global guard: prevents a single tap from selecting multiple overlapping cards
-      const tNow = performance.now();
-      if (tNow < globalPickLockUntil) return;
-
-      // Hard cap (use ref to avoid stale prop in same-tick multi-dispatch)
-      if (selectedCountRef.current >= 5) return;
-
-      // Lock immediately
+      // Lock global pick time
       globalPickLockUntil = tNow + PICK_LOCK_MS;
-      pickedInstanceKeysRef.current.add(card.instanceKey);
+      pickedInstanceKeysRef.current.add(hitCard.instanceKey);
 
-      // Pointer event termination (avoid ghost double-trigger / bubbling)
+      // Event termination
       e.preventDefault();
       e.stopPropagation();
       (e.nativeEvent as any)?.stopImmediatePropagation?.();
 
-      // Instant visual removal + hitbox disable BEFORE any global selection logic
-      const wrapper = cardElementsRef.current.get(card.instanceKey);
+      // Instant visual removal
+      const wrapper = cardElementsRef.current.get(hitCard.instanceKey);
       if (wrapper) {
         wrapper.style.pointerEvents = 'none';
         wrapper.style.visibility = 'hidden';
       }
-      const target = e.currentTarget as HTMLElement;
-      target.style.pointerEvents = 'none';
-      target.style.visibility = 'hidden';
 
-      // Debug instrumentation (remove once confirmed)
       if (import.meta.env.DEV) {
         // eslint-disable-next-line no-console
-        console.log('[FallingCards] pick', {
-          instanceKey: card.instanceKey,
-          id: card.id,
+        console.log('[FallingCards] delegated pick', {
+          instanceKey: hitCard.instanceKey,
+          id: hitCard.id,
           pointerId: e.pointerId,
           selectedCount: selectedCountRef.current,
           t: tNow,
         });
       }
 
-      // Update touched state
-      card.isTouched = true;
-
+      hitCard.isTouched = true;
       playSound('cardSelect');
-      onSelectCard(card);
+      onSelectCard(hitCard);
 
       // Remove from refs
-      cardsRef.current = cardsRef.current.filter((c) => c.instanceKey !== card.instanceKey);
-      cardElementsRef.current.delete(card.instanceKey);
+      cardsRef.current = cardsRef.current.filter((c) => c.instanceKey !== hitCard!.instanceKey);
+      cardElementsRef.current.delete(hitCard.instanceKey);
       triggerRender();
     },
     [onSelectCard, playSound, triggerRender]
@@ -323,7 +341,11 @@ export function FallingCards({
   const visibleCards = cardsRef.current;
 
   return (
-    <div ref={containerRef} className="absolute inset-0 z-20 overflow-hidden touch-none">
+    <div
+      ref={containerRef}
+      onPointerDown={handleContainerPointerDown}
+      className="absolute inset-0 z-20 overflow-hidden touch-none cursor-pointer"
+    >
       {visibleCards.map((card) => (
         <div
           key={card.instanceKey}
@@ -337,24 +359,11 @@ export function FallingCards({
             top: 0,
             transform: `translate3d(${card.x}px, ${card.y}px, 0) rotate(${card.rotation}deg)`,
             willChange: "transform",
+            pointerEvents: 'none', // all pointer events handled by container
           }}
           className="z-10 relative"
         >
-          {/* Visual card (never receives pointer events) */}
           <PlayingCard card={card} size="md" animate={false} className="pointer-events-none" />
-
-          {/* Full hitbox (reverted): the sequential store lock prevents multi-picks */}
-          <div
-            onPointerDown={(e) => handleCardPointerDown(card, e)}
-            style={{
-              position: 'absolute',
-              inset: 0,
-              borderRadius: 12,
-            }}
-            className="cursor-pointer touch-none"
-            role="button"
-            aria-label={`Select ${card.rank} of ${card.suit}`}
-          />
         </div>
       ))}
     </div>
