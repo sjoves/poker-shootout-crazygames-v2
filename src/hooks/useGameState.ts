@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { Card, GameState } from '@/types/game';
+import { useState, useEffect } from 'react';
+import { GameState } from '@/types/game';
 import { 
   useGameTimer,
   useCardSelection,
@@ -21,19 +21,7 @@ export function useGameState() {
 
   // Compose smaller focused hooks
   const { timerRef, subscribe, getTimeRemaining, getTimeElapsed } = useGameTimer(state, setState);
-  const { selectCard: selectCardRaw } = useCardSelection(setState);
-
-  // Global selection lock (prevents ghost/double events across all selection surfaces)
-  const selectionLockRef = useRef<number>(0);
-  const selectCard = useCallback(
-    (card: Card) => {
-      const now = Date.now();
-      if (now - selectionLockRef.current < 300) return;
-      selectionLockRef.current = now;
-      selectCardRaw(card);
-    },
-    [selectCardRaw]
-  );
+  const { selectCard } = useCardSelection(setState);
   const { 
     usePowerUp, 
     claimReward, 

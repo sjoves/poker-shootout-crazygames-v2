@@ -82,6 +82,9 @@ const STORE_INITIAL_STATE: GameState = {
   phaseOverride: undefined,
 };
 
+// Selection unlock timer (Zustand store variant)
+let selectionUnlockTimer: ReturnType<typeof setTimeout> | null = null;
+
 export const useGameStore = create<GameStore>()(
   subscribeWithSelector((set, get) => ({
     // Initial state from all slices
@@ -92,20 +95,28 @@ export const useGameStore = create<GameStore>()(
     // ========================================================================
     selectCard: (card: Card) => {
       const state = get();
-      if (!state.isPlaying || state.isPaused || state.selectedCards.length >= 5) {
-        return;
-      }
-      
-      if (state.selectedCards.some(c => c.id === card.id)) {
-        return;
-      }
+      const now = Date.now();
+
+      if (!state.isPlaying || state.isPaused || state.selectedCards.length >= 5) return;
+
+      // "Hammer" guards
+      if (state.isProcessingSelection) return;
+      if (state.lastHandLengthChangeAt && now - state.lastHandLengthChangeAt < 500) return;
+
+      if (state.selectedCards.some(c => c.id === card.id)) return;
 
       const isBlitz = state.mode === 'blitz_fc' || state.mode === 'blitz_cb';
       const isSSC = state.mode === 'ssc';
       const shouldRecycle = isBlitz || isSSC;
 
+      // Release lock after the "hand add" animation window
+      if (selectionUnlockTimer) clearTimeout(selectionUnlockTimer);
+      selectionUnlockTimer = setTimeout(() => set({ isProcessingSelection: false }), 500);
+
       // Only update card-related state
       set({
+        isProcessingSelection: true,
+        lastHandLengthChangeAt: now,
         selectedCards: [...state.selectedCards, card],
         usedCards: shouldRecycle ? state.usedCards : [...state.usedCards, card],
         deck: state.deck.filter(c => c.id !== card.id),

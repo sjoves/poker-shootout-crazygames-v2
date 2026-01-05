@@ -13,6 +13,8 @@ export const INITIAL_GAME_STATE: GameState = {
   isLevelComplete: false,
   isBonusLevel: false,
   isBonusFailed: false,
+  isProcessingSelection: false,
+  lastHandLengthChangeAt: null,
   selectedCards: [],
   deck: [],
   usedCards: [],

@@ -260,6 +260,7 @@ export function ConveyorBelt({
   const handleCardPointerDown = useCallback((card: ConveyorCard, e: React.PointerEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    (e.nativeEvent as any)?.stopImmediatePropagation?.();
 
     // Pointer capture to prevent multi-target / ghost interactions
     try {
@@ -268,9 +269,9 @@ export function ConveyorBelt({
       // ignore
     }
     
-    // Selection lock guard - prevent double-selection within 300ms
+    // Local selection lock guard - prevent double-selection within 500ms
     const now = Date.now();
-    if (now - selectionLockRef.current < 300) return;
+    if (now - selectionLockRef.current < 500) return;
     selectionLockRef.current = now;
     
     const originalCard: Card = {
