@@ -10,9 +10,8 @@ interface StaticGridProps {
   onSelectCard: (card: Card) => void;
 }
 
-// Show at most 24 cards in a 6x4 grid (or 30 for 6x5)
-const MAX_VISIBLE_CARDS = 24;
-const GRID_COLUMNS = 6;
+// Max visible cards and columns are dynamic based on device
+const MAX_VISIBLE_CARDS = 25; // Works for both 5x5 and 6x4+
 
 // Memoized card slot - only re-renders when its specific card changes
 interface CardSlotProps {
@@ -44,10 +43,12 @@ const CardSlot = memo(
 );
 
 export function StaticGrid({ deck, selectedCardIds, onSelectCard }: StaticGridProps) {
-  const visibleCards = deck.slice(0, MAX_VISIBLE_CARDS);
   const isMobile = useIsMobile();
   const { playSound } = useAudio();
 
+  // 5 columns on mobile, 6 on desktop
+  const gridColumns = isMobile ? 5 : 6;
+  const visibleCards = deck.slice(0, MAX_VISIBLE_CARDS);
   const cardSize = isMobile ? 'sdm' : 'sd';
 
   // Simple handler - let the store handle all validation
@@ -73,7 +74,7 @@ export function StaticGrid({ deck, selectedCardIds, onSelectCard }: StaticGridPr
         <div
           className="grid w-full max-w-2xl lg:max-w-3xl"
           style={{
-            gridTemplateColumns: `repeat(${GRID_COLUMNS}, minmax(0, 1fr))`,
+            gridTemplateColumns: `repeat(${gridColumns}, minmax(0, 1fr))`,
             gap: isMobile ? '0.25rem' : '0.5rem',
           }}
         >
