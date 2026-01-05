@@ -3,6 +3,50 @@ import type { Card, FallingCard } from "@/types/game";
 import { PlayingCard } from "./PlayingCard";
 import { useAudio } from "@/contexts/AudioContext";
 
+// ============= DEBUG INSTRUMENTATION =============
+// Enable via ?debugInput=1 in URL
+const isDebugInput = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('debugInput');
+
+interface DebugEvent {
+  seq: number;
+  source: string;
+  action: string;
+  cardId?: string;
+  instanceKey?: string;
+  pointerId?: number;
+  pointerType?: string;
+  isPrimary?: boolean;
+  buttons?: number;
+  nativeTs?: number;
+  perfNow: number;
+  dateNow: number;
+  selectedCount?: number;
+  extra?: string;
+}
+
+let debugEventSeq = 0;
+const debugLog: DebugEvent[] = [];
+const MAX_DEBUG_LOG = 100;
+
+function logDebugEvent(event: Omit<DebugEvent, 'seq' | 'perfNow' | 'dateNow'>) {
+  if (!isDebugInput) return;
+  const entry: DebugEvent = {
+    ...event,
+    seq: ++debugEventSeq,
+    perfNow: performance.now(),
+    dateNow: Date.now(),
+  };
+  debugLog.push(entry);
+  if (debugLog.length > MAX_DEBUG_LOG) debugLog.shift();
+  // eslint-disable-next-line no-console
+  console.log(`[DEBUG ${entry.seq}] ${entry.source} | ${entry.action}`, entry);
+}
+
+// Expose debug log to console for inspection
+if (isDebugInput && typeof window !== 'undefined') {
+  (window as any).__fallingCardsDebugLog = debugLog;
+}
+// ============= END DEBUG INSTRUMENTATION =============
 
 interface FallingCardsProps {
   deck: Card[];
@@ -33,6 +77,10 @@ function fisherYatesShuffle<T>(array: T[]): T[] {
 // Module-level global pick lock (prevents a single tap from selecting multiple cards)
 const PICK_LOCK_MS = 400;
 let globalPickLockUntil = 0;
+
+// Native event timestamp deduplication
+let lastNativeEventTs = 0;
+let lastNativePointerId = -1;
 
 // Card dimensions for hit-testing
 const CARD_WIDTH = 76;
@@ -254,15 +302,44 @@ export function FallingCards({
   // =========================================================================
   const handleContainerPointerDown = useCallback(
     (e: React.PointerEvent) => {
+      const tNow = performance.now();
+      const nativeTs = e.nativeEvent.timeStamp;
+      
+      // Debug: log every handler invocation
+      logDebugEvent({
+        source: 'FallingCards',
+        action: 'handler_enter',
+        pointerId: e.pointerId,
+        pointerType: e.pointerType,
+        isPrimary: e.isPrimary,
+        buttons: e.buttons,
+        nativeTs,
+        selectedCount: selectedCountRef.current,
+      });
+
+      // NATIVE EVENT DEDUPLICATION: same pointer + same native timestamp = same physical event
+      if (e.pointerId === lastNativePointerId && Math.abs(nativeTs - lastNativeEventTs) < 5) {
+        logDebugEvent({ source: 'FallingCards', action: 'BLOCKED_native_dupe', pointerId: e.pointerId, nativeTs });
+        return;
+      }
+
       // Block if we're already processing a tap
-      if (activePointerIdRef.current !== null) return;
+      if (activePointerIdRef.current !== null) {
+        logDebugEvent({ source: 'FallingCards', action: 'BLOCKED_active_pointer', pointerId: e.pointerId });
+        return;
+      }
 
       // Global time lock
-      const tNow = performance.now();
-      if (tNow < globalPickLockUntil) return;
+      if (tNow < globalPickLockUntil) {
+        logDebugEvent({ source: 'FallingCards', action: 'BLOCKED_time_lock', extra: `${(globalPickLockUntil - tNow).toFixed(0)}ms remaining` });
+        return;
+      }
 
       // Hand is full
-      if (selectedCountRef.current >= 5) return;
+      if (selectedCountRef.current >= 5) {
+        logDebugEvent({ source: 'FallingCards', action: 'BLOCKED_hand_full', selectedCount: selectedCountRef.current });
+        return;
+      }
 
       // Get pointer position relative to container
       const containerRect = containerRef.current?.getBoundingClientRect();
@@ -288,7 +365,14 @@ export function FallingCards({
         }
       }
 
-      if (!hitCard) return; // tapped empty space
+      if (!hitCard) {
+        logDebugEvent({ source: 'FallingCards', action: 'no_hit', extra: `pos(${pointerX.toFixed(0)},${pointerY.toFixed(0)})` });
+        return;
+      }
+
+      // UPDATE NATIVE EVENT TRACKING
+      lastNativeEventTs = nativeTs;
+      lastNativePointerId = e.pointerId;
 
       // Lock pointer
       activePointerIdRef.current = e.pointerId;
@@ -314,16 +398,15 @@ export function FallingCards({
         wrapper.style.visibility = 'hidden';
       }
 
-      if (import.meta.env.DEV) {
-        // eslint-disable-next-line no-console
-        console.log('[FallingCards] delegated pick', {
-          instanceKey: hitCard.instanceKey,
-          id: hitCard.id,
-          pointerId: e.pointerId,
-          selectedCount: selectedCountRef.current,
-          t: tNow,
-        });
-      }
+      logDebugEvent({
+        source: 'FallingCards',
+        action: 'ACCEPTED_pick',
+        cardId: hitCard.id,
+        instanceKey: hitCard.instanceKey,
+        pointerId: e.pointerId,
+        nativeTs,
+        selectedCount: selectedCountRef.current,
+      });
 
       hitCard.isTouched = true;
       playSound('cardSelect');
