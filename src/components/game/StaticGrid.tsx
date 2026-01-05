@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useEffect } from 'react';
+import React, { useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Card } from '@/types/game';
 import { PlayingCard } from './PlayingCard';
@@ -11,36 +11,25 @@ interface StaticGridProps {
   onSelectCard: (card: Card) => void;
 }
 
-// Show at most 50% of the deck (26 cards), arranged in 5 columns x 5 rows = 25 cards max
+// Show at most 25 cards in a 5x5 grid
 const MAX_VISIBLE_CARDS = 25;
 const GRID_COLUMNS = 5;
 const BUSY_MS = 300;
 
 export function StaticGrid({ deck, selectedCardIds, onSelectCard }: StaticGridProps) {
+  // Simply slice the first 25 cards - deck changes will auto-fill slots
   const visibleCards = deck.slice(0, MAX_VISIBLE_CARDS);
   const isMobile = useIsMobile();
   const { playSound } = useAudio();
 
   // Busy flag to prevent multi-touch / ghost taps
   const busyUntilRef = useRef<number>(0);
-  // Track hidden cards via ref (reset when deck resets)
-  const hiddenCardsRef = useRef<Set<string>>(new Set());
-  const prevDeckLengthRef = useRef<number>(deck.length);
-
-  // Reset hidden cards when deck resets (new game)
-  useEffect(() => {
-    if (deck.length > prevDeckLengthRef.current + 10) {
-      // Deck grew significantly — probably a new game
-      hiddenCardsRef.current.clear();
-    }
-    prevDeckLengthRef.current = deck.length;
-  }, [deck.length]);
 
   // Sitting Duck: larger cards on both mobile + desktop
   const cardSize = isMobile ? 'sdm' : 'sd';
 
   const handleCardPointerDown = useCallback(
-    (card: Card, el: HTMLElement, e: React.PointerEvent) => {
+    (card: Card, e: React.PointerEvent) => {
       // Global hand guard
       if (selectedCardIds.length >= 5) {
         e.preventDefault();
@@ -56,28 +45,23 @@ export function StaticGrid({ deck, selectedCardIds, onSelectCard }: StaticGridPr
         return;
       }
 
-      // Already selected / already hidden
-      if (selectedCardIds.includes(card.id) || hiddenCardsRef.current.has(card.id)) {
+      // Already selected
+      if (selectedCardIds.includes(card.id)) {
         e.preventDefault();
         e.stopPropagation();
         return;
       }
 
       busyUntilRef.current = now + BUSY_MS;
-      hiddenCardsRef.current.add(card.id);
 
-      // Stop all event propagation first
+      // Stop all event propagation
       e.stopPropagation();
       (e.nativeEvent as any)?.stopImmediatePropagation?.();
-
-      // Immediate feedback: kill the card instantly
-      el.style.opacity = '0';
-      el.style.pointerEvents = 'none';
 
       playSound('cardSelect');
       onSelectCard(card);
 
-      // No Ghost Taps: prevent click synthesis after pointerdown
+      // Prevent click synthesis after pointerdown
       e.preventDefault();
     },
     [onSelectCard, playSound, selectedCardIds]
@@ -97,15 +81,14 @@ export function StaticGrid({ deck, selectedCardIds, onSelectCard }: StaticGridPr
           gap: isMobile ? '0.37rem' : '0.67rem',
         }}
       >
-        {visibleCards.map((card) => {
+        {visibleCards.map((card, index) => {
           const isSelected = selectedCardIds.includes(card.id);
 
           return (
             <div
-              key={card.id}
-              onPointerDown={(e) => handleCardPointerDown(card, e.currentTarget as HTMLElement, e)}
+              key={`slot-${index}`}
+              onPointerDown={(e) => handleCardPointerDown(card, e)}
               style={{
-                willChange: 'transform, opacity',
                 cursor: isSelected ? 'not-allowed' : 'pointer',
                 touchAction: 'none',
               }}
