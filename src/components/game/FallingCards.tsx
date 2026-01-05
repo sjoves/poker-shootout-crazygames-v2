@@ -400,11 +400,11 @@ export function FallingCards({
       e.stopPropagation();
       (e.nativeEvent as any)?.stopImmediatePropagation?.();
 
-      // Instant visual removal
+      // Instant visual removal (opacity: 0 for hardware-accelerated hide)
       const wrapper = cardElementsRef.current.get(hitCard.instanceKey);
       if (wrapper) {
+        wrapper.style.opacity = '0';
         wrapper.style.pointerEvents = 'none';
-        wrapper.style.visibility = 'hidden';
       }
 
       logDebugEvent({
@@ -450,8 +450,9 @@ export function FallingCards({
             left: 0,
             top: 0,
             transform: `translate3d(${card.x}px, ${card.y}px, 0) rotate(${card.rotation}deg)`,
-            willChange: "transform",
+            willChange: "transform, opacity",
             pointerEvents: 'none', // all pointer events handled by container
+            opacity: 1,
           }}
           className="z-10 relative"
         >

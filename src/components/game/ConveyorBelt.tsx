@@ -261,10 +261,10 @@ export function ConveyorBelt({
     e.stopPropagation();
     (e.nativeEvent as any)?.stopImmediatePropagation?.();
 
-    // Visual removal: prevent this card from being a target for the rest of the frame
+    // Instant visual removal (opacity: 0 for hardware-accelerated hide)
     const el = e.currentTarget as HTMLElement;
+    el.style.opacity = '0';
     el.style.pointerEvents = 'none';
-    el.style.visibility = 'hidden';
 
     // Pointer capture to prevent multi-target / ghost interactions
     try {
@@ -323,7 +323,8 @@ export function ConveyorBelt({
               left: 0,
               top: card.row * rowHeight + 10,
               transform: `translate3d(${card.x}px, 0, 0)`,
-              willChange: 'transform',
+              willChange: 'transform, opacity',
+              opacity: 1,
             }}
             onPointerDown={(e) => handleCardPointerDown(card, e)}
             className="cursor-pointer select-none touch-none"
