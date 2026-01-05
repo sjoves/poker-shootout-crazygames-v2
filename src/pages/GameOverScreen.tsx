@@ -305,7 +305,7 @@ export default function GameOverScreen() {
           )}
         </div>
 
-        {/* Guest Sign-In Module - Hide on CrazyGames */}
+        {/* Guest Sign-In Module - Hidden for now (re-enable when not on CrazyGames)
         {isGuest && !isCrazyGamesAvailable && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -330,6 +330,7 @@ export default function GameOverScreen() {
             </Button>
           </motion.div>
         )}
+        */}
 
         {/* Authenticated User - Personal Best / Synced Status */}
         {!isGuest && (
@@ -398,7 +399,7 @@ export default function GameOverScreen() {
             {isSSC ? 'Start From Level 1' : 'Play Again'}
           </Button>
           
-          {/* Go Premium - Hide on CrazyGames */}
+          {/* Go Premium - Hidden for now (re-enable when not on CrazyGames)
           {!isPremium && !isCrazyGamesAvailable && (
             <Button
               onClick={async () => {
@@ -416,6 +417,7 @@ export default function GameOverScreen() {
               Go Premium - No Ads
             </Button>
           )}
+          */}
           
           <Button 
             onClick={() => navigate('/')} 
