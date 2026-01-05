@@ -131,8 +131,8 @@ export function ScorePanel({
         {/* Main stats pill */}
         <div className="flex items-center gap-4 bg-transparent rounded-full px-5 py-2.5 border border-primary">
           {/* Score */}
-          <div className="flex items-center gap-2">
-            <TrophyIcon className="w-5 h-5 text-primary" />
+          <div className="flex items-center gap-2 min-w-[5.5rem]">
+            <TrophyIcon className="w-5 h-5 text-primary flex-shrink-0" />
             <motion.span
               key={score}
               initial={{ scale: 1.1 }}
