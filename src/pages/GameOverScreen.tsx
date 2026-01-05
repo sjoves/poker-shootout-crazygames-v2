@@ -3,12 +3,11 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { GameState, HandResult } from '@/types/game';
-import { Crown, Play, Award, Clapperboard, Home, RotateCcw, CloudUpload, CheckCircle } from 'lucide-react';
+import { Play, Award, Home, RotateCcw, CheckCircle } from 'lucide-react';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/hooks/useAuth';
 import { useRetention } from '@/hooks/useRetention';
 import { useCrazyGames } from '@/contexts/CrazyGamesContext';
-import { RewardedAd, useRewardedAd } from '@/components/ads/RewardedAd';
 import { supabase } from '@/integrations/supabase/client';
 import { useGuestScores } from '@/hooks/useGuestScores';
 import { AuthModal } from '@/components/auth/AuthModal';
@@ -52,10 +51,9 @@ export default function GameOverScreen() {
   const gameState = location.state?.gameState as GameState | undefined;
   const handHistory = location.state?.handHistory as HandResult[] | undefined;
   const { user, loading: authLoading } = useAuth();
-  const { isPremium, openCheckout } = useSubscription();
+  const { isPremium } = useSubscription();
   const { updateStats, updateStreak } = useRetention();
   const { showMidgameAd, isAvailable: isCrazyGamesAvailable } = useCrazyGames();
-  const rewardedAd = useRewardedAd();
   const { saveGuestScore } = useGuestScores();
   const scoreSavedRef = useRef(false);
   const statsUpdatedRef = useRef(false);
@@ -243,13 +241,7 @@ export default function GameOverScreen() {
   };
 
   const handleReplayLevel = () => {
-    if (isPremium) {
-      navigate(`/play/ssc?startLevel=${gameState.sscLevel}`);
-    } else {
-      rewardedAd.showAd('replay_level', () => {
-        navigate(`/play/ssc?startLevel=${gameState.sscLevel}`);
-      }, String(gameState.sscLevel));
-    }
+    navigate(`/play/ssc?startLevel=${gameState.sscLevel}`);
   };
 
   const isGuest = !authLoading && !user;
@@ -375,17 +367,8 @@ export default function GameOverScreen() {
               size="lg" 
               className="w-full h-14 text-lg font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground gap-2"
             >
-              {isPremium ? (
-                <>
-                  <RotateCcw className="w-5 h-5 text-primary" />
-                  Replay Level {gameState.sscLevel}
-                </>
-              ) : (
-                <>
-                  <Clapperboard className="w-5 h-5 text-primary" />
-                  Watch Ad to Retry Level {gameState.sscLevel}
-                </>
-              )}
+              <RotateCcw className="w-5 h-5 text-primary" />
+              Replay Level {gameState.sscLevel}
             </Button>
           )}
           
@@ -430,14 +413,6 @@ export default function GameOverScreen() {
         </div>
       </motion.div>
 
-      {/* Rewarded Ad Modal */}
-      <RewardedAd
-        isOpen={rewardedAd.isOpen}
-        onClose={rewardedAd.hideAd}
-        onAdComplete={rewardedAd.onComplete}
-        adType={rewardedAd.adType}
-        modeName={rewardedAd.modeName}
-      />
 
       {/* Auth Modal */}
       <AuthModal

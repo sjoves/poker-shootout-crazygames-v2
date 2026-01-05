@@ -6,9 +6,6 @@ interface SubscriptionState {
   isPremium: boolean;
   subscriptionEnd: string | null;
   loading: boolean;
-  adWatchedModes: Set<string>;
-  adWatchedRevive: boolean;
-  adWatchedPlayAgain: boolean;
 }
 
 export function useSubscription() {
@@ -17,9 +14,6 @@ export function useSubscription() {
     isPremium: false,
     subscriptionEnd: null,
     loading: true,
-    adWatchedModes: new Set(),
-    adWatchedRevive: false,
-    adWatchedPlayAgain: false,
   });
 
   const checkSubscription = useCallback(async () => {
@@ -116,50 +110,6 @@ export function useSubscription() {
     }
   }, [session?.access_token]);
 
-  // Mark that user watched an ad for a specific mode
-  const markAdWatchedForMode = useCallback((mode: string) => {
-    setState(prev => ({
-      ...prev,
-      adWatchedModes: new Set([...prev.adWatchedModes, mode]),
-    }));
-  }, []);
-
-  // Mark that user watched an ad to revive
-  const markAdWatchedForRevive = useCallback(() => {
-    setState(prev => ({ ...prev, adWatchedRevive: true }));
-  }, []);
-
-  // Mark that user watched an ad to play again
-  const markAdWatchedForPlayAgain = useCallback(() => {
-    setState(prev => ({ ...prev, adWatchedPlayAgain: true }));
-  }, []);
-
-  // Reset ad-watched states for a new game session
-  const resetAdStates = useCallback(() => {
-    setState(prev => ({
-      ...prev,
-      adWatchedRevive: false,
-      adWatchedPlayAgain: false,
-    }));
-  }, []);
-
-  // Check if a mode is accessible
-  const canAccessMode = useCallback((mode: string) => {
-    // Classic modes are always free
-    if (mode.startsWith('classic')) return true;
-    // Premium users have full access
-    if (state.isPremium) return true;
-    // Free users need to watch an ad
-    return state.adWatchedModes.has(mode);
-  }, [state.isPremium, state.adWatchedModes]);
-
-  // Check if mode requires ad to unlock
-  const requiresAdForMode = useCallback((mode: string) => {
-    if (mode.startsWith('classic')) return false;
-    if (state.isPremium) return false;
-    return !state.adWatchedModes.has(mode);
-  }, [state.isPremium, state.adWatchedModes]);
-
   return {
     isPremium: state.isPremium,
     subscriptionEnd: state.subscriptionEnd,
@@ -168,13 +118,5 @@ export function useSubscription() {
     checkSubscription,
     openCheckout,
     openCustomerPortal,
-    canAccessMode,
-    requiresAdForMode,
-    markAdWatchedForMode,
-    markAdWatchedForRevive,
-    markAdWatchedForPlayAgain,
-    adWatchedRevive: state.adWatchedRevive,
-    adWatchedPlayAgain: state.adWatchedPlayAgain,
-    resetAdStates,
   };
 }
