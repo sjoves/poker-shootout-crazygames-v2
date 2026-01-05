@@ -330,7 +330,7 @@ export function ConveyorBelt({
   return (
     <div 
       ref={containerRef}
-      className="absolute inset-0 z-10 flex items-start justify-center overflow-hidden px-4 pt-12"
+      className="absolute inset-0 z-10 flex items-start justify-center overflow-hidden px-4 pt-[8.75rem]"
     >
       <div 
         className="relative w-full"
