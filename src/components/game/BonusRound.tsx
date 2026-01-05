@@ -63,12 +63,13 @@ export function BonusRound({
     }
   }, [timeRemaining, introPhase, playSound]);
 
-  // Calculate number of cards based on bonus round number (10, 20, 30, 40, 50, max 52)
-  // Ensure at least 1 for the multiplier (handles bonusRoundNumber being 0)
+  // Calculate number of cards based on bonus round number
+  // First bonus round: 10 cards (2x5), then 20, 30, 40, 50, max 52
   const effectiveBonusRound = Math.max(bonusRoundNumber, 1);
   const cardCount = Math.min(effectiveBonusRound * 10, 52);
-  // Calculate grid columns: 5 on mobile, 6 on desktop (matching StaticGrid)
-  const gridCols = isMobile ? 5 : 6;
+  // First bonus round uses 5 columns for 2x5 grid; others use standard grid
+  const isFirstBonusRound = effectiveBonusRound === 1;
+  const gridCols = isFirstBonusRound ? 5 : (isMobile ? 5 : 6);
   // Card size matches StaticGrid: sdm on mobile, sd on desktop
   const cardSize = isMobile ? 'sdm' : 'sd';
 
