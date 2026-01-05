@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, forwardRef } from 'react';
 import { motion } from 'framer-motion';
 import { Card, Suit } from '@/types/game';
 import { cn } from '@/lib/utils';
@@ -65,21 +65,25 @@ const CenterPips = memo(function CenterPips({ rank, suit, size }: { rank: string
 });
 
 // Memoized PlayingCard to prevent re-renders when only position changes
-export const PlayingCard = memo(function PlayingCard({
-  card,
-  onClick,
-  isSelected,
-  isDisabled,
-  size = 'md',
-  animate = true,
-  className,
-}: PlayingCardProps) {
+const PlayingCardInner = forwardRef<HTMLButtonElement, PlayingCardProps>(function PlayingCardInner(
+  {
+    card,
+    onClick,
+    isSelected,
+    isDisabled,
+    size = 'md',
+    animate = true,
+    className,
+  },
+  ref
+) {
   const suitSymbol = SUIT_SYMBOLS[card.suit];
   const colorClass = isRedSuit(card.suit) ? 'text-red-600' : 'text-gray-900';
   const config = SIZE_CONFIG[size];
 
   return (
     <motion.button
+      ref={ref}
       onPointerDown={!isDisabled && !isSelected ? onClick : undefined}
       disabled={isDisabled || isSelected}
       whileHover={!isDisabled && !isSelected ? { scale: 1.05, y: -5, transition: { duration: 0.1 } } : {}}
@@ -115,7 +119,11 @@ export const PlayingCard = memo(function PlayingCard({
       </div>
     </motion.button>
   );
-}, (prevProps, nextProps) => {
+});
+
+PlayingCardInner.displayName = 'PlayingCard';
+
+export const PlayingCard = memo(PlayingCardInner, (prevProps, nextProps) => {
   // Custom comparison: only re-render if these props actually change
   return (
     prevProps.card.id === nextProps.card.id &&

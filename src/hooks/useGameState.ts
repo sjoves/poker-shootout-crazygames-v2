@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { GameState } from '@/types/game';
 import { 
   useGameTimer,
@@ -18,11 +18,16 @@ export { getRewardTier, getTierDisplayInfo, type RewardTier };
 
 export function useGameState() {
   const [state, setState] = useState<GameState>(INITIAL_GAME_STATE);
+  const stateRef = useRef(state);
+
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
 
   // Compose smaller focused hooks
   const { timerRef, subscribe, getTimeRemaining, getTimeElapsed } = useGameTimer(state, setState);
-  const { selectCard } = useCardSelection(setState);
-  const { 
+  const { selectCard } = useCardSelection(setState, () => stateRef.current);
+  const {
     usePowerUp, 
     claimReward, 
     swapPowerUp, 
