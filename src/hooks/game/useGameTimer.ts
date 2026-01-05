@@ -22,11 +22,32 @@ export function useGameTimer(
     timeElapsedRef.current = state.timeElapsed;
   }, [state.timeRemaining, state.timeElapsed]);
 
+  // Keep stable references to avoid timer reset on state changes
+  const modeRef = useRef(state.mode);
+  const isBonusLevelRef = useRef(state.isBonusLevel);
+  const scoreRef = useRef(state.score);
+  const levelGoalRef = useRef(state.levelGoal);
+  const sscLevelRef = useRef(state.sscLevel);
+  const deckRef = useRef(state.deck);
+  const rawScoreRef = useRef(state.rawScore);
+
+  // Sync refs when state changes
+  useEffect(() => {
+    modeRef.current = state.mode;
+    isBonusLevelRef.current = state.isBonusLevel;
+    scoreRef.current = state.score;
+    levelGoalRef.current = state.levelGoal;
+    sscLevelRef.current = state.sscLevel;
+    deckRef.current = state.deck;
+    rawScoreRef.current = state.rawScore;
+  }, [state.mode, state.isBonusLevel, state.score, state.levelGoal, state.sscLevel, state.deck, state.rawScore]);
+
   useEffect(() => {
     if (state.isPlaying && !state.isPaused && !state.isGameOver) {
       timerRef.current = setInterval(() => {
-        const isBlitz = state.mode === 'blitz_fc' || state.mode === 'blitz_cb';
-        const isSSC = state.mode === 'ssc';
+        const mode = modeRef.current;
+        const isBlitz = mode === 'blitz_fc' || mode === 'blitz_cb';
+        const isSSC = mode === 'ssc';
         
         if (isBlitz || isSSC) {
           timeRemainingRef.current -= 1;
@@ -37,7 +58,7 @@ export function useGameTimer(
           
           if (timeRemainingRef.current <= 0) {
             // Game state changes - these DO need React updates
-            if (isSSC && state.isBonusLevel) {
+            if (isSSC && isBonusLevelRef.current) {
               setState(prev => ({ 
                 ...prev, 
                 timeRemaining: 0, 
@@ -45,9 +66,9 @@ export function useGameTimer(
                 isLevelComplete: true, 
                 isBonusFailed: true 
               }));
-            } else if (isSSC && state.score >= state.levelGoal) {
-              const starRating = calculateStarRating(state.score, state.levelGoal);
-              const shouldBonus = shouldTriggerBonusRound(state.sscLevel);
+            } else if (isSSC && scoreRef.current >= levelGoalRef.current) {
+              const starRating = calculateStarRating(scoreRef.current, levelGoalRef.current);
+              const shouldBonus = shouldTriggerBonusRound(sscLevelRef.current);
               setState(prev => ({
                 ...prev,
                 timeRemaining: 0,
@@ -80,12 +101,12 @@ export function useGameTimer(
           // Notify subscribers
           subscribersRef.current.forEach(cb => cb());
           
-          const isClassic = state.mode === 'classic_fc' || state.mode === 'classic_cb';
+          const isClassic = mode === 'classic_fc' || mode === 'classic_cb';
           
           if (isClassic && timeElapsedRef.current >= 600) {
-            const leftoverPenalty = calculateLeftoverPenalty(state.deck);
+            const leftoverPenalty = calculateLeftoverPenalty(deckRef.current);
             const timeBonus = calculateTimeBonus(600);
-            const finalScore = state.rawScore + timeBonus - leftoverPenalty;
+            const finalScore = rawScoreRef.current + timeBonus - leftoverPenalty;
             
             setState(prev => ({ 
               ...prev, 
@@ -109,7 +130,7 @@ export function useGameTimer(
         clearInterval(timerRef.current);
       }
     };
-  }, [state.isPlaying, state.isPaused, state.isGameOver, state.mode, state.isBonusLevel, state.score, state.levelGoal, state.sscLevel, state.deck, state.rawScore, setState]);
+  }, [state.isPlaying, state.isPaused, state.isGameOver, setState]);
 
   // Subscribe function for UI components
   const subscribe = useCallback((callback: () => void) => {
