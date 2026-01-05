@@ -104,54 +104,28 @@ export const useGameStore = create<GameStore>()(
     // ATOMIC CARD SELECTION - Only updates selectedCards and deck
     // ========================================================================
     selectCard: (card: Card) => {
-      // Global synchronous gate (must be first)
+      // Fast timing gate only - no lock mechanism
       const t = Date.now();
-      if (t - lastPickTime < 50 || get().selectedCards.length >= 5) return;
-
+      if (t - lastPickTime < 50) return;
+      
       const state = get();
-      const now = t;
-
-      // Safety check: if hand is incomplete but lock is stuck, force unlock
-      if (state.isSelectionLocked && state.selectedCards.length < 5) {
-        const lockAge = state.lastHandLengthChangeAt ? now - state.lastHandLengthChangeAt : 0;
-        if (lockAge > 500) {
-          // Force unlock - lock has been held too long
-          set({ isSelectionLocked: false, isProcessingSelection: false });
-        } else {
-          return; // Lock is still valid
-        }
-      }
-
-      // Atomic selection gate
-      if (state.isSelectionLocked || state.selectedCards.length >= 5) return;
+      if (state.selectedCards.length >= 5) return;
       if (!state.isPlaying || state.isPaused) return;
+      if (state.selectedCards.some((c) => c.id === card.id)) return;
 
-      // Instant lock
+      // Update gate immediately
+      lastPickTime = t;
+
+      const isBlitz = state.mode === 'blitz_fc' || state.mode === 'blitz_cb';
+      const isSSC = state.mode === 'ssc';
+      const shouldRecycle = isBlitz || isSSC;
+
       set({
-        isSelectionLocked: true,
-        isProcessingSelection: true,
-        lastHandLengthChangeAt: now,
+        selectedCards: [...state.selectedCards, card],
+        usedCards: shouldRecycle ? state.usedCards : [...state.usedCards, card],
+        deck: state.deck.filter((c) => c.id !== card.id),
+        cardsSelected: state.cardsSelected + 1,
       });
-
-      // --- selection logic ---
-      if (!state.selectedCards.some((c) => c.id === card.id)) {
-        // Update lastPickTime only on successful pick
-        lastPickTime = now;
-
-        const isBlitz = state.mode === 'blitz_fc' || state.mode === 'blitz_cb';
-        const isSSC = state.mode === 'ssc';
-        const shouldRecycle = isBlitz || isSSC;
-
-        set({
-          selectedCards: [...state.selectedCards, card],
-          usedCards: shouldRecycle ? state.usedCards : [...state.usedCards, card],
-          deck: state.deck.filter((c) => c.id !== card.id),
-          cardsSelected: state.cardsSelected + 1,
-        });
-      }
-
-      // Schedule unlock
-      scheduleUnlock(set);
     },
     
     // ========================================================================
