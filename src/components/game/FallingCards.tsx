@@ -135,19 +135,25 @@ export function FallingCards({
     dealtCardIdsRef.current.clear();
   }, []);
 
-  // Reset on reshuffle trigger or new game
+  // Reset shuffled deck on reshuffle trigger - but DON'T clear visible falling cards
   useEffect(() => {
     reshuffleDeck();
-    cardsRef.current = [];
-    cardElementsRef.current.clear();
+    // Only clear picked tracking, not the visible cards themselves
     pickedInstanceKeysRef.current.clear();
     isSelectingGlobal = false;
-    triggerRender();
-  }, [reshuffleTrigger, reshuffleDeck, triggerRender]);
+    // Don't clear cardsRef.current - let existing cards continue falling
+  }, [reshuffleTrigger, reshuffleDeck]);
 
-  // Reset on new game (full deck)
+  // Full game reset only when deck becomes 52 AND there are no falling cards
+  // This ensures new game starts fresh, but hand completion doesn't clear cards
+  const prevDeckLengthRef = useRef<number>(deck.length);
   useEffect(() => {
-    if (deck.length === 52) {
+    const wasSmaller = prevDeckLengthRef.current < 52;
+    const isNow52 = deck.length === 52;
+    prevDeckLengthRef.current = deck.length;
+    
+    // Only reset on true new game: deck went from <52 to exactly 52
+    if (wasSmaller && isNow52) {
       reshuffleDeck();
       cardsRef.current = [];
       cardElementsRef.current.clear();
