@@ -8,7 +8,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useRetention } from '@/hooks/useRetention';
 import { useCrazyGames } from '@/contexts/CrazyGamesContext';
-import { RewardedAd, useRewardedAd } from '@/components/ads/RewardedAd';
 import { TutorialModal } from '@/components/tutorial/TutorialModal';
 import { SettingsModal } from '@/components/settings/SettingsModal';
 import { StreakDisplay } from '@/components/retention/StreakDisplay';
@@ -16,14 +15,14 @@ import { DailyChallenges } from '@/components/retention/DailyChallenges';
 import { AchievementsPanel, AchievementNotification } from '@/components/retention/AchievementsPanel';
 import { DailyRewardWheel } from '@/components/retention/DailyRewardWheel';
 import { StarIcon } from '@heroicons/react/24/solid';
-import { Target, Zap, Trophy, Gift, HelpCircle, User, Settings } from 'lucide-react';
+import { Target, Zap, Trophy, Gift, Settings } from 'lucide-react';
 
 export default function SplashScreen() {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
-  const { isPremium, requiresAdForMode, markAdWatchedForMode, openCheckout, loading } = useSubscription();
+  const { isPremium, loading } = useSubscription();
   const { currentLogo } = useTheme();
-  const { user: crazyGamesUser, isAvailable: isCrazyGamesAvailable, showAuthPrompt } = useCrazyGames();
+  const { user: crazyGamesUser } = useCrazyGames();
   const {
     streak,
     achievements,
@@ -44,7 +43,6 @@ export default function SplashScreen() {
   const [showAchievements, setShowAchievements] = useState(false);
   const [showRewardWheel, setShowRewardWheel] = useState(false);
   const [showChallenges, setShowChallenges] = useState(false);
-  const rewardedAd = useRewardedAd();
 
   // Use CrazyGames user if available, otherwise fall back to Supabase user
   const displayUsername = crazyGamesUser?.username || profile?.username;
@@ -86,37 +84,11 @@ export default function SplashScreen() {
     if (phaseOverride) {
       url += `?phase=${phaseOverride}`;
     }
-    
-    if (requiresAdForMode(mode)) {
-      const modeName = mode.startsWith('blitz') ? 'Blitz Mode' : 'SSC Mode';
-      rewardedAd.showAd('mode_unlock', () => {
-        markAdWatchedForMode(mode);
-        navigate(url);
-      }, modeName);
-    } else {
-      navigate(url);
-    }
+    navigate(url);
   };
 
   const handleSSCStart = (startLevel: number) => {
-    if (requiresAdForMode('ssc')) {
-      rewardedAd.showAd('mode_unlock', () => {
-        markAdWatchedForMode('ssc');
-        navigate(`/play/ssc?startLevel=${startLevel}`);
-      }, 'SSC Mode');
-    } else {
-      navigate(`/play/ssc?startLevel=${startLevel}`);
-    }
-  };
-
-  const getModeLabel = (mode: string) => {
-    if (isPremium) return null;
-    if (mode.startsWith('classic')) return null;
-    return (
-      <span className="ml-2 text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">
-        Watch Ad
-      </span>
-    );
+    navigate(`/play/ssc?startLevel=${startLevel}`);
   };
 
   return (
@@ -164,7 +136,6 @@ export default function SplashScreen() {
           >
             <Target className="w-5 h-5 text-primary" />
             Classic Mode
-            <span className="ml-2 text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">Free</span>
           </Button>
           {selectedMode === 'classic' && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="flex flex-col gap-2">
@@ -185,7 +156,6 @@ export default function SplashScreen() {
           >
             <Zap className="w-5 h-5 text-primary" />
             52-Card Blitz
-            {getModeLabel('blitz')}
           </Button>
           {selectedMode === 'blitz' && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="flex flex-col gap-2">
@@ -205,9 +175,8 @@ export default function SplashScreen() {
               className="w-full h-14 text-lg font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground gap-2"
               onClick={() => setSelectedMode(selectedMode === 'ssc' ? null : 'ssc')}
             >
-              <Trophy className="w-5 h-5 text-primary" />
-              Sharp Shooter Challenge
-              {getModeLabel('ssc')}
+            <Trophy className="w-5 h-5 text-primary" />
+            Sharp Shooter Challenge
             </Button>
             {selectedMode === 'ssc' && (
               <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} className="flex gap-2">
@@ -229,7 +198,6 @@ export default function SplashScreen() {
           >
             <Trophy className="w-5 h-5 text-primary" />
             Sharp Shooter Challenge
-            {getModeLabel('ssc')}
           </Button>
         )}
 
@@ -350,13 +318,6 @@ export default function SplashScreen() {
         onClaim={claimDailyReward}
         todayReward={todayReward}
         timeUntilNext={getTimeUntilNextReward()}
-      />
-      <RewardedAd
-        isOpen={rewardedAd.isOpen}
-        onClose={rewardedAd.hideAd}
-        onAdComplete={rewardedAd.onComplete}
-        adType={rewardedAd.adType}
-        modeName={rewardedAd.modeName}
       />
     </div>
   );
