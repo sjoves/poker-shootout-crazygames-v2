@@ -317,66 +317,21 @@ export default function SplashScreen() {
         */}
       </motion.div>
 
-      {/* Bottom Nav */}
+      {/* Bottom Nav - CrazyGames only shows Settings button */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.4 }}
         className="mt-6 flex justify-center gap-3"
       >
-        {/* Show different nav for CrazyGames vs standalone */}
-        {isCrazyGamesAvailable ? (
-          // CrazyGames: Only show Settings button
-          <Button 
-            variant="outline" 
-            className="gap-2 border-primary bg-transparent hover:bg-primary/10" 
-            onClick={() => setShowSettings(true)}
-          >
-            <Settings className="w-5 h-5 text-primary" />
-            Settings
-          </Button>
-        ) : (
-          // Standalone: Show full nav
-          <>
-            {/* Account/Auth Button - Hidden for CrazyGames monetization model
-                TODO: Show this only when NOT running on CrazyGames (isCrazyGamesAvailable === false)
-                For now, hidden entirely until we have a non-CrazyGames distribution channel
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="w-10 h-10" 
-              onClick={async () => {
-                // On CrazyGames, use their auth prompt
-                if (isCrazyGamesAvailable && !crazyGamesUser) {
-                  await showAuthPrompt();
-                } else if (user) {
-                  navigate('/account');
-                } else {
-                  navigate('/auth');
-                }
-              }}
-            >
-              {displayAvatar ? (
-                <img src={displayAvatar} alt="Profile" className="w-8 h-8 rounded-full" />
-              ) : (
-                <User className="w-5 h-5 text-primary" />
-              )}
-            </Button>
-            */}
-            <Button variant="ghost" size="icon" className="w-10 h-10" onClick={() => navigate('/leaderboard')}>
-              <Trophy className="w-5 h-5 text-primary" />
-            </Button>
-            <Button variant="ghost" size="icon" className="w-10 h-10" onClick={() => setShowTutorial(true)}>
-              <HelpCircle className="w-5 h-5 text-primary" />
-            </Button>
-            <Button variant="ghost" size="icon" className="w-10 h-10" onClick={() => setShowSettings(true)}>
-              <Settings className="w-5 h-5 text-primary" />
-            </Button>
-            <Button variant="ghost" size="icon" className="w-10 h-10" onClick={() => navigate('/dev-sandbox')}>
-              <Zap className="w-5 h-5 text-primary" />
-            </Button>
-          </>
-        )}
+        <Button 
+          variant="outline" 
+          className="gap-2 border-primary bg-transparent hover:bg-primary/10" 
+          onClick={() => setShowSettings(true)}
+        >
+          <Settings className="w-5 h-5 text-primary" />
+          Settings
+        </Button>
       </motion.div>
 
       {/* Modals */}
