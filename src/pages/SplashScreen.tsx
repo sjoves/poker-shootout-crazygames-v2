@@ -324,6 +324,9 @@ export default function SplashScreen() {
         transition={{ delay: 0.4 }}
         className="mt-6 flex justify-center gap-3"
       >
+        {/* Account/Auth Button - Hidden for CrazyGames monetization model
+            TODO: Show this only when NOT running on CrazyGames (isCrazyGamesAvailable === false)
+            For now, hidden entirely until we have a non-CrazyGames distribution channel
         <Button 
           variant="ghost" 
           size="icon" 
@@ -345,6 +348,7 @@ export default function SplashScreen() {
             <User className="w-5 h-5 text-primary" />
           )}
         </Button>
+        */}
         <Button variant="ghost" size="icon" className="w-10 h-10" onClick={() => navigate('/leaderboard')}>
           <Trophy className="w-5 h-5 text-primary" />
         </Button>
