@@ -68,10 +68,10 @@ export function StaticGrid({ deck, selectedCardIds, onSelectCard }: StaticGridPr
   return (
     <div className="absolute inset-0 flex items-start justify-center px-2 sm:px-4 md:px-6 lg:px-8 pt-[8.75rem]">
       <div
-        className="grid w-full max-w-2xl lg:max-w-3xl"
+        className="grid w-full max-w-2xl lg:max-w-3xl justify-center"
         style={{
-          gridTemplateColumns: `repeat(${gridColumns}, minmax(0, 1fr))`,
-          gap: isMobile ? '0.25rem' : '0.5rem',
+          gridTemplateColumns: `repeat(${gridColumns}, auto)`,
+          gap: isMobile ? '0.5rem' : '0.75rem',
         }}
       >
         {visibleCards.map((card, index) => (
