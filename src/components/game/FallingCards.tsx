@@ -49,12 +49,18 @@ export function FallingCards({
   // Use refs for card positions to avoid React state updates on every frame
   const cardsRef = useRef<LocalFallingCard[]>([]);
   const cardElementsRef = useRef<Map<string, HTMLDivElement>>(new Map());
+  const pickedInstanceKeysRef = useRef<Set<string>>(new Set());
+  const selectedCountRef = useRef<number>(selectedCardIds.length);
   const containerRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number>();
   const lastSpawnRef = useRef<number>(0);
   const spawnCountRef = useRef<number>(0);
   const { playSound } = useAudio();
   const isMobile = useIsMobile();
+
+  useEffect(() => {
+    selectedCountRef.current = selectedCardIds.length;
+  }, [selectedCardIds.length]);
   
   // Force re-render only when cards are added/removed
   const [, setRenderTrigger] = useState(0);
@@ -78,6 +84,8 @@ export function FallingCards({
     reshuffleDeck();
     cardsRef.current = [];
     cardElementsRef.current.clear();
+    pickedInstanceKeysRef.current.clear();
+    globalPickLock = false;
     triggerRender();
   }, [reshuffleTrigger, reshuffleDeck, triggerRender]);
 
@@ -87,6 +95,8 @@ export function FallingCards({
       reshuffleDeck();
       cardsRef.current = [];
       cardElementsRef.current.clear();
+      pickedInstanceKeysRef.current.clear();
+      globalPickLock = false;
       triggerRender();
     }
   }, [deck.length, reshuffleDeck, triggerRender]);
@@ -236,27 +246,20 @@ export function FallingCards({
     };
   }, [isPaused, effectiveSpeed, selectedCardIds, dealNextCard, deck.length, triggerRender]);
 
-  const FallingCardItem = ({ card }: { card: LocalFallingCard }) => {
-    const [isAlreadyPicked, setIsAlreadyPicked] = useState(false);
+  const handleCardPointerDown = useCallback(
+    (card: LocalFallingCard, e: React.PointerEvent) => {
+      // Synchronous per-instance guard (works even if multiple events fire before React re-renders)
+      if (pickedInstanceKeysRef.current.has(card.instanceKey)) return;
 
-    const handlePointerDown = (e: React.PointerEvent) => {
-      // Synchronous global lock (prevents multi-card pick from overlapping hitboxes)
+      // Global guard: prevents a single tap from selecting multiple overlapping cards
       if (globalPickLock) return;
+
+      // Hard cap (use ref to avoid stale prop in same-tick multi-dispatch)
+      if (selectedCountRef.current >= 5) return;
+
+      // Lock immediately
       globalPickLock = true;
-
-      // Per-card React state lock
-      if (isAlreadyPicked) {
-        globalPickLock = false;
-        return;
-      }
-      setIsAlreadyPicked(true);
-
-      // Hand capacity hard-stop using selectedCardIds (more reliable than selectedCards)
-      if (selectedCardIds.length >= 5) {
-        setIsAlreadyPicked(false);
-        globalPickLock = false;
-        return;
-      }
+      pickedInstanceKeysRef.current.add(card.instanceKey);
 
       // Pointer event termination (avoid ghost double-trigger / bubbling)
       (e.nativeEvent as any)?.stopImmediatePropagation?.();
@@ -273,11 +276,16 @@ export function FallingCards({
       target.style.pointerEvents = 'none';
       target.style.display = 'none';
 
-      // Pointer capture to prevent multi-target / ghost interactions
-      try {
-        e.currentTarget.setPointerCapture(e.pointerId);
-      } catch {
-        // ignore
+      // Debug instrumentation (remove once confirmed)
+      if (import.meta.env.DEV) {
+        // eslint-disable-next-line no-console
+        console.log('[FallingCards] pick', {
+          instanceKey: card.instanceKey,
+          id: card.id,
+          pointerId: e.pointerId,
+          selectedCount: selectedCountRef.current,
+          t: performance.now(),
+        });
       }
 
       // Update touched state
@@ -291,44 +299,13 @@ export function FallingCards({
       cardElementsRef.current.delete(card.instanceKey);
       triggerRender();
 
-      // Release global lock after a short delay (allow animation to settle)
-      setTimeout(() => {
+      // Release global lock next frame (prevents same-tap multi-select, allows next tap quickly)
+      requestAnimationFrame(() => {
         globalPickLock = false;
-      }, 100);
-    };
-
-    return (
-      <div
-        ref={(el) => {
-          if (el) cardElementsRef.current.set(card.instanceKey, el);
-          else cardElementsRef.current.delete(card.instanceKey);
-        }}
-        style={{
-          position: 'absolute',
-          left: 0,
-          top: 0,
-          transform: `translate3d(${card.x}px, ${card.y}px, 0) rotate(${card.rotation}deg)`,
-          willChange: 'transform',
-          pointerEvents: isAlreadyPicked ? 'none' : 'auto',
-          display: isAlreadyPicked ? 'none' : 'block',
-        }}
-        className="z-10"
-      >
-        <div
-          onPointerDown={handlePointerDown}
-          className={`relative cursor-pointer ${hitboxPadding} select-none touch-none`}
-          role="button"
-          aria-label={`Select ${card.rank} of ${card.suit}`}
-        >
-          <div
-            className={`transition-all duration-75 ${card.isTouched ? 'ring-4 ring-primary ring-opacity-80 rounded-lg shadow-lg shadow-primary/50' : ''}`}
-          >
-            <PlayingCard card={card} size="md" animate={false} />
-          </div>
-        </div>
-      </div>
-    );
-  };
+      });
+    },
+    [onSelectCard, playSound, triggerRender]
+  );
 
   // Get current cards for render
   const visibleCards = cardsRef.current;
@@ -336,7 +313,34 @@ export function FallingCards({
   return (
     <div ref={containerRef} className="absolute inset-0 z-20 overflow-hidden touch-none">
       {visibleCards.map((card) => (
-        <FallingCardItem key={card.instanceKey} card={card} />
+        <div
+          key={card.instanceKey}
+          ref={(el) => {
+            if (el) cardElementsRef.current.set(card.instanceKey, el);
+            else cardElementsRef.current.delete(card.instanceKey);
+          }}
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            transform: `translate3d(${card.x}px, ${card.y}px, 0) rotate(${card.rotation}deg)`,
+            willChange: "transform",
+          }}
+          className="z-10"
+        >
+          <div
+            onPointerDown={(e) => handleCardPointerDown(card, e)}
+            className={`relative cursor-pointer ${hitboxPadding} select-none touch-none`}
+            role="button"
+            aria-label={`Select ${card.rank} of ${card.suit}`}
+          >
+            <div
+              className={`transition-all duration-75 ${card.isTouched ? 'ring-4 ring-primary ring-opacity-80 rounded-lg shadow-lg shadow-primary/50' : ''}`}
+            >
+              <PlayingCard card={card} size="md" animate={false} />
+            </div>
+          </div>
+        </div>
       ))}
     </div>
   );

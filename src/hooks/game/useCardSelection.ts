@@ -18,6 +18,14 @@ export function useCardSelection(
     (card: Card) => {
       const now = Date.now();
 
+      if (import.meta.env.DEV) {
+        // eslint-disable-next-line no-console
+        console.log('[useCardSelection] selectCard called', {
+          id: card.id,
+          t: now,
+        });
+      }
+
       setState((prev) => {
         // Hard cap: if hand is full, never allow another card (also clears stale locks)
         if (prev.selectedCards.length >= 5) {
