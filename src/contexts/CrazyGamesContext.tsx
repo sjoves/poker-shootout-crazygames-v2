@@ -88,24 +88,39 @@ export function CrazyGamesProvider({ children }: { children: ReactNode }) {
         console.log('CrazyGames SDK initialized');
 
         // Check for adblock
-        setHasAdblock(window.CrazyGames.SDK.ad.hasAdblock());
+        try {
+          setHasAdblock(window.CrazyGames.SDK.ad.hasAdblock());
+        } catch {
+          // Ignore adblock check errors
+        }
 
         // Try to get logged in user
         if (window.CrazyGames.SDK.user.isUserAccountAvailable) {
-          const cgUser = await window.CrazyGames.SDK.user.getUser();
-          if (cgUser) {
-            setUser(cgUser);
-            console.log('CrazyGames user logged in:', cgUser.username);
-          }
+          try {
+            const cgUser = await window.CrazyGames.SDK.user.getUser();
+            if (cgUser) {
+              setUser(cgUser);
+              console.log('CrazyGames user logged in:', cgUser.username);
+            }
 
-          // Listen for auth changes
-          window.CrazyGames.SDK.user.addAuthListener((newUser) => {
-            setUser(newUser);
-            console.log('CrazyGames auth changed:', newUser?.username || 'logged out');
-          });
+            // Listen for auth changes
+            window.CrazyGames.SDK.user.addAuthListener((newUser) => {
+              setUser(newUser);
+              console.log('CrazyGames auth changed:', newUser?.username || 'logged out');
+            });
+          } catch {
+            // Ignore user fetch errors
+          }
         }
-      } catch (error) {
-        console.error('Failed to initialize CrazyGames SDK:', error);
+      } catch (error: unknown) {
+        // Handle SDK disabled or other init errors gracefully
+        const errorCode = (error as { code?: string })?.code;
+        if (errorCode === 'sdkDisabled') {
+          console.log('CrazyGames SDK disabled on this domain (expected in dev)');
+        } else {
+          console.log('CrazyGames SDK init failed:', error);
+        }
+        setIsAvailable(false);
         setIsInitialized(true);
       }
     };
