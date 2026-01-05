@@ -286,8 +286,10 @@ export default function SplashScreen() {
           </div>
         )}
 
-        {/* Premium Upsell */}
-        {!isPremium && !loading && (
+        {/* Premium Upsell - Hidden for CrazyGames monetization model
+            TODO: Show this only when NOT running on CrazyGames (isCrazyGamesAvailable === false)
+            For now, hidden entirely until we have a non-CrazyGames distribution channel
+        {!isPremium && !loading && !isCrazyGamesAvailable && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -312,6 +314,7 @@ export default function SplashScreen() {
             </Button>
           </motion.div>
         )}
+        */}
       </motion.div>
 
       {/* Bottom Nav */}
