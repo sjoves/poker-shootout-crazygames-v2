@@ -57,7 +57,9 @@ export interface GameState {
   isLevelComplete: boolean;
   isBonusLevel: boolean;
   isBonusFailed: boolean;
-  // Global input guard (prevents ghost/double events across all selection surfaces)
+  // Global selection lock (prevents double-picks across all selection surfaces)
+  isSelectionLocked: boolean;
+  // Legacy/diagnostic guards (kept for compatibility)
   isProcessingSelection: boolean;
   lastHandLengthChangeAt: number | null;
   selectedCards: Card[];

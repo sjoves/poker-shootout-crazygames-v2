@@ -50,7 +50,6 @@ export function FallingCards({
   const rafRef = useRef<number>();
   const lastSpawnRef = useRef<number>(0);
   const spawnCountRef = useRef<number>(0);
-  const selectionLockRef = useRef<number>(0);
   const { playSound } = useAudio();
   const isMobile = useIsMobile();
   
@@ -246,11 +245,6 @@ export function FallingCards({
         // ignore
       }
       
-      // Local selection lock guard - prevent double-selection within 500ms
-      const now = Date.now();
-      if (now - selectionLockRef.current < 500) return;
-      selectionLockRef.current = now;
-      
       // Update touched state
       card.isTouched = true;
       
@@ -269,7 +263,7 @@ export function FallingCards({
   const visibleCards = cardsRef.current;
 
   return (
-    <div ref={containerRef} className="absolute inset-0 overflow-hidden touch-none">
+    <div ref={containerRef} className="absolute inset-0 z-20 overflow-hidden touch-none">
       {visibleCards.map((card) => (
         <div
           key={card.instanceKey}

@@ -97,31 +97,37 @@ export const useGameStore = create<GameStore>()(
       const state = get();
       const now = Date.now();
 
-      if (!state.isPlaying || state.isPaused || state.selectedCards.length >= 5) return;
+      // Atomic selection gate ("synchronous queue")
+      if (state.isSelectionLocked || state.selectedCards.length >= 5) return;
+      if (!state.isPlaying || state.isPaused) return;
 
-      // "Hammer" guards
-      if (state.isProcessingSelection) return;
-      if (state.lastHandLengthChangeAt && now - state.lastHandLengthChangeAt < 500) return;
-
-      if (state.selectedCards.some(c => c.id === card.id)) return;
-
-      const isBlitz = state.mode === 'blitz_fc' || state.mode === 'blitz_cb';
-      const isSSC = state.mode === 'ssc';
-      const shouldRecycle = isBlitz || isSSC;
-
-      // Release lock after the "hand add" animation window
-      if (selectionUnlockTimer) clearTimeout(selectionUnlockTimer);
-      selectionUnlockTimer = setTimeout(() => set({ isProcessingSelection: false }), 500);
-
-      // Only update card-related state
+      // Instant lock
       set({
+        isSelectionLocked: true,
+        // keep existing fields for compatibility
         isProcessingSelection: true,
         lastHandLengthChangeAt: now,
-        selectedCards: [...state.selectedCards, card],
-        usedCards: shouldRecycle ? state.usedCards : [...state.usedCards, card],
-        deck: state.deck.filter(c => c.id !== card.id),
-        cardsSelected: state.cardsSelected + 1,
       });
+
+      // --- selection logic (no early returns that skip unlock) ---
+      if (!state.selectedCards.some((c) => c.id === card.id)) {
+        const isBlitz = state.mode === 'blitz_fc' || state.mode === 'blitz_cb';
+        const isSSC = state.mode === 'ssc';
+        const shouldRecycle = isBlitz || isSSC;
+
+        set({
+          selectedCards: [...state.selectedCards, card],
+          usedCards: shouldRecycle ? state.usedCards : [...state.usedCards, card],
+          deck: state.deck.filter((c) => c.id !== card.id),
+          cardsSelected: state.cardsSelected + 1,
+        });
+      }
+
+      // Timed release (end of function)
+      if (selectionUnlockTimer) clearTimeout(selectionUnlockTimer);
+      selectionUnlockTimer = setTimeout(() => {
+        set({ isSelectionLocked: false, isProcessingSelection: false });
+      }, 800);
     },
     
     // ========================================================================

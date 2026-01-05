@@ -38,7 +38,6 @@ export function ConveyorBelt({
   const containerRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number>();
   const initializedRef = useRef(false);
-  const selectionLockRef = useRef<number>(0);
   const returnDelayMs = 3000;
   const { playSound } = useAudio();
   const isMobile = useIsMobile();
@@ -268,12 +267,6 @@ export function ConveyorBelt({
     } catch {
       // ignore
     }
-    
-    // Local selection lock guard - prevent double-selection within 500ms
-    const now = Date.now();
-    if (now - selectionLockRef.current < 500) return;
-    selectionLockRef.current = now;
-    
     const originalCard: Card = {
       id: card.id.split('-row')[0],
       suit: card.suit,
@@ -291,7 +284,7 @@ export function ConveyorBelt({
   return (
     <div 
       ref={containerRef}
-      className="absolute inset-0 flex items-center justify-center overflow-hidden px-4"
+      className="absolute inset-0 z-10 flex items-center justify-center overflow-hidden px-4"
     >
       <div 
         className="relative w-full"
