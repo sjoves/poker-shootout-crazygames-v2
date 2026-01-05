@@ -6,6 +6,7 @@ import { CheckIcon } from '@heroicons/react/24/solid';
 import { SpeakerWaveIcon, SpeakerXMarkIcon, MusicalNoteIcon } from '@heroicons/react/24/outline';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
+import { Button } from '@/components/ui/button';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -51,12 +52,30 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <SpeakerWaveIcon className="w-5 h-5 text-muted-foreground" />
+                  {masterVolume > 0 ? (
+                    <SpeakerWaveIcon className="w-5 h-5 text-muted-foreground" />
+                  ) : (
+                    <SpeakerXMarkIcon className="w-5 h-5 text-muted-foreground" />
+                  )}
                   <span className="text-sm font-medium">Master Volume</span>
                 </div>
-                <span className="text-sm text-muted-foreground w-12 text-right">
-                  {Math.round(masterVolume * 100)}%
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground w-12 text-right">
+                    {Math.round(masterVolume * 100)}%
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => setMasterVolume(masterVolume > 0 ? 0 : 0.7)}
+                  >
+                    {masterVolume > 0 ? (
+                      <SpeakerWaveIcon className="w-4 h-4" />
+                    ) : (
+                      <SpeakerXMarkIcon className="w-4 h-4" />
+                    )}
+                  </Button>
+                </div>
               </div>
               <Slider
                 value={[masterVolume * 100]}
@@ -105,20 +124,35 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               )}
             </div>
 
-            {/* Music (Future Feature) */}
-            <div className="mt-6 space-y-4 opacity-50">
+            {/* Music */}
+            <div className="mt-6 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <MusicalNoteIcon className="w-5 h-5 text-muted-foreground" />
+                  <MusicalNoteIcon className={cn("w-5 h-5", musicEnabled ? "text-primary" : "text-muted-foreground")} />
                   <span className="text-sm font-medium">Music</span>
-                  <span className="text-xs text-muted-foreground">(Coming Soon)</span>
                 </div>
                 <Switch
                   checked={musicEnabled}
                   onCheckedChange={setMusicEnabled}
-                  disabled
                 />
               </div>
+              {musicEnabled && (
+                <div className="pl-7">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs text-muted-foreground">Volume</span>
+                    <span className="text-xs text-muted-foreground">
+                      {Math.round(musicVolume * 100)}%
+                    </span>
+                  </div>
+                  <Slider
+                    value={[musicVolume * 100]}
+                    onValueChange={([value]) => setMusicVolume(value / 100)}
+                    max={100}
+                    step={5}
+                    className="w-full"
+                  />
+                </div>
+              )}
             </div>
           </div>
 
