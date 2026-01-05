@@ -5,7 +5,6 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Skeleton } from '@/components/ui/skeleton';
 import { GameMode, LeaderboardEntry } from '@/types/game';
 import { Trophy, Medal, Award, ArrowLeft, User, Clock, Zap, Target } from 'lucide-react';
 
@@ -118,7 +117,7 @@ export default function LeaderboardScreen() {
         {isLoading ? (
           <div className="space-y-3">
             {[...Array(10)].map((_, i) => (
-              <Skeleton key={i} className="h-20 w-full rounded-xl" />
+              <div key={i} className="h-20 w-full rounded-xl bg-muted/50 animate-pulse" />
             ))}
           </div>
         ) : entries && entries.length > 0 ? (
