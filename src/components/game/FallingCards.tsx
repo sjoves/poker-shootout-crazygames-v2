@@ -98,7 +98,13 @@ export function FallingCards({
   gameMode = 'classic',
 }: FallingCardsProps) {
   const effectiveSpeed = gameMode === 'ssc' ? speed * 0.8 : speed;
-  
+
+  // Keep latest deck in a ref so internal callbacks don't change identity on every deck update
+  const deckRef = useRef<Card[]>(deck);
+  useEffect(() => {
+    deckRef.current = deck;
+  }, [deck]);
+
   // Use refs for card positions to avoid React state updates on every frame
   const cardsRef = useRef<LocalFallingCard[]>([]);
   const cardElementsRef = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -114,20 +120,21 @@ export function FallingCards({
   useEffect(() => {
     selectedCountRef.current = selectedCardIds.length;
   }, [selectedCardIds.length]);
-  
+
   // Force re-render only when cards are added/removed
   const [, setRenderTrigger] = useState(0);
-  const triggerRender = useCallback(() => setRenderTrigger(v => v + 1), []);
-  
+  const triggerRender = useCallback(() => setRenderTrigger((v) => v + 1), []);
+
   // Exhaustive deck system: shuffled queue of cards to deal
   const shuffledDeckRef = useRef<Card[]>([]);
   const dealtCardIdsRef = useRef<Set<string>>(new Set());
 
   // Initialize/reshuffle the deck
   const reshuffleDeck = useCallback(() => {
-    shuffledDeckRef.current = fisherYatesShuffle(deck);
+    // IMPORTANT: use deckRef so reshuffleDeck doesn't change identity every time deck updates
+    shuffledDeckRef.current = fisherYatesShuffle(deckRef.current);
     dealtCardIdsRef.current.clear();
-  }, [deck]);
+  }, []);
 
   // Reset on reshuffle trigger or new game
   useEffect(() => {
@@ -156,31 +163,33 @@ export function FallingCards({
     (containerWidth: number): LocalFallingCard | null => {
       // Find next card in shuffled deck that hasn't been dealt or selected
       let picked: Card | null = null;
-      
+
       while (shuffledDeckRef.current.length > 0) {
         const candidate = shuffledDeckRef.current.shift()!;
-        
+
         // Skip if already selected by player
         if (selectedCardIds.includes(candidate.id)) {
           continue;
         }
-        
+
         // Skip if currently on screen (already dealt but not collected)
         if (dealtCardIdsRef.current.has(candidate.id)) {
           continue;
         }
-        
+
         picked = candidate;
         break;
       }
-      
+
       // If deck exhausted, reshuffle and try again
       if (!picked && shuffledDeckRef.current.length === 0) {
         // Reshuffle: get all cards not currently selected
-        const availableForReshuffle = deck.filter(c => !selectedCardIds.includes(c.id));
+        const availableForReshuffle = deckRef.current.filter(
+          (c) => !selectedCardIds.includes(c.id)
+        );
         shuffledDeckRef.current = fisherYatesShuffle(availableForReshuffle);
         dealtCardIdsRef.current.clear();
-        
+
         // Try to get next card from reshuffled deck
         while (shuffledDeckRef.current.length > 0) {
           const candidate = shuffledDeckRef.current.shift()!;
@@ -190,7 +199,7 @@ export function FallingCards({
           }
         }
       }
-      
+
       if (!picked) return null;
 
       dealtCardIdsRef.current.add(picked.id);
@@ -209,7 +218,7 @@ export function FallingCards({
         swaySpeed: 1.2 + Math.random() * 1.6,
       };
     },
-    [deck, selectedCardIds, effectiveSpeed]
+    [selectedCardIds, effectiveSpeed]
   );
 
   // Seed first card - only when deck is populated
