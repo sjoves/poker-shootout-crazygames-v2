@@ -26,11 +26,7 @@ const CardSlot = memo(
     return (
       <div
         onPointerDown={(e) => onPointerDown(card, e)}
-        style={{
-          cursor: 'pointer',
-          touchAction: 'none',
-        }}
-        className="select-none"
+        className="select-none cursor-pointer touch-none flex items-center justify-center"
       >
         <PlayingCard
           card={card}
@@ -68,26 +64,32 @@ export function StaticGrid({ deck, selectedCardIds, onSelectCard }: StaticGridPr
   );
 
   return (
-    <div
-      className="absolute inset-0 flex items-center justify-center"
-      style={{ paddingTop: '5rem', paddingBottom: '9rem' }}
-    >
-      <div
-        className="grid p-2 sm:p-4"
-        style={{
-          gridTemplateColumns: `repeat(${GRID_COLUMNS}, minmax(0, 1fr))`,
-          gap: isMobile ? '0.37rem' : '0.67rem',
-        }}
-      >
-        {visibleCards.map((card, index) => (
-          <CardSlot
-            key={`slot-${index}`}
-            card={card}
-            cardSize={cardSize}
-            onPointerDown={handleCardPointerDown}
-          />
-        ))}
+    <div className="absolute inset-0 flex flex-col">
+      {/* Top safe zone for scoreboard - responsive height */}
+      <div className="shrink-0 h-16 sm:h-20 md:h-24" />
+      
+      {/* Fluid card field - expands to fill available space */}
+      <div className="flex-1 min-h-0 flex items-center justify-center px-2 sm:px-4 md:px-6 lg:px-8">
+        <div
+          className="grid w-full max-w-2xl lg:max-w-3xl"
+          style={{
+            gridTemplateColumns: `repeat(${GRID_COLUMNS}, minmax(0, 1fr))`,
+            gap: isMobile ? '0.25rem' : '0.5rem',
+          }}
+        >
+          {visibleCards.map((card, index) => (
+            <CardSlot
+              key={`slot-${index}`}
+              card={card}
+              cardSize={cardSize}
+              onPointerDown={handleCardPointerDown}
+            />
+          ))}
+        </div>
       </div>
+      
+      {/* Bottom safe zone for hand display - responsive height */}
+      <div className="shrink-0 h-32 sm:h-36 md:h-40" />
     </div>
   );
 }
