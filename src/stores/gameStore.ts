@@ -85,6 +85,14 @@ const STORE_INITIAL_STATE: GameState = {
 // Selection unlock timer (Zustand store variant)
 let selectionUnlockTimer: ReturnType<typeof setTimeout> | null = null;
 
+// Safety watchdog: ensures lock never stays on for more than 500ms
+const scheduleUnlock = (set: (partial: Partial<GameState>) => void) => {
+  if (selectionUnlockTimer) clearTimeout(selectionUnlockTimer);
+  selectionUnlockTimer = setTimeout(() => {
+    set({ isSelectionLocked: false, isProcessingSelection: false });
+  }, 500); // Max 500ms lock time
+};
+
 export const useGameStore = create<GameStore>()(
   subscribeWithSelector((set, get) => ({
     // Initial state from all slices
@@ -97,19 +105,29 @@ export const useGameStore = create<GameStore>()(
       const state = get();
       const now = Date.now();
 
-      // Atomic selection gate ("synchronous queue")
+      // Safety check: if hand is incomplete but lock is stuck, force unlock
+      if (state.isSelectionLocked && state.selectedCards.length < 5) {
+        const lockAge = state.lastHandLengthChangeAt ? now - state.lastHandLengthChangeAt : 0;
+        if (lockAge > 500) {
+          // Force unlock - lock has been held too long
+          set({ isSelectionLocked: false, isProcessingSelection: false });
+        } else {
+          return; // Lock is still valid
+        }
+      }
+
+      // Atomic selection gate
       if (state.isSelectionLocked || state.selectedCards.length >= 5) return;
       if (!state.isPlaying || state.isPaused) return;
 
       // Instant lock
       set({
         isSelectionLocked: true,
-        // keep existing fields for compatibility
         isProcessingSelection: true,
         lastHandLengthChangeAt: now,
       });
 
-      // --- selection logic (no early returns that skip unlock) ---
+      // --- selection logic ---
       if (!state.selectedCards.some((c) => c.id === card.id)) {
         const isBlitz = state.mode === 'blitz_fc' || state.mode === 'blitz_cb';
         const isSSC = state.mode === 'ssc';
@@ -123,11 +141,8 @@ export const useGameStore = create<GameStore>()(
         });
       }
 
-      // Timed release (end of function)
-      if (selectionUnlockTimer) clearTimeout(selectionUnlockTimer);
-      selectionUnlockTimer = setTimeout(() => {
-        set({ isSelectionLocked: false, isProcessingSelection: false });
-      }, 800);
+      // Schedule unlock (always runs, even if card was duplicate)
+      scheduleUnlock(set);
     },
     
     // ========================================================================

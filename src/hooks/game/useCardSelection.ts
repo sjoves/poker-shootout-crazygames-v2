@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { Card, GameState } from '@/types/game';
 
-const LOCK_MS = 800;
+const LOCK_MS = 500; // Max 500ms lock time
 
 export function useCardSelection(
   setState: React.Dispatch<React.SetStateAction<GameState>>
@@ -19,7 +19,17 @@ export function useCardSelection(
       const now = Date.now();
 
       setState((prev) => {
-        // Atomic selection gate ("synchronous queue")
+        // Safety check: if hand is incomplete but lock is stuck, force unlock
+        if (prev.isSelectionLocked && prev.selectedCards.length < 5) {
+          const lockAge = prev.lastHandLengthChangeAt ? now - prev.lastHandLengthChangeAt : 0;
+          if (lockAge > 500) {
+            // Force unlock - lock has been held too long, continue with selection
+          } else {
+            return prev; // Lock is still valid
+          }
+        }
+
+        // Atomic selection gate
         if (prev.isSelectionLocked || prev.selectedCards.length >= 5) return prev;
         if (!prev.isPlaying || prev.isPaused) return prev;
 
@@ -27,7 +37,6 @@ export function useCardSelection(
         const nextStateBase = {
           ...prev,
           isSelectionLocked: true,
-          // Keep these for compatibility/diagnostics
           isProcessingSelection: true,
           lastHandLengthChangeAt: now,
         };
@@ -48,14 +57,14 @@ export function useCardSelection(
         };
       });
 
-      // Timed release (must run after we attempted selection)
+      // Timed release (always runs)
       if (unlockTimerRef.current) window.clearTimeout(unlockTimerRef.current);
       unlockTimerRef.current = window.setTimeout(() => {
-        setState((prev) =>
-          prev.isSelectionLocked || prev.isProcessingSelection
-            ? { ...prev, isSelectionLocked: false, isProcessingSelection: false }
-            : prev
-        );
+        setState((prev) => ({
+          ...prev,
+          isSelectionLocked: false,
+          isProcessingSelection: false,
+        }));
       }, LOCK_MS);
     },
     [setState]
