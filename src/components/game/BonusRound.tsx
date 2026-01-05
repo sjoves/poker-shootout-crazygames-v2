@@ -8,6 +8,7 @@ import { ScorePanel } from './ScoreDisplay';
 import { StarIcon } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
 import { useAudio } from '@/contexts/AudioContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 type IntroPhase = 'instructions' | 'ready' | 'begin' | 'playing';
 
@@ -45,6 +46,7 @@ export function BonusRound({
   const [currentFlippedId, setCurrentFlippedId] = useState<string | null>(null);
   const [introPhase, setIntroPhase] = useState<IntroPhase>('instructions');
   const { playSound } = useAudio();
+  const isMobile = useIsMobile();
   const lastPlayedSecondRef = useRef<number | null>(null);
 
   // Play countdown sound on each second in the last 10 seconds
@@ -65,8 +67,10 @@ export function BonusRound({
   // Ensure at least 1 for the multiplier (handles bonusRoundNumber being 0)
   const effectiveBonusRound = Math.max(bonusRoundNumber, 1);
   const cardCount = Math.min(effectiveBonusRound * 10, 52);
-  // Calculate grid columns based on card count
-  const gridCols = cardCount <= 10 ? 5 : cardCount <= 20 ? 5 : 7;
+  // Calculate grid columns: 5 on mobile, 6 on desktop (matching StaticGrid)
+  const gridCols = isMobile ? 5 : 6;
+  // Card size matches StaticGrid: sdm on mobile, sd on desktop
+  const cardSize = isMobile ? 'sdm' : 'sd';
 
   // Intro sequence timing
   useEffect(() => {
@@ -232,22 +236,27 @@ export function BonusRound({
       />
 
       {/* Cards Grid */}
-      <div className="flex-1 flex items-center justify-center overflow-auto p-4">
-        <div className={cn(
-          "gap-1.5 max-w-md mx-auto grid",
-          gridCols === 5 ? "grid-cols-5" : "grid-cols-7"
-        )}>
+      <div className="flex-1 flex items-center justify-center overflow-auto px-2 sm:px-4 md:px-6 lg:px-8">
+        <div 
+          className="grid w-full max-w-2xl lg:max-w-3xl mx-auto"
+          style={{
+            gridTemplateColumns: `repeat(${gridCols}, minmax(0, 1fr))`,
+            gap: isMobile ? '0.25rem' : '0.5rem',
+          }}
+        >
           {deck.slice(0, cardCount).map((card) => (
-            <FlippableCard
-              key={card.id}
-              card={card}
-              isKept={keptCardIds.includes(card.id)}
-              isFlippedExternal={currentFlippedId === card.id}
-              onFlip={handleFlip}
-              onKeep={handleKeep}
-              onUnkeep={handleUnkeep}
-              disabled={keptCards.length >= 5 && !keptCardIds.includes(card.id)}
-            />
+            <div key={card.id} className="flex items-center justify-center">
+              <FlippableCard
+                card={card}
+                isKept={keptCardIds.includes(card.id)}
+                isFlippedExternal={currentFlippedId === card.id}
+                onFlip={handleFlip}
+                onKeep={handleKeep}
+                onUnkeep={handleUnkeep}
+                disabled={keptCards.length >= 5 && !keptCardIds.includes(card.id)}
+                size={cardSize}
+              />
+            </div>
           ))}
         </div>
       </div>

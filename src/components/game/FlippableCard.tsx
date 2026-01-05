@@ -4,6 +4,7 @@ import { Card, Suit } from '@/types/game';
 import { cn } from '@/lib/utils';
 import { Check } from 'lucide-react';
 import { useAudio } from '@/contexts/AudioContext';
+
 interface FlippableCardProps {
   card: Card;
   isKept: boolean;
@@ -12,7 +13,14 @@ interface FlippableCardProps {
   onKeep: (card: Card) => void;
   onUnkeep: (card: Card) => void;
   disabled?: boolean;
+  size?: 'sm' | 'sdm' | 'sd';
 }
+
+const SIZE_CLASSES = {
+  sm: 'w-[40px] h-[57px]',
+  sdm: 'w-[50px] h-[71px]',
+  sd: 'w-[60px] h-[85px]',
+};
 
 const SUIT_SYMBOLS: Record<Suit, string> = {
   hearts: '♥',
@@ -26,7 +34,7 @@ const isRedSuit = (suit: Suit) => suit === 'hearts' || suit === 'diamonds';
 // Time in ms before card flips back if not kept
 const AUTO_UNFLIP_DELAY = 2500;
 
-export function FlippableCard({ card, isKept, isFlippedExternal, onFlip, onKeep, onUnkeep, disabled }: FlippableCardProps) {
+export function FlippableCard({ card, isKept, isFlippedExternal, onFlip, onKeep, onUnkeep, disabled, size = 'sdm' }: FlippableCardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
   const unflipTimerRef = useRef<NodeJS.Timeout | null>(null);
   const { playSound } = useAudio();
@@ -90,7 +98,8 @@ export function FlippableCard({ card, isKept, isFlippedExternal, onFlip, onKeep,
     <div className="relative perspective-1000 touch-manipulation">
       <motion.div
         className={cn(
-          'w-[50px] h-[71px] cursor-pointer relative',
+          SIZE_CLASSES[size],
+          'cursor-pointer relative',
           'transform-style-preserve-3d will-change-transform',
           disabled && !isKept && 'opacity-50 cursor-not-allowed'
         )}
