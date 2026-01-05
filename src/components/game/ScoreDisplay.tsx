@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { TrophyIcon, ClockIcon, Cog6ToothIcon, SpeakerWaveIcon, SpeakerXMarkIcon, HandRaisedIcon, MusicalNoteIcon, HomeIcon, ArrowPathIcon, PauseIcon, PlayIcon } from '@heroicons/react/24/outline';
+import { TrophyIcon, ClockIcon, Cog6ToothIcon, SpeakerWaveIcon, SpeakerXMarkIcon, HandRaisedIcon, MusicalNoteIcon, HomeIcon, ArrowPathIcon, PauseIcon, PlayIcon, CheckIcon } from '@heroicons/react/24/outline';
 import { RectangleVertical } from 'lucide-react';
 import { HandResult } from '@/types/game';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAudio } from '@/contexts/AudioContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
@@ -83,15 +84,18 @@ export function ScorePanel({
   gameMode = 'classic'
 }: ScorePanelProps) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const { theme, setTheme, themes } = useTheme();
   const {
     masterVolume,
     sfxEnabled,
     sfxVolume,
     musicEnabled,
+    musicVolume,
     setMasterVolume,
     setSfxEnabled,
     setSfxVolume,
     setMusicEnabled,
+    setMusicVolume,
     playSound,
   } = useAudio();
 
@@ -203,7 +207,7 @@ export function ScorePanel({
 
       {/* Settings Modal */}
       <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
-        <DialogContent className="sm:max-w-md bg-card border-border">
+        <DialogContent className="sm:max-w-md bg-card border-border max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl font-display">Settings</DialogTitle>
           </DialogHeader>
@@ -263,12 +267,30 @@ export function ScorePanel({
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <SpeakerWaveIcon className="w-5 h-5 text-muted-foreground" />
+                    {masterVolume > 0 ? (
+                      <SpeakerWaveIcon className="w-5 h-5 text-muted-foreground" />
+                    ) : (
+                      <SpeakerXMarkIcon className="w-5 h-5 text-muted-foreground" />
+                    )}
                     <span className="text-sm font-medium">Master Volume</span>
                   </div>
-                  <span className="text-sm text-muted-foreground w-12 text-right">
-                    {Math.round(masterVolume * 100)}%
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground w-12 text-right">
+                      {Math.round(masterVolume * 100)}%
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => setMasterVolume(masterVolume > 0 ? 0 : 0.7)}
+                    >
+                      {masterVolume > 0 ? (
+                        <SpeakerWaveIcon className="w-4 h-4" />
+                      ) : (
+                        <SpeakerXMarkIcon className="w-4 h-4" />
+                      )}
+                    </Button>
+                  </div>
                 </div>
                 <Slider
                   value={[masterVolume * 100]}
@@ -317,20 +339,72 @@ export function ScorePanel({
                 )}
               </div>
 
-              {/* Music (Future Feature) */}
-              <div className="mt-6 space-y-4 opacity-50">
+              {/* Music */}
+              <div className="mt-6 space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <MusicalNoteIcon className="w-5 h-5 text-muted-foreground" />
+                    <MusicalNoteIcon className={cn("w-5 h-5", musicEnabled ? "text-primary" : "text-muted-foreground")} />
                     <span className="text-sm font-medium">Music</span>
-                    <span className="text-xs text-muted-foreground">(Coming Soon)</span>
                   </div>
                   <Switch
                     checked={musicEnabled}
                     onCheckedChange={setMusicEnabled}
-                    disabled
                   />
                 </div>
+                {musicEnabled && (
+                  <div className="pl-7">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs text-muted-foreground">Volume</span>
+                      <span className="text-xs text-muted-foreground">
+                        {Math.round(musicVolume * 100)}%
+                      </span>
+                    </div>
+                    <Slider
+                      value={[musicVolume * 100]}
+                      onValueChange={([value]) => setMusicVolume(value / 100)}
+                      max={100}
+                      step={5}
+                      className="w-full"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div className="border-t border-border" />
+
+            {/* Theme Selection */}
+            <div>
+              <h3 className="text-sm font-medium text-muted-foreground mb-3">Theme</h3>
+              <div className="grid grid-cols-2 gap-3">
+                {themes.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => {
+                      setTheme(t.id);
+                      playSound('buttonClick');
+                    }}
+                    className={cn(
+                      "flex flex-col items-center p-3 rounded-lg border transition-all",
+                      theme === t.id
+                        ? "border-primary bg-primary/10"
+                        : "border-border bg-secondary/50 hover:bg-secondary"
+                    )}
+                  >
+                    <img 
+                      src={t.logo} 
+                      alt={t.name} 
+                      className="w-16 h-16 object-contain mb-2"
+                    />
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium text-sm text-foreground">{t.name}</p>
+                      {theme === t.id && (
+                        <CheckIcon className="w-4 h-4 text-primary" />
+                      )}
+                    </div>
+                  </button>
+                ))}
               </div>
             </div>
           </div>
