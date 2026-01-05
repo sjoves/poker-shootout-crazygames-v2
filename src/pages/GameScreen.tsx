@@ -335,10 +335,13 @@ export default function GameScreen() {
   const timeDisplay = isBlitz || isSSC ? formatTime(state.timeRemaining) : formatTime(state.timeElapsed);
   const progress = getProgressInfo();
 
-  if (state.isGameOver) {
-    const handHistory = getHandResults();
-    navigate('/game-over', { state: { gameState: state, handHistory } });
-  }
+  // Navigate to game over screen when game ends
+  useEffect(() => {
+    if (state.isGameOver) {
+      const handHistory = getHandResults();
+      navigate('/game-over', { state: { gameState: state, handHistory } });
+    }
+  }, [state.isGameOver, state, getHandResults, navigate]);
 
   const selectedIds = state.selectedCards.map(c => c.id);
 
