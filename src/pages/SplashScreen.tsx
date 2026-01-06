@@ -15,7 +15,7 @@ import { DailyChallenges } from '@/components/retention/DailyChallenges';
 import { AchievementsPanel, AchievementNotification } from '@/components/retention/AchievementsPanel';
 import { DailyRewardWheel } from '@/components/retention/DailyRewardWheel';
 import { StarIcon } from '@heroicons/react/24/solid';
-import { Target, Zap, Trophy, Gift, Settings } from 'lucide-react';
+import { Target, Zap, Trophy, Gift, Settings, HelpCircle } from 'lucide-react';
 
 export default function SplashScreen() {
   const navigate = useNavigate();
@@ -211,8 +211,8 @@ export default function SplashScreen() {
           </div>
         </div>
 
-        {/* Settings Button - Centered below game modes */}
-        <div className="flex justify-center">
+        {/* Settings & Tutorial Buttons - Centered below game modes */}
+        <div className="flex justify-center gap-3">
           <Button 
             variant="outline" 
             className="gap-2 border-primary bg-transparent hover:bg-primary/10" 
@@ -220,6 +220,14 @@ export default function SplashScreen() {
           >
             <Settings className="w-5 h-5 text-primary" />
             Settings
+          </Button>
+          <Button 
+            variant="outline" 
+            className="gap-2 border-primary bg-transparent hover:bg-primary/10" 
+            onClick={() => setShowTutorial(true)}
+          >
+            <HelpCircle className="w-5 h-5 text-primary" />
+            Tutorial
           </Button>
         </div>
 
