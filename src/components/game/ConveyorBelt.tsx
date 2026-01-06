@@ -331,7 +331,7 @@ export function ConveyorBelt({
   return (
     <div 
       ref={containerRef}
-      className="absolute inset-0 z-10 flex items-start justify-center overflow-hidden px-2 sm:px-4 pt-4 sm:pt-8"
+      className="absolute inset-0 z-10 flex items-start justify-center overflow-hidden px-2 sm:px-4 pt-9 sm:pt-12"
       style={{ maxWidth: '100vw' }}
     >
       <div 
