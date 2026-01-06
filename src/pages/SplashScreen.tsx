@@ -145,10 +145,10 @@ export default function SplashScreen() {
               Classic Mode
             </Button>
             {selectedMode === 'classic' && (
-              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="flex gap-2">
-                <Button variant="secondary" size="sm" className="flex-1 text-xs" onClick={() => handleModeSelect('classic_cb', 'sitting_duck')}>Sitting Duck</Button>
-                <Button variant="secondary" size="sm" className="flex-1 text-xs" onClick={() => handleModeSelect('classic_cb')}>Carnival Gallery</Button>
-                <Button variant="secondary" size="sm" className="flex-1 text-xs" onClick={() => handleModeSelect('classic_fc')}>Sky is Falling</Button>
+              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="flex justify-center gap-2">
+                <Button variant="secondary" size="sm" className="text-xs" onClick={() => handleModeSelect('classic_cb', 'sitting_duck')}>Sitting Duck</Button>
+                <Button variant="secondary" size="sm" className="text-xs" onClick={() => handleModeSelect('classic_cb')}>Carnival Gallery</Button>
+                <Button variant="secondary" size="sm" className="text-xs" onClick={() => handleModeSelect('classic_fc')}>Sky is Falling</Button>
               </motion.div>
             )}
           </div>
@@ -165,10 +165,10 @@ export default function SplashScreen() {
               52-Card Blitz
             </Button>
             {selectedMode === 'blitz' && (
-              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="flex gap-2">
-                <Button variant="secondary" size="sm" className="flex-1 text-xs" onClick={() => handleModeSelect('blitz_cb', 'sitting_duck')}>Sitting Duck</Button>
-                <Button variant="secondary" size="sm" className="flex-1 text-xs" onClick={() => handleModeSelect('blitz_cb')}>Carnival Gallery</Button>
-                <Button variant="secondary" size="sm" className="flex-1 text-xs" onClick={() => handleModeSelect('blitz_fc')}>Sky is Falling</Button>
+              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="flex justify-center gap-2">
+                <Button variant="secondary" size="sm" className="text-xs" onClick={() => handleModeSelect('blitz_cb', 'sitting_duck')}>Sitting Duck</Button>
+                <Button variant="secondary" size="sm" className="text-xs" onClick={() => handleModeSelect('blitz_cb')}>Carnival Gallery</Button>
+                <Button variant="secondary" size="sm" className="text-xs" onClick={() => handleModeSelect('blitz_fc')}>Sky is Falling</Button>
               </motion.div>
             )}
           </div>
