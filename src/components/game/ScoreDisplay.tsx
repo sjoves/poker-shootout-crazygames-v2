@@ -266,14 +266,19 @@ export function ScorePanel({
                 <h3 className="text-sm font-medium text-muted-foreground mb-4">Audio</h3>
                 
                 {/* Master Volume */}
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      {masterVolume > 0 ? (
-                        <SpeakerWaveIcon className="w-4 h-4 text-muted-foreground" />
-                      ) : (
-                        <SpeakerXMarkIcon className="w-4 h-4 text-muted-foreground" />
-                      )}
+                      <button
+                        onClick={() => setMasterVolume(masterVolume > 0 ? 0 : 0.7)}
+                        className="p-1 hover:bg-primary/10 rounded transition-colors"
+                      >
+                        {masterVolume > 0 ? (
+                          <SpeakerWaveIcon className="w-4 h-4 text-muted-foreground" />
+                        ) : (
+                          <SpeakerXMarkIcon className="w-4 h-4 text-destructive" />
+                        )}
+                      </button>
                       <span className="text-xs font-medium">Master</span>
                     </div>
                     <span className="text-xs text-muted-foreground">
@@ -340,7 +345,7 @@ export function ScorePanel({
               {/* Theme Selection */}
               <div>
                 <h3 className="text-sm font-medium text-muted-foreground mb-4">Theme</h3>
-                <div className="grid grid-cols-1 gap-2">
+                <div className="grid grid-cols-2 gap-1.5">
                   {themes.map((t) => (
                     <button
                       key={t.id}
@@ -349,15 +354,15 @@ export function ScorePanel({
                         playSound('buttonClick');
                       }}
                       className={cn(
-                        "flex items-center justify-center gap-2 p-2 rounded-lg border transition-all",
+                        "flex items-center justify-center gap-1 py-1.5 px-2 rounded border transition-all text-xs",
                         theme === t.id
                           ? "border-primary bg-primary/10"
                           : "border-border bg-secondary/50 hover:bg-secondary"
                       )}
                     >
-                      <p className="font-medium text-sm text-foreground">{t.name}</p>
+                      <span className="font-medium text-foreground">{t.name}</span>
                       {theme === t.id && (
-                        <CheckIcon className="w-4 h-4 text-primary" />
+                        <CheckIcon className="w-3 h-3 text-primary" />
                       )}
                     </button>
                   ))}
