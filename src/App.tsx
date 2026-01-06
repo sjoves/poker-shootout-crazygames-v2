@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HashRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AudioProvider } from "@/contexts/AudioContext";
 import { CrazyGamesProvider } from "@/contexts/CrazyGamesContext";
@@ -28,7 +28,7 @@ const App = () => (
           <TooltipProvider>
             <ErrorBoundary>
               <Toaster />
-              <BrowserRouter>
+              <HashRouter>
                 <Routes>
                   <Route path="/" element={<SplashScreen />} />
                   <Route path="/play/:mode" element={<GameScreen />} />
@@ -41,7 +41,7 @@ const App = () => (
                   <Route path="/dev-sandbox" element={<DevSandbox />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
-              </BrowserRouter>
+              </HashRouter>
             </ErrorBoundary>
           </TooltipProvider>
         </CrazyGamesProvider>
