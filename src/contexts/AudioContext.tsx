@@ -1,5 +1,16 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 
+// CrazyGames SDK type for audio unlock integration
+declare global {
+  interface Window {
+    CrazyGames?: {
+      SDK: {
+        init: () => Promise<void>;
+        [key: string]: any;
+      };
+    };
+  }
+}
 interface AudioSettings {
   masterVolume: number;
   sfxEnabled: boolean;
@@ -19,6 +30,8 @@ interface AudioContextValue extends AudioSettings {
   stopMusic: () => void;
   isMusicPlaying: boolean;
   isMusicLoading: boolean;
+  unlockAudio: () => Promise<boolean>;
+  isAudioUnlocked: boolean;
 }
 
 export type SoundType = 
@@ -291,26 +304,86 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
 
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
   const [isMusicLoading, setIsMusicLoading] = useState(false);
+  const [isAudioUnlocked, setIsAudioUnlocked] = useState(false);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const musicRef = useRef<BackgroundMusic | null>(null);
+  const pendingSoundsRef = useRef<SoundType[]>([]);
+
+  // Helper to ensure AudioContext exists
+  const ensureAudioContext = useCallback(() => {
+    if (!audioCtxRef.current) {
+      console.log('[Audio] Creating new AudioContext');
+      audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      musicRef.current = new BackgroundMusic(audioCtxRef.current);
+      console.log('[Audio] AudioContext created, state:', audioCtxRef.current.state);
+    }
+    return audioCtxRef.current;
+  }, []);
+
+  // Global unlock function - call this on first user interaction
+  const unlockAudio = useCallback(async (): Promise<boolean> => {
+    console.log('[Audio] unlockAudio called');
+    
+    // Wait for CrazyGames SDK if available
+    if (window.CrazyGames?.SDK) {
+      try {
+        console.log('[Audio] CrazyGames SDK detected, waiting for init...');
+        await window.CrazyGames.SDK.init();
+        console.log('[Audio] CrazyGames SDK initialized');
+      } catch (err) {
+        console.log('[Audio] CrazyGames SDK init error (non-fatal):', err);
+      }
+    }
+    
+    const ctx = ensureAudioContext();
+    
+    if (ctx.state === 'running') {
+      console.log('[Audio] AudioContext already running');
+      setIsAudioUnlocked(true);
+      return true;
+    }
+    
+    if (ctx.state === 'suspended') {
+      try {
+        console.log('[Audio] Resuming suspended AudioContext...');
+        await ctx.resume();
+        console.log('[Audio] AudioContext resumed successfully, state:', ctx.state);
+        setIsAudioUnlocked(true);
+        
+        // Play any queued sounds
+        if (pendingSoundsRef.current.length > 0) {
+          console.log('[Audio] Playing', pendingSoundsRef.current.length, 'queued sounds');
+          pendingSoundsRef.current.forEach(sound => {
+            playSoundInternal(ctx, sound, settings.masterVolume * settings.sfxVolume);
+          });
+          pendingSoundsRef.current = [];
+        }
+        
+        return true;
+      } catch (err) {
+        console.error('[Audio] Failed to resume AudioContext:', err);
+        return false;
+      }
+    }
+    
+    console.log('[Audio] AudioContext in unexpected state:', ctx.state);
+    return false;
+  }, [ensureAudioContext, settings.masterVolume, settings.sfxVolume]);
 
   // Initialize AudioContext on first user interaction
   useEffect(() => {
-    const initAudioContext = () => {
-      if (!audioCtxRef.current) {
-        audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-        musicRef.current = new BackgroundMusic(audioCtxRef.current);
-      }
+    const handleUserInteraction = () => {
+      unlockAudio();
     };
 
-    document.addEventListener('click', initAudioContext, { once: true });
-    document.addEventListener('touchstart', initAudioContext, { once: true });
+    document.addEventListener('click', handleUserInteraction, { once: true });
+    document.addEventListener('touchstart', handleUserInteraction, { once: true });
 
     return () => {
-      document.removeEventListener('click', initAudioContext);
-      document.removeEventListener('touchstart', initAudioContext);
+      document.removeEventListener('click', handleUserInteraction);
+      document.removeEventListener('touchstart', handleUserInteraction);
     };
-  }, []);
+  }, [unlockAudio]);
 
   // Persist settings
   useEffect(() => {
@@ -332,62 +405,8 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     }
   }, [settings.musicEnabled, isMusicPlaying]);
 
-  const startMusic = useCallback(async (): Promise<void> => {
-    console.log('startMusic called, musicEnabled:', settings.musicEnabled);
-    if (!settings.musicEnabled) return;
-    
-    // Ensure AudioContext is created
-    if (!audioCtxRef.current) {
-      console.log('Creating new AudioContext');
-      audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-      musicRef.current = new BackgroundMusic(audioCtxRef.current);
-    }
-    
-    console.log('AudioContext state:', audioCtxRef.current.state);
-    
-    // Resume if suspended
-    if (audioCtxRef.current.state === 'suspended') {
-      console.log('Resuming suspended AudioContext');
-      await audioCtxRef.current.resume();
-      console.log('AudioContext resumed, new state:', audioCtxRef.current.state);
-    }
-
-    setIsMusicLoading(true);
-    try {
-      const volume = settings.masterVolume * settings.musicVolume;
-      console.log('Starting music with volume:', volume);
-      await musicRef.current?.start(volume);
-      console.log('Music started successfully');
-      setIsMusicPlaying(true);
-    } catch (err) {
-      console.error('Failed to start music:', err);
-    } finally {
-      setIsMusicLoading(false);
-    }
-  }, [settings.musicEnabled, settings.masterVolume, settings.musicVolume]);
-
-  const stopMusic = useCallback(() => {
-    musicRef.current?.stop();
-    setIsMusicPlaying(false);
-  }, []);
-
-  const playSound = useCallback((soundType: SoundType) => {
-    if (!settings.sfxEnabled) return;
-    
-    // Ensure AudioContext is created
-    if (!audioCtxRef.current) {
-      audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-      musicRef.current = new BackgroundMusic(audioCtxRef.current);
-    }
-    
-    // Resume if suspended
-    if (audioCtxRef.current.state === 'suspended') {
-      audioCtxRef.current.resume();
-    }
-
-    const volume = settings.masterVolume * settings.sfxVolume;
-    const ctx = audioCtxRef.current;
-
+  // Internal sound player (doesn't check state, assumes running)
+  const playSoundInternal = (ctx: AudioContext, soundType: SoundType, volume: number) => {
     switch (soundType) {
       case 'cardSelect':
         playCardSelect(ctx, volume);
@@ -423,7 +442,76 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         playBonusCountdown(ctx, volume);
         break;
     }
-  }, [settings.sfxEnabled, settings.masterVolume, settings.sfxVolume]);
+  };
+
+  const startMusic = useCallback(async (): Promise<void> => {
+    console.log('[Audio] startMusic called, musicEnabled:', settings.musicEnabled);
+    if (!settings.musicEnabled) return;
+    
+    const ctx = ensureAudioContext();
+    console.log('[Audio] AudioContext state:', ctx.state);
+    
+    // Resume if suspended
+    if (ctx.state === 'suspended') {
+      try {
+        console.log('[Audio] Resuming suspended AudioContext for music...');
+        await ctx.resume();
+        console.log('[Audio] AudioContext resumed, new state:', ctx.state);
+        setIsAudioUnlocked(true);
+      } catch (err) {
+        console.error('[Audio] Failed to resume AudioContext for music:', err);
+        return;
+      }
+    }
+
+    setIsMusicLoading(true);
+    try {
+      const volume = settings.masterVolume * settings.musicVolume;
+      console.log('[Audio] Starting music with volume:', volume);
+      await musicRef.current?.start(volume);
+      console.log('[Audio] Music started successfully');
+      setIsMusicPlaying(true);
+    } catch (err) {
+      console.error('[Audio] Failed to start music:', err);
+    } finally {
+      setIsMusicLoading(false);
+    }
+  }, [settings.musicEnabled, settings.masterVolume, settings.musicVolume, ensureAudioContext]);
+
+  const stopMusic = useCallback(() => {
+    musicRef.current?.stop();
+    setIsMusicPlaying(false);
+  }, []);
+
+  const playSound = useCallback((soundType: SoundType) => {
+    if (!settings.sfxEnabled) return;
+    
+    const ctx = ensureAudioContext();
+    const volume = settings.masterVolume * settings.sfxVolume;
+    
+    // Check if AudioContext is running
+    if (ctx.state === 'running') {
+      playSoundInternal(ctx, soundType, volume);
+    } else if (ctx.state === 'suspended') {
+      // Queue the sound and try to resume
+      console.log('[Audio] AudioContext suspended, queueing sound:', soundType);
+      pendingSoundsRef.current.push(soundType);
+      
+      // Try to resume (will play queued sounds on success)
+      ctx.resume().then(() => {
+        console.log('[Audio] AudioContext resumed from playSound, state:', ctx.state);
+        setIsAudioUnlocked(true);
+        // Play queued sounds
+        const pending = [...pendingSoundsRef.current];
+        pendingSoundsRef.current = [];
+        pending.forEach(sound => playSoundInternal(ctx, sound, volume));
+      }).catch(err => {
+        console.error('[Audio] Failed to resume AudioContext from playSound:', err);
+      });
+    } else {
+      console.log('[Audio] AudioContext in unexpected state:', ctx.state, '- skipping sound:', soundType);
+    }
+  }, [settings.sfxEnabled, settings.masterVolume, settings.sfxVolume, ensureAudioContext]);
 
   const value: AudioContextValue = {
     ...settings,
@@ -437,6 +525,8 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     stopMusic,
     isMusicPlaying,
     isMusicLoading,
+    unlockAudio,
+    isAudioUnlocked,
   };
 
   return (
