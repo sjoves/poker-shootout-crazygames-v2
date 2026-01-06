@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useRetention } from '@/hooks/useRetention';
 import { useCrazyGames } from '@/contexts/CrazyGamesContext';
+import { useAudio } from '@/contexts/AudioContext';
 import { TutorialModal } from '@/components/tutorial/TutorialModal';
 import { SettingsModal } from '@/components/settings/SettingsModal';
 import { StreakDisplay } from '@/components/retention/StreakDisplay';
@@ -23,6 +24,7 @@ export default function SplashScreen() {
   const { isPremium, loading } = useSubscription();
   const { currentLogo } = useTheme();
   const { user: crazyGamesUser, loadingStop } = useCrazyGames();
+  const { unlockAudio } = useAudio();
   const {
     streak,
     achievements,
@@ -83,7 +85,10 @@ export default function SplashScreen() {
     }
   }, [user, canClaimReward]);
 
-  const handleModeSelect = (mode: GameMode, phaseOverride?: string) => {
+  const handleModeSelect = async (mode: GameMode, phaseOverride?: string) => {
+    // Fallback audio unlock on game start
+    await unlockAudio();
+    
     // Build URL with optional phase override for Classic/Blitz modes
     let url = `/play/${mode}`;
     if (phaseOverride) {
@@ -92,7 +97,10 @@ export default function SplashScreen() {
     navigate(url);
   };
 
-  const handleSSCStart = (startLevel: number) => {
+  const handleSSCStart = async (startLevel: number) => {
+    // Fallback audio unlock on game start
+    await unlockAudio();
+    
     navigate(`/play/ssc?startLevel=${startLevel}`);
   };
 

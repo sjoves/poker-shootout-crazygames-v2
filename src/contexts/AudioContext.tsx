@@ -9,8 +9,11 @@ declare global {
         [key: string]: any;
       };
     };
+    __audioUnlocked?: boolean;
+    __audioContext?: AudioContext;
   }
 }
+
 interface AudioSettings {
   masterVolume: number;
   sfxEnabled: boolean;
@@ -56,6 +59,89 @@ const DEFAULT_SETTINGS: AudioSettings = {
 };
 
 const AudioContext = createContext<AudioContextValue | undefined>(undefined);
+
+// ===== GLOBAL AUDIO UNLOCKER =====
+// This runs once at module load to set up the global click listener
+let globalAudioContext: AudioContext | null = null;
+let sdkInitialized = false;
+let unlockAttempted = false;
+
+// Initialize CrazyGames SDK first (if available)
+async function ensureSdkInitialized(): Promise<void> {
+  if (sdkInitialized) return;
+  
+  if (window.CrazyGames?.SDK) {
+    try {
+      console.log('[Audio] Waiting for CrazyGames SDK init...');
+      await window.CrazyGames.SDK.init();
+      console.log('[Audio] CrazyGames SDK initialized successfully');
+    } catch (err) {
+      console.log('[Audio] CrazyGames SDK init error (non-fatal):', err);
+    }
+  }
+  sdkInitialized = true;
+}
+
+// Global audio unlock function
+async function globalUnlockAudio(): Promise<boolean> {
+  if (unlockAttempted && window.__audioUnlocked) {
+    console.log('[Audio] Already unlocked, skipping');
+    return true;
+  }
+  unlockAttempted = true;
+
+  // Ensure SDK is initialized first
+  await ensureSdkInitialized();
+
+  // Create or get AudioContext
+  if (!globalAudioContext) {
+    globalAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    window.__audioContext = globalAudioContext;
+    console.log('[Audio] Created global AudioContext, state:', globalAudioContext.state);
+  }
+
+  console.log('[Audio] AudioContext state before resume:', globalAudioContext.state);
+
+  if (globalAudioContext.state === 'suspended') {
+    try {
+      await globalAudioContext.resume();
+      console.log('[Audio] AudioContext resumed, state:', globalAudioContext.state);
+    } catch (err) {
+      console.error('[Audio] Failed to resume AudioContext:', err);
+      return false;
+    }
+  }
+
+  if (globalAudioContext.state === 'running') {
+    window.__audioUnlocked = true;
+    console.log('[Audio] ✓ Audio unlocked successfully, state:', globalAudioContext.state);
+    return true;
+  }
+
+  console.log('[Audio] AudioContext in unexpected state:', globalAudioContext.state);
+  return false;
+}
+
+// Set up ONE-TIME global listener for first user interaction
+if (typeof document !== 'undefined') {
+  const handleFirstInteraction = async (e: Event) => {
+    console.log('[Audio] First user interaction detected:', e.type);
+    
+    // Remove both listeners immediately
+    document.removeEventListener('pointerdown', handleFirstInteraction, true);
+    document.removeEventListener('click', handleFirstInteraction, true);
+    document.removeEventListener('touchstart', handleFirstInteraction, true);
+    
+    await globalUnlockAudio();
+  };
+
+  // Use capture phase to ensure we get the event first
+  document.addEventListener('pointerdown', handleFirstInteraction, { once: true, capture: true });
+  document.addEventListener('click', handleFirstInteraction, { once: true, capture: true });
+  document.addEventListener('touchstart', handleFirstInteraction, { once: true, capture: true });
+  
+  console.log('[Audio] Global audio unlock listeners registered');
+}
 
 // Synthesized sound effects using Web Audio API
 function createOscillatorSound(
@@ -304,86 +390,82 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
 
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
   const [isMusicLoading, setIsMusicLoading] = useState(false);
-  const [isAudioUnlocked, setIsAudioUnlocked] = useState(false);
-  const audioCtxRef = useRef<AudioContext | null>(null);
+  const [isAudioUnlocked, setIsAudioUnlocked] = useState(() => window.__audioUnlocked ?? false);
+  const audioCtxRef = useRef<AudioContext | null>(globalAudioContext);
   const musicRef = useRef<BackgroundMusic | null>(null);
   const pendingSoundsRef = useRef<SoundType[]>([]);
 
-  // Helper to ensure AudioContext exists
+  // Sync with global unlock state
+  useEffect(() => {
+    const checkUnlockState = () => {
+      if (window.__audioUnlocked && !isAudioUnlocked) {
+        setIsAudioUnlocked(true);
+      }
+      // Use global context if available
+      if (globalAudioContext && !audioCtxRef.current) {
+        audioCtxRef.current = globalAudioContext;
+        musicRef.current = new BackgroundMusic(globalAudioContext);
+      }
+    };
+    
+    checkUnlockState();
+    // Check periodically in case global unlock happens
+    const interval = setInterval(checkUnlockState, 100);
+    return () => clearInterval(interval);
+  }, [isAudioUnlocked]);
+
+  // Helper to ensure AudioContext exists (uses global if available)
   const ensureAudioContext = useCallback(() => {
+    // Prefer global context
+    if (globalAudioContext) {
+      if (!audioCtxRef.current) {
+        audioCtxRef.current = globalAudioContext;
+        musicRef.current = new BackgroundMusic(globalAudioContext);
+      }
+      return globalAudioContext;
+    }
+    
     if (!audioCtxRef.current) {
-      console.log('[Audio] Creating new AudioContext');
+      console.log('[Audio] Creating new AudioContext (no global available)');
       audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      globalAudioContext = audioCtxRef.current;
+      window.__audioContext = audioCtxRef.current;
       musicRef.current = new BackgroundMusic(audioCtxRef.current);
       console.log('[Audio] AudioContext created, state:', audioCtxRef.current.state);
     }
     return audioCtxRef.current;
   }, []);
 
-  // Global unlock function - call this on first user interaction
+  // Fallback unlock function - can be called explicitly from buttons
   const unlockAudio = useCallback(async (): Promise<boolean> => {
-    console.log('[Audio] unlockAudio called');
+    console.log('[Audio] unlockAudio (fallback) called');
     
-    // Wait for CrazyGames SDK if available
-    if (window.CrazyGames?.SDK) {
-      try {
-        console.log('[Audio] CrazyGames SDK detected, waiting for init...');
-        await window.CrazyGames.SDK.init();
-        console.log('[Audio] CrazyGames SDK initialized');
-      } catch (err) {
-        console.log('[Audio] CrazyGames SDK init error (non-fatal):', err);
-      }
-    }
+    // Use the global unlock function
+    const success = await globalUnlockAudio();
     
-    const ctx = ensureAudioContext();
-    
-    if (ctx.state === 'running') {
-      console.log('[Audio] AudioContext already running');
+    if (success) {
       setIsAudioUnlocked(true);
-      return true;
-    }
-    
-    if (ctx.state === 'suspended') {
-      try {
-        console.log('[Audio] Resuming suspended AudioContext...');
-        await ctx.resume();
-        console.log('[Audio] AudioContext resumed successfully, state:', ctx.state);
-        setIsAudioUnlocked(true);
-        
-        // Play any queued sounds
-        if (pendingSoundsRef.current.length > 0) {
-          console.log('[Audio] Playing', pendingSoundsRef.current.length, 'queued sounds');
-          pendingSoundsRef.current.forEach(sound => {
-            playSoundInternal(ctx, sound, settings.masterVolume * settings.sfxVolume);
-          });
-          pendingSoundsRef.current = [];
-        }
-        
-        return true;
-      } catch (err) {
-        console.error('[Audio] Failed to resume AudioContext:', err);
-        return false;
+      
+      // Ensure we're using the global context
+      if (globalAudioContext && !audioCtxRef.current) {
+        audioCtxRef.current = globalAudioContext;
+        musicRef.current = new BackgroundMusic(globalAudioContext);
+      }
+      
+      // Play any queued sounds
+      const ctx = ensureAudioContext();
+      if (pendingSoundsRef.current.length > 0 && ctx.state === 'running') {
+        console.log('[Audio] Playing', pendingSoundsRef.current.length, 'queued sounds');
+        pendingSoundsRef.current.forEach(sound => {
+          playSoundInternal(ctx, sound, settings.masterVolume * settings.sfxVolume);
+        });
+        pendingSoundsRef.current = [];
       }
     }
     
-    console.log('[Audio] AudioContext in unexpected state:', ctx.state);
-    return false;
+    return success;
   }, [ensureAudioContext, settings.masterVolume, settings.sfxVolume]);
 
-  // Initialize AudioContext on first user interaction
-  useEffect(() => {
-    const handleUserInteraction = () => {
-      unlockAudio();
-    };
-
-    document.addEventListener('click', handleUserInteraction, { once: true });
-    document.addEventListener('touchstart', handleUserInteraction, { once: true });
-
-    return () => {
-      document.removeEventListener('click', handleUserInteraction);
-      document.removeEventListener('touchstart', handleUserInteraction);
-    };
-  }, [unlockAudio]);
 
   // Persist settings
   useEffect(() => {
