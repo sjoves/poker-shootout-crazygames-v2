@@ -215,7 +215,7 @@ export default function SplashScreen() {
         <div className="flex justify-center gap-3">
           <Button 
             variant="outline" 
-            className="gap-2 border-primary bg-transparent hover:bg-primary/10" 
+            className="gap-2 border-primary bg-transparent hover:bg-primary/10 hover:text-foreground" 
             onClick={() => setShowSettings(true)}
           >
             <Settings className="w-5 h-5 text-primary" />
@@ -223,7 +223,7 @@ export default function SplashScreen() {
           </Button>
           <Button 
             variant="outline" 
-            className="gap-2 border-primary bg-transparent hover:bg-primary/10" 
+            className="gap-2 border-primary bg-transparent hover:bg-primary/10 hover:text-foreground" 
             onClick={() => setShowTutorial(true)}
           >
             <HelpCircle className="w-5 h-5 text-primary" />
