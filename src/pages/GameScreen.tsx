@@ -413,9 +413,9 @@ export default function GameScreen() {
   }
 
   return (
-    <div className="h-screen max-h-screen flex flex-col overflow-hidden modern-bg relative">
-      {/* Main game area - takes full screen */}
-      <div className="flex-1 min-h-0 relative overflow-hidden">
+    <div className="h-[100vh] max-h-[100vh] flex flex-col overflow-hidden modern-bg relative">
+      {/* Main game area - takes full screen, no scrolling */}
+      <div className="flex-1 min-h-0 relative overflow-hidden flex-shrink-0">
         {/* ScorePanel overlay */}
         {!isBonusRound && (
           <>
