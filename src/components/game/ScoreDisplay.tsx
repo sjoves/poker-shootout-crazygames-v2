@@ -386,23 +386,16 @@ export function ScorePanel({
                       playSound('buttonClick');
                     }}
                     className={cn(
-                      "flex flex-col items-center p-3 rounded-lg border transition-all",
+                      "flex items-center justify-center gap-2 p-3 rounded-lg border transition-all",
                       theme === t.id
                         ? "border-primary bg-primary/10"
                         : "border-border bg-secondary/50 hover:bg-secondary"
                     )}
                   >
-                    <img 
-                      src={t.logo} 
-                      alt={t.name} 
-                      className="w-16 h-16 object-contain mb-2"
-                    />
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium text-sm text-foreground">{t.name}</p>
-                      {theme === t.id && (
-                        <CheckIcon className="w-4 h-4 text-primary" />
-                      )}
-                    </div>
+                    <p className="font-medium text-sm text-foreground">{t.name}</p>
+                    {theme === t.id && (
+                      <CheckIcon className="w-4 h-4 text-primary" />
+                    )}
                   </button>
                 ))}
               </div>
