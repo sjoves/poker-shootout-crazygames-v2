@@ -8,7 +8,7 @@ interface PlayingCardProps {
   onClick?: () => void;
   isSelected?: boolean;
   isDisabled?: boolean;
-  size?: 'xs' | 'sm' | 'ssc' | 'sdm' | 'sd' | 'md' | 'hand' | 'lg';
+  size?: 'xs' | 'sm' | 'ssc' | 'sdm' | 'sdm-lg' | 'sd' | 'md' | 'hand' | 'lg';
   animate?: boolean;
   className?: string;
 }
@@ -28,6 +28,8 @@ const SIZE_CONFIG = {
   ssc: { card: 'w-[68px] h-[95px]', rank: 'text-sm', corner: 'text-[10px]', center: 'text-xl', pip: 'text-[8px]', gap: 'gap-0' },
   // Game cards use vh-based sizing for CrazyGames compatibility (no scrolling)
   sdm: { card: 'w-[calc(13.6vh*0.714)] h-[13.6vh]', rank: 'text-sm', corner: 'text-[9px]', center: 'text-lg', pip: 'text-[7px]', gap: 'gap-0' },
+  // Larger mobile cards for 3-row layout (~18% bigger than sdm)
+  'sdm-lg': { card: 'w-[calc(16vh*0.714)] h-[16vh]', rank: 'text-base', corner: 'text-[10px]', center: 'text-xl', pip: 'text-[8px]', gap: 'gap-0' },
   sd: { card: 'w-[calc(17vh*0.714)] h-[17vh]', rank: 'text-base', corner: 'text-xs', center: 'text-2xl', pip: 'text-[9px]', gap: 'gap-0' },
   md: { card: 'w-[76px] h-[106px]', rank: 'text-base', corner: 'text-xs', center: 'text-2xl', pip: 'text-[10px]', gap: 'gap-0.5' },
   // Hand display uses vh-based sizing
@@ -39,7 +41,7 @@ const PIP_LAYOUTS: Record<string, number> = {
   'A': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10,
 };
 
-const CenterPips = memo(function CenterPips({ rank, suit, size }: { rank: string; suit: Suit; size: 'xs' | 'sm' | 'ssc' | 'sdm' | 'sd' | 'md' | 'hand' | 'lg' }) {
+const CenterPips = memo(function CenterPips({ rank, suit, size }: { rank: string; suit: Suit; size: 'xs' | 'sm' | 'ssc' | 'sdm' | 'sdm-lg' | 'sd' | 'md' | 'hand' | 'lg' }) {
   const symbol = SUIT_SYMBOLS[suit];
   const count = PIP_LAYOUTS[rank];
   const config = SIZE_CONFIG[size];
@@ -141,13 +143,14 @@ const EMPTY_SLOT_SIZES = {
   sm: 'w-14 h-[79px]',
   ssc: 'w-[68px] h-[95px]',
   sdm: 'w-[calc(13.6vh*0.714)] h-[13.6vh]',
+  'sdm-lg': 'w-[calc(16vh*0.714)] h-[16vh]',
   sd: 'w-[calc(17vh*0.714)] h-[17vh]',
   md: 'w-[76px] h-[106px]',
   hand: 'w-[calc(11vh*0.714)] h-[11vh]',
   lg: 'w-[115px] h-[158px]',
 };
 
-export function EmptyCardSlot({ size = 'md' }: { size?: 'xs' | 'sm' | 'ssc' | 'sdm' | 'sd' | 'md' | 'hand' | 'lg' }) {
+export function EmptyCardSlot({ size = 'md' }: { size?: 'xs' | 'sm' | 'ssc' | 'sdm' | 'sdm-lg' | 'sd' | 'md' | 'hand' | 'lg' }) {
   return (
     <div
       className={cn(
