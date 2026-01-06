@@ -52,9 +52,9 @@ export function ConveyorBelt({
   // Track when cards are ready for animation
   const [cardsReady, setCardsReady] = useState(false);
 
-  // Use viewport-relative sizing for responsive cards
+  // Use viewport-relative sizing for responsive cards with increased spacing
   const cardWidth = isMobile ? Math.min(72, window.innerWidth * 0.18) : Math.min(64, window.innerWidth * 0.06);
-  const cardSpacing = isMobile ? Math.min(28, window.innerWidth * 0.07) : Math.min(20, window.innerWidth * 0.02);
+  const cardSpacing = isMobile ? Math.min(40, window.innerWidth * 0.10) : Math.min(32, window.innerWidth * 0.04);
 
   // Reset on reshuffle
   useEffect(() => {
