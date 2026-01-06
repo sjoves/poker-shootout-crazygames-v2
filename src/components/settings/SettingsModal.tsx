@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useTheme, ThemeName, THEMES } from '@/contexts/ThemeContext';
 import { useAudio } from '@/contexts/AudioContext';
@@ -30,14 +30,20 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     playSound,
   } = useAudio();
 
-  const [previousMasterVolume, setPreviousMasterVolume] = useState<number | null>(null);
+  const [lastNonZeroMasterVolume, setLastNonZeroMasterVolume] = useState(0.5);
+
+  useEffect(() => {
+    if (masterVolume > 0) {
+      setLastNonZeroMasterVolume(masterVolume);
+    }
+  }, [masterVolume]);
 
   const toggleMasterMute = () => {
     if (masterVolume > 0) {
-      setPreviousMasterVolume(masterVolume);
+      setLastNonZeroMasterVolume(masterVolume);
       setMasterVolume(0);
     } else {
-      setMasterVolume(previousMasterVolume ?? 0.5);
+      setMasterVolume(lastNonZeroMasterVolume);
     }
   };
 
@@ -95,7 +101,11 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               </div>
               <Slider
                 value={[masterVolume * 100]}
-                onValueChange={([value]) => setMasterVolume(value / 100)}
+                onValueChange={([value]) => {
+                  const vol = value / 100;
+                  setMasterVolume(vol);
+                  if (vol > 0) setLastNonZeroMasterVolume(vol);
+                }}
                 max={100}
                 step={5}
                 className="w-full"

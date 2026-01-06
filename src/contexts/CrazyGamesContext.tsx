@@ -8,6 +8,7 @@ interface CrazyGamesUser {
 }
 
 interface CrazyGamesSDK {
+  [key: string]: any;
   init: () => Promise<void>;
   ad: {
     requestAd: (type: 'midgame' | 'rewarded', callbacks?: {
@@ -41,7 +42,10 @@ interface CrazyGamesSDK {
 declare global {
   interface Window {
     CrazyGames?: {
-      SDK: CrazyGamesSDK;
+      SDK: {
+        init: () => Promise<void>;
+        [key: string]: any;
+      };
     };
   }
 }
