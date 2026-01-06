@@ -101,11 +101,13 @@ async function globalUnlockAudio(): Promise<boolean> {
   }
 
   console.log('[Audio] AudioContext state before resume:', globalAudioContext.state);
+  console.log('AudioContext state:', globalAudioContext.state);
 
   if (globalAudioContext.state === 'suspended') {
     try {
       await globalAudioContext.resume();
       console.log('[Audio] AudioContext resumed, state:', globalAudioContext.state);
+      console.log('AudioContext state:', globalAudioContext.state);
     } catch (err) {
       console.error('[Audio] Failed to resume AudioContext:', err);
       return false;
@@ -170,31 +172,53 @@ function createOscillatorSound(
 // Cache for loaded audio buffers
 const audioBufferCache = new Map<string, AudioBuffer>();
 
+function publicAssetUrl(path: string): string {
+  const clean = path.replace(/^\/+/, '');
+  const base = (import.meta as any).env?.BASE_URL ?? '/';
+  const normalizedBase = base.endsWith('/') ? base : `${base}/`;
+  return `${normalizedBase}${clean}`;
+}
+
 async function loadAudioBuffer(audioCtx: AudioContext, url: string): Promise<AudioBuffer> {
   const cached = audioBufferCache.get(url);
   if (cached) return cached;
-  
+
+  console.log('[Audio] Loading audio buffer:', url);
+
   const response = await fetch(url);
+  if (!response.ok) {
+    console.error('[Audio] Audio fetch failed:', { url, status: response.status, statusText: response.statusText });
+    throw new Error(`Audio fetch failed (${response.status}) for ${url}`);
+  }
+
   const arrayBuffer = await response.arrayBuffer();
-  const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-  audioBufferCache.set(url, audioBuffer);
-  return audioBuffer;
+  try {
+    const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+    audioBufferCache.set(url, audioBuffer);
+    return audioBuffer;
+  } catch (err) {
+    console.error('[Audio] decodeAudioData failed:', { url, err });
+    throw err;
+  }
 }
 
 function playCardSelect(audioCtx: AudioContext, volume: number): void {
-  loadAudioBuffer(audioCtx, '/sounds/card-hit.mp3').then((buffer) => {
-    const source = audioCtx.createBufferSource();
-    const gainNode = audioCtx.createGain();
-    
-    source.buffer = buffer;
-    gainNode.gain.setValueAtTime(volume, audioCtx.currentTime);
-    
-    source.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-    source.start();
-  }).catch((err) => {
-    console.error('Failed to play card select sound:', err);
-  });
+  const url = publicAssetUrl('sounds/card-hit.mp3');
+  loadAudioBuffer(audioCtx, url)
+    .then((buffer) => {
+      const source = audioCtx.createBufferSource();
+      const gainNode = audioCtx.createGain();
+
+      source.buffer = buffer;
+      gainNode.gain.setValueAtTime(volume, audioCtx.currentTime);
+
+      source.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      source.start();
+    })
+    .catch((err) => {
+      console.error('[Audio] Failed to play card select sound:', err);
+    });
 }
 
 function playCardFlip(audioCtx: AudioContext, volume: number): void {
@@ -231,19 +255,22 @@ function playLevelComplete(audioCtx: AudioContext, volume: number): void {
 
 function playGameOver(audioCtx: AudioContext, volume: number): void {
   // Play the game-over.mp3 sound file
-  loadAudioBuffer(audioCtx, '/sounds/game-over.mp3').then((buffer) => {
-    const source = audioCtx.createBufferSource();
-    const gainNode = audioCtx.createGain();
-    
-    source.buffer = buffer;
-    gainNode.gain.setValueAtTime(volume * 0.8, audioCtx.currentTime);
-    
-    source.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-    source.start();
-  }).catch((err) => {
-    console.error('Failed to play game over sound:', err);
-  });
+  const url = publicAssetUrl('sounds/game-over.mp3');
+  loadAudioBuffer(audioCtx, url)
+    .then((buffer) => {
+      const source = audioCtx.createBufferSource();
+      const gainNode = audioCtx.createGain();
+
+      source.buffer = buffer;
+      gainNode.gain.setValueAtTime(volume * 0.8, audioCtx.currentTime);
+
+      source.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      source.start();
+    })
+    .catch((err) => {
+      console.error('[Audio] Failed to play game over sound:', err);
+    });
 }
 
 function playButtonClick(audioCtx: AudioContext, volume: number): void {
@@ -305,19 +332,22 @@ function playCountdownUrgent(audioCtx: AudioContext, volume: number): void {
 
 function playBonusCountdown(audioCtx: AudioContext, volume: number): void {
   // Play the countdown pulse sound
-  loadAudioBuffer(audioCtx, '/sounds/countdown-tick.mp3').then((buffer) => {
-    const source = audioCtx.createBufferSource();
-    const gainNode = audioCtx.createGain();
-    
-    source.buffer = buffer;
-    gainNode.gain.setValueAtTime(volume * 0.8, audioCtx.currentTime);
-    
-    source.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-    source.start();
-  }).catch((err) => {
-    console.error('Failed to play bonus countdown sound:', err);
-  });
+  const url = publicAssetUrl('sounds/countdown-tick.mp3');
+  loadAudioBuffer(audioCtx, url)
+    .then((buffer) => {
+      const source = audioCtx.createBufferSource();
+      const gainNode = audioCtx.createGain();
+
+      source.buffer = buffer;
+      gainNode.gain.setValueAtTime(volume * 0.8, audioCtx.currentTime);
+
+      source.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      source.start();
+    })
+    .catch((err) => {
+      console.error('[Audio] Failed to play bonus countdown sound:', err);
+    });
 }
 
 // Background music player using audio file
@@ -346,7 +376,7 @@ class BackgroundMusic {
       // Load the audio buffer if not already loaded
       if (!this.audioBuffer) {
         console.log('Loading background music audio buffer...');
-        this.audioBuffer = await loadAudioBuffer(this.audioCtx, '/sounds/background-music.mp3');
+        this.audioBuffer = await loadAudioBuffer(this.audioCtx, publicAssetUrl('sounds/background-music.mp3'));
         console.log('Audio buffer loaded, duration:', this.audioBuffer.duration);
       }
       
@@ -529,23 +559,24 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   const startMusic = useCallback(async (): Promise<void> => {
     console.log('[Audio] startMusic called, musicEnabled:', settings.musicEnabled);
     if (!settings.musicEnabled) return;
-    
-    const ctx = ensureAudioContext();
-    console.log('[Audio] AudioContext state:', ctx.state);
-    
-    // Resume if suspended
-    if (ctx.state === 'suspended') {
-      try {
-        console.log('[Audio] Resuming suspended AudioContext for music...');
-        await ctx.resume();
-        console.log('[Audio] AudioContext resumed, new state:', ctx.state);
-        setIsAudioUnlocked(true);
-      } catch (err) {
-        console.error('[Audio] Failed to resume AudioContext for music:', err);
-        return;
-      }
+
+    // Ensure SDK init + AudioContext resume follows CrazyGames requirements
+    const unlocked = await globalUnlockAudio();
+    if (!unlocked) {
+      console.log('[Audio] startMusic aborted - audio unlock failed');
+      return;
     }
 
+    const ctx = ensureAudioContext();
+    console.log('[Audio] AudioContext state:', ctx.state);
+    console.log('AudioContext state:', ctx.state);
+
+    if (ctx.state !== 'running') {
+      console.log('[Audio] startMusic aborted - AudioContext not running');
+      return;
+    }
+
+    setIsAudioUnlocked(true);
     setIsMusicLoading(true);
     try {
       const volume = settings.masterVolume * settings.musicVolume;
@@ -567,32 +598,44 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
 
   const playSound = useCallback((soundType: SoundType) => {
     if (!settings.sfxEnabled) return;
-    
+
     const ctx = ensureAudioContext();
     const volume = settings.masterVolume * settings.sfxVolume;
-    
-    // Check if AudioContext is running
+
     if (ctx.state === 'running') {
       playSoundInternal(ctx, soundType, volume);
-    } else if (ctx.state === 'suspended') {
-      // Queue the sound and try to resume
+      return;
+    }
+
+    if (ctx.state === 'suspended') {
+      // Queue and unlock using the SDK-synced global unlocker
       console.log('[Audio] AudioContext suspended, queueing sound:', soundType);
       pendingSoundsRef.current.push(soundType);
-      
-      // Try to resume (will play queued sounds on success)
-      ctx.resume().then(() => {
-        console.log('[Audio] AudioContext resumed from playSound, state:', ctx.state);
-        setIsAudioUnlocked(true);
-        // Play queued sounds
-        const pending = [...pendingSoundsRef.current];
-        pendingSoundsRef.current = [];
-        pending.forEach(sound => playSoundInternal(ctx, sound, volume));
-      }).catch(err => {
-        console.error('[Audio] Failed to resume AudioContext from playSound:', err);
-      });
-    } else {
-      console.log('[Audio] AudioContext in unexpected state:', ctx.state, '- skipping sound:', soundType);
+
+      globalUnlockAudio()
+        .then((success) => {
+          console.log('[Audio] playSound unlock result:', success);
+          console.log('AudioContext state:', ctx.state);
+          if (!success) return;
+
+          setIsAudioUnlocked(true);
+
+          if (ctx.state !== 'running') {
+            console.log('[Audio] AudioContext still not running after unlock:', ctx.state);
+            return;
+          }
+
+          const pending = [...pendingSoundsRef.current];
+          pendingSoundsRef.current = [];
+          pending.forEach((sound) => playSoundInternal(ctx, sound, volume));
+        })
+        .catch((err) => {
+          console.error('[Audio] playSound unlock error:', err);
+        });
+      return;
     }
+
+    console.log('[Audio] AudioContext in unexpected state:', ctx.state, '- skipping sound:', soundType);
   }, [settings.sfxEnabled, settings.masterVolume, settings.sfxVolume, ensureAudioContext]);
 
   const value: AudioContextValue = {
