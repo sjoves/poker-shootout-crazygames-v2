@@ -208,10 +208,10 @@ function GuidedInteractiveDemo({ onComplete }: { onComplete: () => void }) {
   }, [selectedCards]);
 
   return (
-    <div className="space-y-4 relative">
+    <div className="space-y-3 relative">
       {/* Instruction banner */}
       <motion.div 
-        className="bg-primary/10 border border-primary/30 rounded-lg p-3 text-center"
+        className="bg-primary/10 border border-primary/30 rounded-lg p-2 text-center"
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
       >
@@ -233,11 +233,11 @@ function GuidedInteractiveDemo({ onComplete }: { onComplete: () => void }) {
       </motion.div>
 
       {/* Hand Display Area */}
-      <div className="bg-muted/30 rounded-xl p-4 relative overflow-hidden">
-        <p className="text-xs text-muted-foreground mb-2 text-center font-medium">
+      <div className="bg-muted/30 rounded-xl p-3 relative overflow-hidden">
+        <p className="text-xs text-muted-foreground mb-1 text-center font-medium">
           YOUR HAND
         </p>
-        <div className="flex justify-center gap-2 min-h-[100px]">
+        <div className="flex justify-center gap-1 min-h-[80px]">
           {Array.from({ length: 5 }).map((_, i) => (
             selectedCards[i] ? (
               <motion.div
@@ -302,10 +302,10 @@ function GuidedInteractiveDemo({ onComplete }: { onComplete: () => void }) {
 
       {/* Available Cards Grid */}
       <div className="relative">
-        <p className="text-xs text-muted-foreground mb-2 text-center">
+        <p className="text-xs text-muted-foreground mb-1 text-center">
           TAP CARDS TO SELECT
         </p>
-        <div className="grid grid-cols-5 gap-2 justify-items-center">
+        <div className="grid grid-cols-5 gap-1 justify-items-center">
           {availableCards.map((card, index) => {
             const isTarget = card.id === currentTargetId;
             return (
@@ -601,7 +601,7 @@ export function TutorialModal({ isOpen, onClose }: TutorialModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto p-0 gap-0 border-border/50 bg-gradient-to-b from-background to-muted/20">
+      <DialogContent className="max-w-md max-h-[65vh] overflow-y-auto p-0 gap-0 border-border/50 bg-gradient-to-b from-background to-muted/20">
         {/* Header */}
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border/50 px-4 py-3">
           <div className="flex items-center justify-between">
@@ -642,7 +642,7 @@ export function TutorialModal({ isOpen, onClose }: TutorialModalProps) {
         </div>
 
         {/* Content */}
-        <div className="px-4 py-4">
+        <div className="px-4 py-3">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentStep}
