@@ -22,23 +22,24 @@ const SUIT_SYMBOLS: Record<Suit, string> = {
 
 const isRedSuit = (suit: Suit) => suit === 'hearts' || suit === 'diamonds';
 
+// Jumbo-style sizing with larger ranks and pips like Bicycle cards
 const SIZE_CONFIG = {
-  xs: { card: 'w-12 h-[67px]', rank: 'text-xs', corner: 'text-[8px]', center: 'text-base', pip: 'text-[6px]', gap: 'gap-0' },
-  sm: { card: 'w-14 h-[79px]', rank: 'text-sm', corner: 'text-[10px]', center: 'text-lg', pip: 'text-[7px]', gap: 'gap-0' },
-  ssc: { card: 'w-[68px] h-[95px]', rank: 'text-sm', corner: 'text-[10px]', center: 'text-xl', pip: 'text-[8px]', gap: 'gap-0' },
+  xs: { card: 'w-12 h-[67px]', rank: 'text-base font-black', corner: 'text-xs', center: 'text-sm', pip: 'text-[8px]', gap: 'gap-0' },
+  sm: { card: 'w-14 h-[79px]', rank: 'text-lg font-black', corner: 'text-sm', center: 'text-base', pip: 'text-[9px]', gap: 'gap-0' },
+  ssc: { card: 'w-[68px] h-[95px]', rank: 'text-xl font-black', corner: 'text-base', center: 'text-lg', pip: 'text-[10px]', gap: 'gap-0' },
   // Game cards use vh-based sizing for CrazyGames compatibility (no scrolling)
-  sdm: { card: 'w-[calc(13.6vh*0.714)] h-[13.6vh]', rank: 'text-sm', corner: 'text-[9px]', center: 'text-lg', pip: 'text-[7px]', gap: 'gap-0' },
+  sdm: { card: 'w-[calc(13.6vh*0.714)] h-[13.6vh]', rank: 'text-lg font-black', corner: 'text-sm', center: 'text-base', pip: 'text-[9px]', gap: 'gap-0' },
   // Larger mobile cards for 3-row layout (~18% bigger than sdm)
-  'sdm-lg': { card: 'w-[calc(16vh*0.714)] h-[16vh]', rank: 'text-base', corner: 'text-[10px]', center: 'text-xl', pip: 'text-[8px]', gap: 'gap-0' },
-  sd: { card: 'w-[calc(17vh*0.714)] h-[17vh]', rank: 'text-base', corner: 'text-xs', center: 'text-2xl', pip: 'text-[9px]', gap: 'gap-0' },
-  md: { card: 'w-[76px] h-[106px]', rank: 'text-base', corner: 'text-xs', center: 'text-2xl', pip: 'text-[10px]', gap: 'gap-0.5' },
+  'sdm-lg': { card: 'w-[calc(16vh*0.714)] h-[16vh]', rank: 'text-xl font-black', corner: 'text-base', center: 'text-lg', pip: 'text-[10px]', gap: 'gap-0' },
+  sd: { card: 'w-[calc(17vh*0.714)] h-[17vh]', rank: 'text-2xl font-black', corner: 'text-lg', center: 'text-xl', pip: 'text-xs', gap: 'gap-0' },
+  md: { card: 'w-[76px] h-[106px]', rank: 'text-2xl font-black', corner: 'text-lg', center: 'text-xl', pip: 'text-sm', gap: 'gap-0.5' },
   // Hand display uses vh-based sizing
-  hand: { card: 'w-[calc(11vh*0.714)] h-[11vh]', rank: 'text-sm', corner: 'text-[10px]', center: 'text-lg', pip: 'text-[8px]', gap: 'gap-0' },
-  lg: { card: 'w-[115px] h-[158px]', rank: 'text-xl', corner: 'text-sm', center: 'text-4xl', pip: 'text-xs', gap: 'gap-1' },
+  hand: { card: 'w-[calc(11vh*0.714)] h-[11vh]', rank: 'text-lg font-black', corner: 'text-sm', center: 'text-base', pip: 'text-[10px]', gap: 'gap-0' },
+  lg: { card: 'w-[115px] h-[158px]', rank: 'text-3xl font-black', corner: 'text-xl', center: 'text-2xl', pip: 'text-base', gap: 'gap-1' },
   // Responsive conveyor belt sizes - use w-full h-full to inherit from parent
-  'conveyor-sm': { card: 'w-full h-full aspect-[2.5/3.5]', rank: 'text-xs', corner: 'text-[8px]', center: 'text-base', pip: 'text-[6px]', gap: 'gap-0' },
-  'conveyor-md': { card: 'w-full h-full aspect-[2.5/3.5]', rank: 'text-sm', corner: 'text-[10px]', center: 'text-lg', pip: 'text-[7px]', gap: 'gap-0' },
-  'conveyor-lg': { card: 'w-full h-full aspect-[2.5/3.5]', rank: 'text-base', corner: 'text-xs', center: 'text-2xl', pip: 'text-[9px]', gap: 'gap-0.5' },
+  'conveyor-sm': { card: 'w-full h-full aspect-[2.5/3.5]', rank: 'text-base font-black', corner: 'text-xs', center: 'text-sm', pip: 'text-[8px]', gap: 'gap-0' },
+  'conveyor-md': { card: 'w-full h-full aspect-[2.5/3.5]', rank: 'text-lg font-black', corner: 'text-sm', center: 'text-base', pip: 'text-[9px]', gap: 'gap-0' },
+  'conveyor-lg': { card: 'w-full h-full aspect-[2.5/3.5]', rank: 'text-2xl font-black', corner: 'text-lg', center: 'text-xl', pip: 'text-xs', gap: 'gap-0.5' },
 };
 
 const PIP_LAYOUTS: Record<string, number> = {
