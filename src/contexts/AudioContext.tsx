@@ -68,13 +68,37 @@ let sdkInitialized = false;
 let unlockAttempted = false;
 
 // Get master gain node (creates it if needed)
-function getMasterGainNode(): GainNode | null {
-  if (!globalAudioContext) return null;
-  if (!globalMasterGain) {
-    globalMasterGain = globalAudioContext.createGain();
-    globalMasterGain.connect(globalAudioContext.destination);
+function getMasterGainNode(audioCtx?: AudioContext): GainNode {
+  const ctx = audioCtx ?? globalAudioContext;
+  if (!ctx) {
+    throw new Error('[Audio] No AudioContext available for master gain');
+  }
+
+  // Keep globals in sync (should always be the same context)
+  if (!globalAudioContext) globalAudioContext = ctx;
+
+  // (Re)create if missing or tied to a different context
+  if (!globalMasterGain || globalMasterGain.context !== ctx) {
+    globalMasterGain = ctx.createGain();
+    globalMasterGain.connect(ctx.destination);
+
+    // Initialize from saved settings if available
+    const saved = localStorage.getItem('poker-shootout-audio');
+    if (saved) {
+      try {
+        const settings = JSON.parse(saved);
+        if (typeof settings.masterVolume === 'number') {
+          globalMasterGain.gain.setValueAtTime(settings.masterVolume, ctx.currentTime);
+          console.log('[Audio] Master gain initialized from saved settings:', settings.masterVolume);
+        }
+      } catch {
+        // ignore
+      }
+    }
+
     console.log('[Audio] Created global master gain node');
   }
+
   return globalMasterGain;
 }
 

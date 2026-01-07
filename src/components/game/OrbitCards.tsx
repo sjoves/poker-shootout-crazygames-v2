@@ -1,9 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import useSound from 'use-sound';
+import { useAudio } from '@/contexts/AudioContext';
 import { Card } from '@/types/game';
 import { PlayingCard } from './PlayingCard';
-
 interface OrbitSlot {
   ring: 0 | 1 | 2;
   slotIndex: number;
@@ -229,7 +228,7 @@ export function OrbitCards({
 
   const handleCardClick = useCallback(
     (slot: OrbitSlot) => {
-      playCardHit();
+      playSound('cardSelect');
       onSelectCard(slot.card);
 
       setSlots(prev => {
@@ -274,7 +273,7 @@ export function OrbitCards({
         return deduped;
       });
     },
-    [onSelectCard, playCardHit, selectedCardIds]
+    [onSelectCard, playSound, selectedCardIds]
   );
 
   // Clear isNew flag after animation
