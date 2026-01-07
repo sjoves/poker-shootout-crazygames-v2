@@ -423,24 +423,14 @@ class BackgroundMusic {
   private source: AudioBufferSourceNode | null = null;
   private isPlaying: boolean = false;
   private audioBuffer: AudioBuffer | null = null;
-  private connectedToMaster: boolean = false;
 
   constructor(audioCtx: AudioContext) {
     this.audioCtx = audioCtx;
     this.gainNode = audioCtx.createGain();
-    this.reconnectToMaster();
-  }
-
-  // Reconnect to master gain (call after forceReconnectMaster to restore routing)
-  reconnectToMaster() {
-    try {
-      this.gainNode.disconnect();
-    } catch {
-      // Ignore if not connected
-    }
-    const masterGain = getStrictMaster(this.audioCtx);
+    // Connect to master gain node once at construction
+    const masterGain = getStrictMaster(audioCtx);
     this.gainNode.connect(masterGain);
-    this.connectedToMaster = true;
+    console.log('[BackgroundMusic] Connected gainNode to masterGain');
   }
 
   setVolume(volume: number) {
@@ -458,9 +448,6 @@ class BackgroundMusic {
         this.audioBuffer = await loadAudioBuffer(this.audioCtx, publicAssetUrl('sounds/background-music.mp3'));
         console.log('Audio buffer loaded, duration:', this.audioBuffer.duration);
       }
-      
-      // Ensure we're connected to master before starting
-      this.reconnectToMaster();
       
       this.source = this.audioCtx.createBufferSource();
       this.source.buffer = this.audioBuffer;
