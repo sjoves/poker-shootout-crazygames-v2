@@ -170,7 +170,7 @@ export default function GameScreen() {
   }, [mode, isTestBonus, startLevel, phaseOverride, startGame, setPaused, startMusic, stopMusic]);
 
 
-  // Intro sequence: Ready -> Begin (user clicks to start Playing)
+  // Intro sequence: Ready -> Begin -> Playing
   useEffect(() => {
     if (introPhase === 'loading' || isLoadingMusic) return;
 
@@ -178,17 +178,19 @@ export default function GameScreen() {
       const timer = setTimeout(() => setIntroPhase('begin'), 1200);
       return () => clearTimeout(timer);
     }
-    // 'begin' phase now waits for user click - see handleStartGame
-  }, [introPhase, isLoadingMusic]);
 
-  // Handler for user clicking to start the game
-  const handleStartGame = useCallback(() => {
-    if (introPhase !== 'begin') return;
-    setIntroPhase('playing');
-    gameplayStart();
-    setPaused(false);
-    startMusic();
-  }, [introPhase, gameplayStart, setPaused, startMusic]);
+    if (introPhase === 'begin') {
+      const timer = setTimeout(() => {
+        setIntroPhase('playing');
+        gameplayStart();
+        // Unpause now that gameplay is visible
+        setPaused(false);
+        // Try starting music again now that user has interacted
+        startMusic();
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [introPhase, isLoadingMusic, gameplayStart, setPaused, startMusic]);
 
   // Failsafe: if we reach the playing phase but game state didn't start, start it once.
   useEffect(() => {
@@ -390,23 +392,22 @@ export default function GameScreen() {
           )}
 
           {introPhase === 'begin' && (
-            <motion.button
+            <motion.div
               key="begin"
-              onClick={handleStartGame}
               initial={{ opacity: 0, scale: 0.3, rotate: -10 }}
               animate={{ opacity: 1, scale: 1, rotate: 0 }}
               exit={{ opacity: 0, scale: 2 }}
               transition={{ duration: 0.3, type: 'spring', stiffness: 300 }}
-              className="text-center cursor-pointer focus:outline-none"
+              className="text-center"
             >
               <motion.h1
-                animate={{ scale: [1, 1.1, 1] }}
-                transition={{ duration: 0.8, repeat: Infinity }}
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 0.4 }}
                 className="text-7xl font-display text-primary drop-shadow-lg"
               >
-                TAP TO START
+                BEGIN!
               </motion.h1>
-            </motion.button>
+            </motion.div>
           )}
         </AnimatePresence>
       </div>
