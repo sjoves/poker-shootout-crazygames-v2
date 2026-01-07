@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { TrophyIcon, ClockIcon, Cog6ToothIcon, SpeakerWaveIcon, SpeakerXMarkIcon, HandRaisedIcon, MusicalNoteIcon, HomeIcon, ArrowPathIcon, PauseIcon, PlayIcon, CheckIcon } from '@heroicons/react/24/outline';
+import { TrophyIcon, ClockIcon, Cog6ToothIcon, SpeakerWaveIcon, SpeakerXMarkIcon, HandRaisedIcon, HomeIcon, ArrowPathIcon, PauseIcon, PlayIcon, CheckIcon } from '@heroicons/react/24/outline';
 import { RectangleVertical } from 'lucide-react';
 import { HandResult } from '@/types/game';
 import { cn } from '@/lib/utils';
@@ -8,8 +8,6 @@ import { Button } from '@/components/ui/button';
 import { useAudio } from '@/contexts/AudioContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Slider } from '@/components/ui/slider';
-import { Switch } from '@/components/ui/switch';
 
 interface ScoreDisplayProps {
   score: number;
@@ -84,39 +82,8 @@ export function ScorePanel({
   gameMode = 'classic'
 }: ScorePanelProps) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [prevMasterVolume, setPrevMasterVolume] = useState(0.5);
   const { theme, setTheme, themes } = useTheme();
-  const {
-    masterVolume,
-    sfxEnabled,
-    sfxVolume,
-    musicEnabled,
-    musicVolume,
-    setMasterVolume,
-    setSfxEnabled,
-    setSfxVolume,
-    setMusicEnabled,
-    setMusicVolume,
-    playSound,
-  } = useAudio();
-
-  const handleMasterMuteToggle = () => {
-    if (masterVolume > 0) {
-      // Save current volume before muting
-      setPrevMasterVolume(masterVolume);
-      setMasterVolume(0);
-    } else {
-      // Restore to previous volume, or default to 50% if none saved
-      setMasterVolume(prevMasterVolume > 0 ? prevMasterVolume : 0.5);
-    }
-  };
-
-  const handleSfxToggle = (enabled: boolean) => {
-    setSfxEnabled(enabled);
-    if (enabled) {
-      setTimeout(() => playSound('buttonClick'), 50);
-    }
-  };
+  const { isMuted, toggleMute, playSound } = useAudio();
 
   const handleSettingsClose = () => {
     setIsSettingsOpen(false);
@@ -206,7 +173,21 @@ export function ScorePanel({
           )}
         </div>
 
-        {/* Settings button only (audio button removed) */}
+        {/* Mute/Unmute button */}
+        <Button 
+          variant="outline" 
+          size="icon" 
+          className="w-11 h-11 border-primary bg-transparent hover:bg-primary/10 hover:text-foreground"
+          onClick={toggleMute}
+        >
+          {isMuted ? (
+            <SpeakerXMarkIcon className="w-5 h-5 text-destructive" />
+          ) : (
+            <SpeakerWaveIcon className="w-5 h-5 text-primary" />
+          )}
+        </Button>
+
+        {/* Settings button */}
         <Button 
           variant="outline" 
           size="icon" 
@@ -272,113 +253,30 @@ export function ScorePanel({
             <div className="border-t border-border" />
 
             {/* Audio and Theme side by side */}
-            <div className="grid grid-cols-2 gap-6">
-              {/* Audio Settings */}
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-4">Audio</h3>
-                
-                {/* Master Volume */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={handleMasterMuteToggle}
-                        className="p-1 hover:bg-primary/10 rounded transition-colors"
-                      >
-                        {masterVolume > 0 ? (
-                          <SpeakerWaveIcon className="w-4 h-4 text-muted-foreground" />
-                        ) : (
-                          <SpeakerXMarkIcon className="w-4 h-4 text-destructive" />
-                        )}
-                      </button>
-                      <span className="text-xs font-medium">Master</span>
-                    </div>
-                    <span className="text-xs text-muted-foreground">
-                      {Math.round(masterVolume * 100)}%
-                    </span>
-                  </div>
-                  <Slider
-                    value={[masterVolume * 100]}
-                    onValueChange={([value]) => setMasterVolume(value / 100)}
-                    max={100}
-                    step={5}
-                    className="w-full"
-                  />
-                </div>
-
-                {/* Sound Effects */}
-                <div className="mt-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <SpeakerWaveIcon className={cn("w-4 h-4", sfxEnabled ? "text-primary" : "text-muted-foreground")} />
-                      <span className="text-xs font-medium">SFX</span>
-                    </div>
-                    <Switch
-                      checked={sfxEnabled}
-                      onCheckedChange={handleSfxToggle}
-                    />
-                  </div>
-                  {sfxEnabled && (
-                    <Slider
-                      value={[sfxVolume * 100]}
-                      onValueChange={([value]) => setSfxVolume(value / 100)}
-                      onValueCommit={() => playSound('buttonClick')}
-                      max={100}
-                      step={5}
-                      className="w-full"
-                    />
-                  )}
-                </div>
-
-                {/* Music */}
-                <div className="mt-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <MusicalNoteIcon className={cn("w-4 h-4", musicEnabled ? "text-primary" : "text-muted-foreground")} />
-                      <span className="text-xs font-medium">Music</span>
-                    </div>
-                    <Switch
-                      checked={musicEnabled}
-                      onCheckedChange={setMusicEnabled}
-                    />
-                  </div>
-                  {musicEnabled && (
-                    <Slider
-                      value={[musicVolume * 100]}
-                      onValueChange={([value]) => setMusicVolume(value / 100)}
-                      max={100}
-                      step={5}
-                      className="w-full"
-                    />
-                  )}
-                </div>
-              </div>
-
+            <div>
               {/* Theme Selection */}
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-4">Theme</h3>
-                <div className="grid grid-cols-1 gap-1.5">
-                  {themes.map((t) => (
-                    <button
-                      key={t.id}
-                      onClick={() => {
-                        setTheme(t.id);
-                        playSound('buttonClick');
-                      }}
-                      className={cn(
-                        "flex items-center justify-center gap-1 py-1.5 px-2 rounded border transition-all text-xs",
-                        theme === t.id
-                          ? "border-primary bg-primary/10"
-                          : "border-border bg-secondary/50 hover:bg-secondary"
-                      )}
-                    >
-                      <span className="font-medium text-foreground">{t.name}</span>
-                      {theme === t.id && (
-                        <CheckIcon className="w-3 h-3 text-primary" />
-                      )}
-                    </button>
-                  ))}
-                </div>
+              <h3 className="text-sm font-medium text-muted-foreground mb-3">Theme</h3>
+              <div className="grid grid-cols-2 gap-2">
+                {themes.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => {
+                      setTheme(t.id);
+                      playSound('buttonClick');
+                    }}
+                    className={cn(
+                      "flex items-center justify-center gap-1 py-2 px-3 rounded-lg border transition-all text-sm",
+                      theme === t.id
+                        ? "border-primary bg-primary/10"
+                        : "border-border bg-secondary/50 hover:bg-secondary"
+                    )}
+                  >
+                    <span className="font-medium text-foreground">{t.name}</span>
+                    {theme === t.id && (
+                      <CheckIcon className="w-4 h-4 text-primary" />
+                    )}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
