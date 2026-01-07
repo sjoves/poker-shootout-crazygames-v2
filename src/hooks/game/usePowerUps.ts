@@ -43,18 +43,25 @@ export function usePowerUps(
 ) {
   const usePowerUp = useCallback((powerUpId: string) => {
     setState(prev => {
-      if (!prev.activePowerUps.includes(powerUpId)) return prev;
+      if (!prev.activePowerUps.includes(powerUpId)) {
+        console.log('[PowerUp] Not in activePowerUps:', powerUpId, 'available:', prev.activePowerUps);
+        return prev;
+      }
 
       const powerUp = POWER_UPS.find(p => p.id === powerUpId);
-      if (!powerUp) return prev;
+      if (!powerUp) {
+        console.log('[PowerUp] Power-up not found:', powerUpId);
+        return prev;
+      }
 
-      // Remove power-up from both earned and active lists (consumed until won again)
-      const newEarnedPowerUps = prev.earnedPowerUps.filter(id => id !== powerUpId);
-      const newActivePowerUps = prev.activePowerUps.filter(id => id !== powerUpId);
+      console.log('[PowerUp] Using power-up:', powerUp.name, 'handType:', powerUp.handType);
 
       // Handle reshuffle power-up
       if (powerUp.id === 'reshuffle') {
         const shuffledDeck = shuffleDeck([...prev.deck]);
+        // Remove power-up from both earned and active lists (consumed until won again)
+        const newEarnedPowerUps = prev.earnedPowerUps.filter(id => id !== powerUpId);
+        const newActivePowerUps = prev.activePowerUps.filter(id => id !== powerUpId);
         return {
           ...prev,
           deck: shuffledDeck,
@@ -65,6 +72,9 @@ export function usePowerUps(
       }
 
       if (powerUp.id === 'add_time') {
+        // Remove power-up from both earned and active lists (consumed until won again)
+        const newEarnedPowerUps = prev.earnedPowerUps.filter(id => id !== powerUpId);
+        const newActivePowerUps = prev.activePowerUps.filter(id => id !== powerUpId);
         return {
           ...prev,
           timeRemaining: prev.timeRemaining + 15,
@@ -73,11 +83,27 @@ export function usePowerUps(
         };
       }
 
-      // Generate the specific hand
-      const hand = generateSpecificHand(powerUp.handType, prev.deck);
-      if (!hand) return prev;
+      // For hand-type power-ups, we need to find cards in the deck
+      // Combine deck with any unselected cards for maximum options
+      const availableCards = [...prev.deck];
+      console.log('[PowerUp] Available cards for hand generation:', availableCards.length);
 
+      // Generate the specific hand
+      const hand = generateSpecificHand(powerUp.handType, availableCards);
+      if (!hand) {
+        console.log('[PowerUp] Could not generate hand:', powerUp.handType, '- deck may not have required cards');
+        // Don't consume the power-up if we can't generate the hand
+        return prev;
+      }
+
+      console.log('[PowerUp] Generated hand:', hand.map(c => `${c.rank}${c.suit[0]}`).join(', '));
+
+      // Remove the used cards from the deck
       const newDeck = prev.deck.filter(c => !hand.some(h => h.id === c.id));
+      
+      // Remove power-up from both earned and active lists (consumed)
+      const newEarnedPowerUps = prev.earnedPowerUps.filter(id => id !== powerUpId);
+      const newActivePowerUps = prev.activePowerUps.filter(id => id !== powerUpId);
 
       return {
         ...prev,

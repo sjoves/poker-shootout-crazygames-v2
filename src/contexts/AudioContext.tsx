@@ -110,14 +110,16 @@ function getStrictMaster(ctx: AudioContext): GainNode {
 }
 
 // Safety: ensure a single, fresh connection from master -> speakers (no duplicate summing)
+// Returns the master gain node after ensuring it's connected to destination
 function forceReconnectMaster(ctx: AudioContext): GainNode {
   const master = getStrictMaster(ctx);
+  // Don't disconnect - this breaks all nodes connected to master (including music)
+  // Instead, just ensure master is connected to destination
   try {
-    master.disconnect();
+    master.connect(ctx.destination);
   } catch {
-    // ignore
+    // Already connected, ignore
   }
-  master.connect(ctx.destination);
   return master;
 }
 
@@ -421,13 +423,24 @@ class BackgroundMusic {
   private source: AudioBufferSourceNode | null = null;
   private isPlaying: boolean = false;
   private audioBuffer: AudioBuffer | null = null;
+  private connectedToMaster: boolean = false;
 
   constructor(audioCtx: AudioContext) {
     this.audioCtx = audioCtx;
     this.gainNode = audioCtx.createGain();
-    // Route through master gain node (strict)
-    const masterGain = getStrictMaster(audioCtx);
+    this.reconnectToMaster();
+  }
+
+  // Reconnect to master gain (call after forceReconnectMaster to restore routing)
+  reconnectToMaster() {
+    try {
+      this.gainNode.disconnect();
+    } catch {
+      // Ignore if not connected
+    }
+    const masterGain = getStrictMaster(this.audioCtx);
     this.gainNode.connect(masterGain);
+    this.connectedToMaster = true;
   }
 
   setVolume(volume: number) {
@@ -445,6 +458,9 @@ class BackgroundMusic {
         this.audioBuffer = await loadAudioBuffer(this.audioCtx, publicAssetUrl('sounds/background-music.mp3'));
         console.log('Audio buffer loaded, duration:', this.audioBuffer.duration);
       }
+      
+      // Ensure we're connected to master before starting
+      this.reconnectToMaster();
       
       this.source = this.audioCtx.createBufferSource();
       this.source.buffer = this.audioBuffer;
