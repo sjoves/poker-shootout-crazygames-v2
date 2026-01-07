@@ -32,8 +32,8 @@ export function HandDisplay({ cards, maxCards = 5, currentHand, className }: Han
   const cardSize = isMobile ? 'sm' : 'hand';
 
   return (
-    <div className={cn('relative flex flex-col items-center gap-1 sm:gap-2 flex-shrink-0', className)}>
-      <div className="bg-transparent rounded-2xl px-3 py-2 sm:px-4 sm:py-3 border border-primary">
+    <div className={cn('relative flex flex-col items-center gap-1 sm:gap-2 flex-shrink-0 max-[800px]:landscape:scale-[0.85] origin-bottom', className)}>
+      <div className="bg-transparent rounded-2xl px-3 py-2 sm:px-4 sm:py-3 max-[900px]:px-2 max-[900px]:py-1.5 border border-primary">
         <div className="relative">
           <div className="flex gap-1 sm:gap-2 justify-center">
             <AnimatePresence mode="popLayout">
