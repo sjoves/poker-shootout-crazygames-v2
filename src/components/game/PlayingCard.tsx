@@ -8,7 +8,7 @@ interface PlayingCardProps {
   onClick?: () => void;
   isSelected?: boolean;
   isDisabled?: boolean;
-  size?: 'xs' | 'sm' | 'ssc' | 'sdm' | 'sdm-lg' | 'sd' | 'md' | 'hand' | 'lg';
+  size?: 'xs' | 'sm' | 'ssc' | 'sdm' | 'sdm-lg' | 'sd' | 'md' | 'hand' | 'lg' | 'conveyor-sm' | 'conveyor-md' | 'conveyor-lg';
   animate?: boolean;
   className?: string;
 }
@@ -35,13 +35,17 @@ const SIZE_CONFIG = {
   // Hand display uses vh-based sizing
   hand: { card: 'w-[calc(11vh*0.714)] h-[11vh]', rank: 'text-sm', corner: 'text-[10px]', center: 'text-lg', pip: 'text-[8px]', gap: 'gap-0' },
   lg: { card: 'w-[115px] h-[158px]', rank: 'text-xl', corner: 'text-sm', center: 'text-4xl', pip: 'text-xs', gap: 'gap-1' },
+  // Responsive conveyor belt sizes - use w-full h-full to inherit from parent
+  'conveyor-sm': { card: 'w-full h-full aspect-[2.5/3.5]', rank: 'text-xs', corner: 'text-[8px]', center: 'text-base', pip: 'text-[6px]', gap: 'gap-0' },
+  'conveyor-md': { card: 'w-full h-full aspect-[2.5/3.5]', rank: 'text-sm', corner: 'text-[10px]', center: 'text-lg', pip: 'text-[7px]', gap: 'gap-0' },
+  'conveyor-lg': { card: 'w-full h-full aspect-[2.5/3.5]', rank: 'text-base', corner: 'text-xs', center: 'text-2xl', pip: 'text-[9px]', gap: 'gap-0.5' },
 };
 
 const PIP_LAYOUTS: Record<string, number> = {
   'A': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10,
 };
 
-const CenterPips = memo(function CenterPips({ rank, suit, size }: { rank: string; suit: Suit; size: 'xs' | 'sm' | 'ssc' | 'sdm' | 'sdm-lg' | 'sd' | 'md' | 'hand' | 'lg' }) {
+const CenterPips = memo(function CenterPips({ rank, suit, size }: { rank: string; suit: Suit; size: keyof typeof SIZE_CONFIG }) {
   const symbol = SUIT_SYMBOLS[suit];
   const count = PIP_LAYOUTS[rank];
   const config = SIZE_CONFIG[size];
@@ -148,9 +152,12 @@ const EMPTY_SLOT_SIZES = {
   md: 'w-[76px] h-[106px]',
   hand: 'w-[calc(11vh*0.714)] h-[11vh]',
   lg: 'w-[115px] h-[158px]',
+  'conveyor-sm': 'w-full h-full aspect-[2.5/3.5]',
+  'conveyor-md': 'w-full h-full aspect-[2.5/3.5]',
+  'conveyor-lg': 'w-full h-full aspect-[2.5/3.5]',
 };
 
-export function EmptyCardSlot({ size = 'md' }: { size?: 'xs' | 'sm' | 'ssc' | 'sdm' | 'sdm-lg' | 'sd' | 'md' | 'hand' | 'lg' }) {
+export function EmptyCardSlot({ size = 'md' }: { size?: keyof typeof EMPTY_SLOT_SIZES }) {
   return (
     <div
       className={cn(

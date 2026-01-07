@@ -21,16 +21,25 @@ interface ConveyorBeltProps {
   reshuffleTrigger?: number;
 }
 
+// Fixed to exactly 3 rows
+const FIXED_ROWS = 3;
+
+// Card aspect ratio: 2.5:3.5 = 0.714
+const CARD_ASPECT_RATIO = 2.5 / 3.5;
+
 export function ConveyorBelt({
   deck,
   selectedCardIds,
   onSelectCard,
   speed = 1,
   isPaused = false,
-  rows = 4,
+  rows = FIXED_ROWS, // Enforce 3 rows
   isRecycling = false,
   reshuffleTrigger = 0,
 }: ConveyorBeltProps) {
+  // Always use exactly 3 rows
+  const actualRows = FIXED_ROWS;
+  
   // Use refs for card positions to avoid React state updates every frame
   const cardsRef = useRef<ConveyorCard[]>([]);
   const cardElementsRef = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -52,9 +61,54 @@ export function ConveyorBelt({
   // Track when cards are ready for animation
   const [cardsReady, setCardsReady] = useState(false);
 
-  // Use viewport-relative sizing for responsive cards with increased spacing
-  const cardWidth = isMobile ? Math.min(72, window.innerWidth * 0.18) : Math.min(64, window.innerWidth * 0.06);
-  const cardSpacing = isMobile ? Math.min(40, window.innerWidth * 0.10) : Math.min(32, window.innerWidth * 0.04);
+  // Responsive card sizing based on viewport
+  // Each row takes ~30% of available height (90vh / 3 rows = 30vh max per row)
+  // Card height is capped to fit within rows, with gaps accounted for
+  const getCardDimensions = useCallback(() => {
+    const vh = window.innerHeight / 100;
+    const vw = window.innerWidth / 100;
+    
+    // Available height for cards: 90vh total, split across 3 rows with gaps
+    const rowGap = isMobile ? 8 : 16; // Gap between rows in px
+    const availableHeight = vh * 90 - (rowGap * 2); // Total height minus gaps
+    const maxCardHeight = availableHeight / 3; // Each row's max card height
+    
+    // Desktop full-screen: larger cards
+    // Mobile: smaller cards
+    // Breakpoint at 1024px for desktop full-screen mode
+    const isFullScreen = window.innerWidth >= 1024;
+    
+    let cardHeight: number;
+    if (isFullScreen) {
+      // Full-screen: cards scale to fill height
+      cardHeight = Math.min(maxCardHeight, vh * 22); // Cap at 22vh per card
+    } else if (isMobile) {
+      // Mobile: smaller cards
+      cardHeight = Math.min(maxCardHeight, vh * 14);
+    } else {
+      // Tablet/smaller desktop
+      cardHeight = Math.min(maxCardHeight, vh * 18);
+    }
+    
+    // Maintain aspect ratio
+    const cardWidth = cardHeight * CARD_ASPECT_RATIO;
+    
+    // Spacing scales with card size
+    const spacing = isFullScreen ? cardWidth * 0.4 : (isMobile ? cardWidth * 0.5 : cardWidth * 0.35);
+    
+    return { cardWidth, cardHeight, spacing, rowGap };
+  }, [isMobile]);
+
+  const [dimensions, setDimensions] = useState(getCardDimensions);
+  
+  // Update dimensions on resize
+  useEffect(() => {
+    const handleResize = () => setDimensions(getCardDimensions());
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [getCardDimensions]);
+
+  const { cardWidth, cardHeight, spacing: cardSpacing, rowGap } = dimensions;
 
   // Reset on reshuffle
   useEffect(() => {
@@ -80,7 +134,7 @@ export function ConveyorBelt({
     let deckIndex = 0;
     const usedCardIds = new Set<string>();
     
-    for (let row = 0; row < rows; row++) {
+    for (let row = 0; row < actualRows; row++) {
       for (let i = 0; i < cardsPerRow; i++) {
         let card = null;
         for (let j = 0; j < deck.length; j++) {
@@ -114,7 +168,7 @@ export function ConveyorBelt({
     cardsRef.current = cards;
     setCardsReady(true);
     triggerRender();
-  }, [deck, rows, speed, reshuffleTrigger, cardWidth, cardSpacing, triggerRender]);
+  }, [deck, actualRows, speed, reshuffleTrigger, cardWidth, cardSpacing, triggerRender]);
 
   // Track selected cards for pending returns
   const prevSelectedRef = useRef<string[]>([]);
@@ -157,7 +211,7 @@ export function ConveyorBelt({
         readyToReturn.forEach(({ card }) => {
           if (currentCardsOnBelt.has(card.id)) return;
           
-          const row = Math.floor(Math.random() * rows);
+          const row = Math.floor(Math.random() * actualRows);
           const isLeftToRight = row % 2 === 0;
           // Start further off-screen for smooth entry
           const x = isLeftToRight ? -offScreenBuffer : containerWidth + offScreenBuffer - cardWidth;
@@ -212,7 +266,7 @@ export function ConveyorBelt({
       const cardsOnBelt = new Set(updatedCards.map(c => c.id.split('-row')[0]));
       const cardsPending = new Set(pendingReturnsRef.current.map(p => p.card.id));
       
-      for (let row = 0; row < rows; row++) {
+      for (let row = 0; row < actualRows; row++) {
         const rowCards = updatedCards.filter(c => c.row === row);
         const isLeftToRight = row % 2 === 0;
         const minCardsPerRow = Math.floor(containerWidth / (cardWidth + cardSpacing)) + 2;
@@ -258,7 +312,7 @@ export function ConveyorBelt({
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [isPaused, cardsReady, selectedCardIds, speed, rows, cardWidth, cardSpacing, deck, triggerRender]);
+  }, [isPaused, cardsReady, selectedCardIds, speed, actualRows, cardWidth, cardSpacing, deck, triggerRender]);
 
   const handleCardPointerDown = useCallback((card: ConveyorCard, e: React.PointerEvent) => {
     // Atomic lock - reject if already processing
@@ -324,26 +378,37 @@ export function ConveyorBelt({
     }
   }, [onSelectCard, playSound, selectedCardIds, triggerRender]);
 
-  const rowHeight = isMobile ? 100 : 120;
-  const totalHeight = rows * rowHeight;
+  // Row height = card height + padding
+  const rowHeight = cardHeight + rowGap;
+  const totalHeight = actualRows * rowHeight;
   const visibleCards = cardsRef.current;
+
+  // Determine card size variant based on viewport
+  const isFullScreen = typeof window !== 'undefined' && window.innerWidth >= 1024;
+  const cardSizeVariant = isFullScreen ? 'conveyor-lg' : (isMobile ? 'conveyor-sm' : 'conveyor-md');
 
   return (
     <div 
       ref={containerRef}
-      className="absolute inset-0 z-10 flex items-start justify-center overflow-hidden px-2 sm:px-4 pt-[4.75rem] sm:pt-[5.5rem]"
+      className="absolute inset-0 z-10 flex items-center justify-center overflow-hidden px-2 sm:px-4 lg:px-8"
       style={{ maxWidth: '100vw' }}
     >
       <div 
-        className="relative w-full max-w-[100vw]"
-        style={{ height: totalHeight }}
+        className="relative w-full max-w-[100vw] flex flex-col justify-center"
+        style={{ 
+          height: totalHeight,
+          maxHeight: 'calc(90vh - 120px)', // Leave room for header/footer
+        }}
       >
         {/* Track backgrounds */}
-        {Array(rows).fill(null).map((_, index) => (
+        {Array(actualRows).fill(null).map((_, index) => (
           <div
             key={`track-${index}`}
-            className="absolute left-0 right-0 h-20 bg-muted/30 border-y border-border/20"
-            style={{ top: index * rowHeight }}
+            className="absolute left-0 right-0 bg-muted/30 border-y border-border/20"
+            style={{ 
+              top: index * rowHeight,
+              height: cardHeight + 8, // Slight padding around cards
+            }}
           >
             <div className="absolute inset-0 flex items-center opacity-20">
               {Array(20).fill(null).map((_, i) => (
@@ -364,19 +429,21 @@ export function ConveyorBelt({
             style={{
               position: 'absolute',
               left: 0,
-              top: card.row * rowHeight + 10,
+              top: card.row * rowHeight + 4,
               transform: `translate3d(${card.x}px, 0, 0)`,
               willChange: 'transform, opacity',
+              width: cardWidth,
+              height: cardHeight,
             }}
             onPointerDown={(e) => handleCardPointerDown(card, e)}
             className="cursor-pointer select-none touch-none"
           >
             <PlayingCard
               card={card}
-              size={isMobile ? 'sdm' : 'md'}
+              size={cardSizeVariant as any}
               animate={false}
               isSelected={selectedCardIds.includes(card.id.split('-row')[0])}
-              className="flex-shrink"
+              className="w-full h-full"
             />
           </div>
         ))}
