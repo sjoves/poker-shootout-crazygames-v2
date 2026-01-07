@@ -82,25 +82,38 @@ export function ScorePanel({
   gameMode = 'classic'
 }: ScorePanelProps) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [wasPausedBeforeSettings, setWasPausedBeforeSettings] = useState(false);
   const { theme, setTheme, themes } = useTheme();
   const { isMuted, toggleMute, playSound } = useAudio();
 
+  const handleOpenSettings = () => {
+    // Remember if game was already paused before opening settings
+    setWasPausedBeforeSettings(isPaused ?? false);
+    setIsSettingsOpen(true);
+  };
+
   const handleSettingsClose = () => {
     setIsSettingsOpen(false);
+    // Auto-resume when closing settings if game wasn't paused before opening
+    if (!wasPausedBeforeSettings && isPaused) {
+      onPause?.(); // Toggle pause to resume
+    }
   };
 
   const handlePause = () => {
-    handleSettingsClose();
     onPause?.();
+    // Update our tracking of pause state
+    setWasPausedBeforeSettings(!isPaused);
   };
 
   const handleRestart = () => {
-    handleSettingsClose();
+    setIsSettingsOpen(false);
+    setWasPausedBeforeSettings(false);
     onRestart?.();
   };
 
   const handleHome = () => {
-    handleSettingsClose();
+    setIsSettingsOpen(false);
     onHome?.();
   };
   
@@ -192,7 +205,7 @@ export function ScorePanel({
           variant="outline" 
           size="icon" 
           className="w-11 h-11 border-primary bg-transparent hover:bg-primary/10 hover:text-foreground"
-          onClick={() => setIsSettingsOpen(true)}
+          onClick={handleOpenSettings}
         >
           <Cog6ToothIcon className="w-5 h-5 text-primary" />
         </Button>

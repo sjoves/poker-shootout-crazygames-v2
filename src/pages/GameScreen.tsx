@@ -433,7 +433,7 @@ export default function GameScreen() {
               level={isSSC ? state.sscLevel : undefined}
               isUrgent={inFinalStretch}
               onHome={() => { resetGame(); navigate('/'); }}
-              onRestart={() => { resetGame(); startGame(mode as GameMode); }}
+              onRestart={() => { startGame(mode as GameMode); }}
               onPause={pauseGame}
               isPaused={state.isPaused}
               gameMode={isSSC ? 'ssc' : isBlitz ? 'blitz' : 'classic'}
@@ -540,7 +540,7 @@ export default function GameScreen() {
             level={state.sscLevel}
             bonusRoundNumber={state.bonusRoundCount}
             onHome={() => { resetGame(); navigate('/'); }}
-            onRestart={() => { resetGame(); startGame(mode as GameMode); }}
+            onRestart={() => { startGame(mode as GameMode); }}
             onPause={pauseGame}
             isPaused={state.isPaused}
             onIntroComplete={handleBonusIntroComplete}
