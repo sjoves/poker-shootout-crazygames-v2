@@ -713,12 +713,13 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     ...settings,
     setMasterVolume: (volume) => {
       // Update state
-      setSettings(prev => ({ ...prev, masterVolume: volume }));
-      // Immediately update master gain node
-      if (globalMasterGain && globalAudioContext) {
-        globalMasterGain.gain.setValueAtTime(volume, globalAudioContext.currentTime);
-        console.log('[Audio] Master gain set to:', volume);
-      }
+      setSettings((prev) => ({ ...prev, masterVolume: volume }));
+
+      // Ensure master gain exists and update in real-time
+      const ctx = ensureAudioContext();
+      const masterGain = getMasterGainNode(ctx);
+      masterGain.gain.setValueAtTime(volume, ctx.currentTime);
+      console.log('[Audio] Master gain set to:', volume);
     },
     setSfxEnabled: (enabled) => setSettings(prev => ({ ...prev, sfxEnabled: enabled })),
     setSfxVolume: (volume) => setSettings(prev => ({ ...prev, sfxVolume: volume })),
