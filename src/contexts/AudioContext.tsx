@@ -486,7 +486,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
 
   // Used by toggleMute (kept in provider, not per-component)
   const lastNonZeroMasterVolumeRef = useRef<number>(settings.masterVolume || DEFAULT_SETTINGS.masterVolume);
-
+  const masterVolumeRef = useRef<number>(settings.masterVolume);
 
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
   const [isMusicLoading, setIsMusicLoading] = useState(false);
@@ -575,6 +575,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
 
   // Track last non-zero master volume for toggleMute
   useEffect(() => {
+    masterVolumeRef.current = settings.masterVolume;
     if (settings.masterVolume > 0) {
       lastNonZeroMasterVolumeRef.current = settings.masterVolume;
     }
@@ -738,24 +739,31 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     console.log('[Audio] AudioContext in unexpected state:', ctx.state, '- skipping sound:', soundType);
   }, [settings.sfxEnabled, settings.sfxVolume, ensureAudioContext]);
 
-  const setMasterVolume = (volume: number) => {
+  const setMasterVolume = useCallback((volume: number) => {
+    // Keep refs in sync immediately (prevents stale closures on rapid clicks)
+    masterVolumeRef.current = volume;
+    if (volume > 0) {
+      lastNonZeroMasterVolumeRef.current = volume;
+    }
+
     // Update state
     setSettings((prev) => ({ ...prev, masterVolume: volume }));
 
     const ctx = ensureAudioContext();
     const master = forceReconnectMaster(ctx);
 
-    // Immediate volume sync (responsive slider)
+    // Immediate volume sync (responsive slider / click)
     master.gain.setTargetAtTime(volume, ctx.currentTime, 0.01);
     console.log('[Audio] Master gain set to:', volume);
-  };
+  }, [ensureAudioContext]);
 
-  const toggleMute = () => {
-    const next = settings.masterVolume > 0
+  const toggleMute = useCallback(() => {
+    const current = masterVolumeRef.current;
+    const next = current > 0
       ? 0
       : (lastNonZeroMasterVolumeRef.current || DEFAULT_SETTINGS.masterVolume);
     setMasterVolume(next);
-  };
+  }, [setMasterVolume]);
 
   const value: AudioContextValue = {
     ...settings,
