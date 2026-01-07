@@ -48,13 +48,11 @@ export default function GameScreen() {
     discardReward,
     getHandResults,
   } = useGameState();
-  const { playSound, startMusic, stopMusic, isMusicLoading } = useAudio();
+  const { playSound, startMusic, stopMusic, isMusicLoading, isMuted, setMasterVolume, masterVolume } = useAudio();
   const isMobile = useIsMobile();
   const isSSC = state.mode === 'ssc';
   const baseSpeed = isMobile ? 0.6 : 1;
   const sscSpeed = isSSC ? getSSCSpeed(state.sscLevel) : 1;
-  
-  const [isMuted, setIsMuted] = useState(false);
   const [showUsedCards, setShowUsedCards] = useState(false);
   const [bonusIntroActive, setBonusIntroActive] = useState(false);
   const [isLoadingMusic, setIsLoadingMusic] = useState(true);
@@ -185,12 +183,16 @@ export default function GameScreen() {
         gameplayStart();
         // Unpause now that gameplay is visible
         setPaused(false);
+        // Ensure audio is not muted when game starts
+        if (isMuted) {
+          setMasterVolume(0.7);
+        }
         // Try starting music again now that user has interacted
         startMusic();
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [introPhase, isLoadingMusic, gameplayStart, setPaused, startMusic]);
+  }, [introPhase, isLoadingMusic, gameplayStart, setPaused, startMusic, isMuted, setMasterVolume]);
 
   // Failsafe: if we reach the playing phase but game state didn't start, start it once.
   useEffect(() => {
