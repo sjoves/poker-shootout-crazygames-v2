@@ -112,14 +112,30 @@ async function globalUnlockAudio(): Promise<boolean> {
     console.log('[Audio] Created global AudioContext, state:', globalAudioContext.state);
   }
 
+  // Create master gain node immediately after context creation
+  if (!globalMasterGain) {
+    globalMasterGain = globalAudioContext.createGain();
+    globalMasterGain.connect(globalAudioContext.destination);
+    // Load saved master volume from localStorage
+    const saved = localStorage.getItem('poker-shootout-audio');
+    if (saved) {
+      try {
+        const settings = JSON.parse(saved);
+        if (typeof settings.masterVolume === 'number') {
+          globalMasterGain.gain.setValueAtTime(settings.masterVolume, globalAudioContext.currentTime);
+          console.log('[Audio] Master gain initialized from saved settings:', settings.masterVolume);
+        }
+      } catch { /* ignore */ }
+    }
+    console.log('[Audio] Created global master gain node');
+  }
+
   console.log('[Audio] AudioContext state before resume:', globalAudioContext.state);
-  console.log('AudioContext state:', globalAudioContext.state);
 
   if (globalAudioContext.state === 'suspended') {
     try {
       await globalAudioContext.resume();
       console.log('[Audio] AudioContext resumed, state:', globalAudioContext.state);
-      console.log('AudioContext state:', globalAudioContext.state);
     } catch (err) {
       console.error('[Audio] Failed to resume AudioContext:', err);
       return false;
