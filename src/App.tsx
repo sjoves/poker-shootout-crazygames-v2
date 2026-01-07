@@ -28,20 +28,23 @@ const App = () => (
           <TooltipProvider>
             <ErrorBoundary>
               <Toaster />
-              <HashRouter>
-                <Routes>
-                  <Route path="/" element={<SplashScreen />} />
-                  <Route path="/play/:mode" element={<GameScreen />} />
-                  <Route path="/game-over" element={<GameOverScreen />} />
-                  <Route path="/auth" element={<AuthScreen />} />
-                  <Route path="/account" element={<AccountScreen />} />
-                  <Route path="/leaderboard" element={<LeaderboardScreen />} />
-                  <Route path="/privacy" element={<PrivacyPolicy />} />
-                  <Route path="/test-orbit" element={<TestOrbitPage />} />
-                  <Route path="/dev-sandbox" element={<DevSandbox />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </HashRouter>
+              {/* Global centering wrapper for CrazyGames iframe */}
+              <div className="cg-root-wrapper">
+                <HashRouter>
+                  <Routes>
+                    <Route path="/" element={<SplashScreen />} />
+                    <Route path="/play/:mode" element={<GameScreen />} />
+                    <Route path="/game-over" element={<GameOverScreen />} />
+                    <Route path="/auth" element={<AuthScreen />} />
+                    <Route path="/account" element={<AccountScreen />} />
+                    <Route path="/leaderboard" element={<LeaderboardScreen />} />
+                    <Route path="/privacy" element={<PrivacyPolicy />} />
+                    <Route path="/test-orbit" element={<TestOrbitPage />} />
+                    <Route path="/dev-sandbox" element={<DevSandbox />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </HashRouter>
+              </div>
             </ErrorBoundary>
           </TooltipProvider>
         </CrazyGamesProvider>
