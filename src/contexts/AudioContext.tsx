@@ -207,12 +207,12 @@ function createOscillatorSound(
 ): void {
   const oscillator = audioCtx.createOscillator();
   const gainNode = audioCtx.createGain();
-  const masterGain = getMasterGainNode();
+  const masterGain = getMasterGainNode(audioCtx);
   
   oscillator.connect(gainNode);
-  // Route through master gain if available, otherwise direct to destination
-  gainNode.connect(masterGain ?? audioCtx.destination);
-  
+  // Route through global master gain (no direct destination fallbacks)
+  gainNode.connect(masterGain);
+
   oscillator.type = type;
   oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
   
@@ -258,7 +258,7 @@ async function loadAudioBuffer(audioCtx: AudioContext, url: string): Promise<Aud
 
 function playCardSelect(audioCtx: AudioContext, volume: number): void {
   const url = publicAssetUrl('sounds/card-hit.mp3');
-  const masterGain = getMasterGainNode();
+  const masterGain = getMasterGainNode(audioCtx);
   loadAudioBuffer(audioCtx, url)
     .then((buffer) => {
       const source = audioCtx.createBufferSource();
@@ -268,7 +268,7 @@ function playCardSelect(audioCtx: AudioContext, volume: number): void {
       gainNode.gain.setValueAtTime(volume, audioCtx.currentTime);
 
       source.connect(gainNode);
-      gainNode.connect(masterGain ?? audioCtx.destination);
+      gainNode.connect(masterGain);
       source.start();
     })
     .catch((err) => {
@@ -311,7 +311,7 @@ function playLevelComplete(audioCtx: AudioContext, volume: number): void {
 function playGameOver(audioCtx: AudioContext, volume: number): void {
   // Play the game-over.mp3 sound file
   const url = publicAssetUrl('sounds/game-over.mp3');
-  const masterGain = getMasterGainNode();
+  const masterGain = getMasterGainNode(audioCtx);
   loadAudioBuffer(audioCtx, url)
     .then((buffer) => {
       const source = audioCtx.createBufferSource();
@@ -321,7 +321,7 @@ function playGameOver(audioCtx: AudioContext, volume: number): void {
       gainNode.gain.setValueAtTime(volume * 0.8, audioCtx.currentTime);
 
       source.connect(gainNode);
-      gainNode.connect(masterGain ?? audioCtx.destination);
+      gainNode.connect(masterGain);
       source.start();
     })
     .catch((err) => {
@@ -340,7 +340,7 @@ function playTimer(audioCtx: AudioContext, volume: number): void {
 function playCountdownTick(audioCtx: AudioContext, volume: number): void {
   // Sharp, urgent tick sound
   const now = audioCtx.currentTime;
-  const masterGain = getMasterGainNode();
+  const masterGain = getMasterGainNode(audioCtx);
   
   // High-pitched tick
   const tick = audioCtx.createOscillator();
@@ -351,7 +351,7 @@ function playCountdownTick(audioCtx: AudioContext, volume: number): void {
   tickGain.gain.setValueAtTime(volume * 0.4, now);
   tickGain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
   tick.connect(tickGain);
-  tickGain.connect(masterGain ?? audioCtx.destination);
+  tickGain.connect(masterGain);
   tick.start(now);
   tick.stop(now + 0.12);
 }
@@ -359,7 +359,7 @@ function playCountdownTick(audioCtx: AudioContext, volume: number): void {
 function playCountdownUrgent(audioCtx: AudioContext, volume: number): void {
   // More urgent double-tick for last 3 seconds
   const now = audioCtx.currentTime;
-  const masterGain = getMasterGainNode();
+  const masterGain = getMasterGainNode(audioCtx);
   
   // First tick
   const tick1 = audioCtx.createOscillator();
@@ -370,7 +370,7 @@ function playCountdownUrgent(audioCtx: AudioContext, volume: number): void {
   tick1Gain.gain.setValueAtTime(volume * 0.5, now);
   tick1Gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
   tick1.connect(tick1Gain);
-  tick1Gain.connect(masterGain ?? audioCtx.destination);
+  tick1Gain.connect(masterGain);
   tick1.start(now);
   tick1.stop(now + 0.1);
   
@@ -383,7 +383,7 @@ function playCountdownUrgent(audioCtx: AudioContext, volume: number): void {
   tick2Gain.gain.setValueAtTime(volume * 0.3, now + 0.1);
   tick2Gain.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
   tick2.connect(tick2Gain);
-  tick2Gain.connect(masterGain ?? audioCtx.destination);
+  tick2Gain.connect(masterGain);
   tick2.start(now + 0.1);
   tick2.stop(now + 0.2);
 }
@@ -391,7 +391,7 @@ function playCountdownUrgent(audioCtx: AudioContext, volume: number): void {
 function playBonusCountdown(audioCtx: AudioContext, volume: number): void {
   // Play the countdown pulse sound
   const url = publicAssetUrl('sounds/countdown-tick.mp3');
-  const masterGain = getMasterGainNode();
+  const masterGain = getMasterGainNode(audioCtx);
   loadAudioBuffer(audioCtx, url)
     .then((buffer) => {
       const source = audioCtx.createBufferSource();
@@ -401,7 +401,7 @@ function playBonusCountdown(audioCtx: AudioContext, volume: number): void {
       gainNode.gain.setValueAtTime(volume * 0.8, audioCtx.currentTime);
 
       source.connect(gainNode);
-      gainNode.connect(masterGain ?? audioCtx.destination);
+      gainNode.connect(masterGain);
       source.start();
     })
     .catch((err) => {
@@ -420,9 +420,9 @@ class BackgroundMusic {
   constructor(audioCtx: AudioContext) {
     this.audioCtx = audioCtx;
     this.gainNode = audioCtx.createGain();
-    // Route through master gain node
-    const masterGain = getMasterGainNode();
-    this.gainNode.connect(masterGain ?? audioCtx.destination);
+    // Route through master gain node (no direct destination fallbacks)
+    const masterGain = getMasterGainNode(audioCtx);
+    this.gainNode.connect(masterGain);
   }
 
   setVolume(volume: number) {
@@ -670,6 +670,15 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     if (!settings.sfxEnabled) return;
 
     const ctx = ensureAudioContext();
+    const masterGainNode = (() => {
+      try {
+        return getMasterGainNode(ctx);
+      } catch {
+        return null;
+      }
+    })();
+    console.log('[Audio Debug] Routing through Master Gain:', masterGainNode !== null);
+
     // Individual sound volume only; master gain is handled globally
     const volume = settings.sfxVolume;
 
