@@ -185,10 +185,12 @@ export default function GameScreen() {
         gameplayStart();
         // Unpause now that gameplay is visible
         setPaused(false);
+        // Try starting music again now that user has interacted
+        startMusic();
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [introPhase, isLoadingMusic, gameplayStart, setPaused]);
+  }, [introPhase, isLoadingMusic, gameplayStart, setPaused, startMusic]);
 
   // Failsafe: if we reach the playing phase but game state didn't start, start it once.
   useEffect(() => {
