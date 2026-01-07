@@ -66,6 +66,18 @@ export function ConveyorBelt({
   // Card height is capped to fit within rows, with gaps accounted for
   const getCardDimensions = useCallback(() => {
     const vh = window.innerHeight / 100;
+    const vw = window.innerWidth;
+    
+    // Detect CrazyGames breakpoints
+    const isTablet = vw <= 1080 && vw > 800;
+    const isMobileLandscape = vw <= 800 && window.innerWidth > window.innerHeight;
+    const isSmallDesktop = vw <= 900 && vw > 800;
+    
+    // Scale factor for different breakpoints
+    let scaleFactor = 1;
+    if (isTablet) scaleFactor = 0.85; // 15% reduction for tablet
+    if (isMobileLandscape) scaleFactor = 0.7; // 30% reduction for mobile landscape
+    if (isSmallDesktop) scaleFactor = 0.85; // 15% reduction for small desktop
     
     // Available height for cards: account for hand display (150px) at bottom
     const rowGap = isMobile ? 8 : 16; // Gap between rows in px
@@ -92,6 +104,9 @@ export function ConveyorBelt({
       // Tablet/smaller desktop
       cardHeight = Math.min(maxCardHeight, vh * 18, maxVhHeight);
     }
+    
+    // Apply scale factor for CrazyGames breakpoints
+    cardHeight *= scaleFactor;
     
     // Maintain aspect ratio
     const cardWidth = cardHeight * CARD_ASPECT_RATIO;

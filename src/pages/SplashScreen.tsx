@@ -105,7 +105,8 @@ export default function SplashScreen() {
   };
 
   return (
-    <div className="min-h-screen modern-bg flex flex-col items-center justify-center p-6 max-[900px]:p-3 overflow-y-auto cg-aspect-container">
+    <div className="cg-game-root cg-letterbox">
+      <div className="cg-game-container modern-bg flex flex-col items-center justify-center p-6 max-[900px]:p-3 overflow-y-auto">
       {/* Achievement notification */}
       {newAchievements.length > 0 && (
         <AchievementNotification 
@@ -140,7 +141,7 @@ export default function SplashScreen() {
         className="flex flex-col gap-4 max-[900px]:gap-2 w-full max-w-4xl cg-reduced-gap"
       >
         {/* Main Game Mode Buttons Row */}
-        <div className="grid grid-cols-1 md:grid-cols-3 max-[900px]:grid-cols-2 gap-4 max-[900px]:gap-2">
+        <div className="grid grid-cols-1 md:grid-cols-3 max-[900px]:grid-cols-2 max-[800px]:landscape:grid-cols-1 max-[800px]:landscape:max-w-[280px] max-[800px]:landscape:mx-auto gap-4 max-[900px]:gap-2">
           {/* Classic Mode */}
           <div className="space-y-2 max-[900px]:space-y-1">
             <Button
@@ -311,6 +312,7 @@ export default function SplashScreen() {
         todayReward={todayReward}
         timeUntilNext={getTimeUntilNextReward()}
       />
+      </div>
     </div>
   );
 }
