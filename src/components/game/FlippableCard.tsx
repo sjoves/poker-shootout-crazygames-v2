@@ -17,9 +17,9 @@ interface FlippableCardProps {
 }
 
 const SIZE_CLASSES = {
-  sm: 'w-[40px] h-[57px]',
-  sdm: 'w-[50px] h-[71px]',
-  sd: 'w-[60px] h-[85px]',
+  sm: { card: 'w-[40px] h-[57px]', rank: 'text-base font-black', corner: 'text-xs' },
+  sdm: { card: 'w-[50px] h-[71px]', rank: 'text-lg font-black', corner: 'text-sm' },
+  sd: { card: 'w-[60px] h-[85px]', rank: 'text-xl font-black', corner: 'text-base' },
 };
 
 const SUIT_SYMBOLS: Record<Suit, string> = {
@@ -38,6 +38,7 @@ export function FlippableCard({ card, isKept, isFlippedExternal, onFlip, onKeep,
   const [isFlipped, setIsFlipped] = useState(false);
   const unflipTimerRef = useRef<NodeJS.Timeout | null>(null);
   const { playSound } = useAudio();
+  const config = SIZE_CLASSES[size];
   const suitSymbol = SUIT_SYMBOLS[card.suit];
   const colorClass = isRedSuit(card.suit) ? 'text-red-600' : 'text-gray-900';
 
@@ -98,7 +99,7 @@ export function FlippableCard({ card, isKept, isFlippedExternal, onFlip, onKeep,
     <div className="relative perspective-1000 touch-manipulation">
       <motion.div
         className={cn(
-          SIZE_CLASSES[size],
+          config.card,
           'cursor-pointer relative',
           'transform-style-preserve-3d will-change-transform',
           disabled && !isKept && 'opacity-50 cursor-not-allowed'
@@ -134,19 +135,19 @@ export function FlippableCard({ card, isKept, isFlippedExternal, onFlip, onKeep,
             isKept && 'ring-2 ring-green-500'
           )}
         >
-          {/* Top-left corner */}
+          {/* Top-left corner - Jumbo style */}
           <div className="absolute top-0.5 left-1 flex flex-col items-center leading-none">
-            <span className="font-bold text-sm">{card.rank}</span>
-            <span className="text-[10px]">{suitSymbol}</span>
+            <span className={config.rank}>{card.rank}</span>
+            <span className={config.corner}>{suitSymbol}</span>
           </div>
 
           {/* Center */}
-          <span className="text-lg font-normal">{suitSymbol}</span>
+          <span className="text-xl font-normal">{suitSymbol}</span>
 
-          {/* Bottom-right corner */}
+          {/* Bottom-right corner - Jumbo style */}
           <div className="absolute bottom-0.5 right-1 flex flex-col items-center leading-none rotate-180">
-            <span className="font-bold text-sm">{card.rank}</span>
-            <span className="text-[10px]">{suitSymbol}</span>
+            <span className={config.rank}>{card.rank}</span>
+            <span className={config.corner}>{suitSymbol}</span>
           </div>
 
           {/* Keep Button */}
