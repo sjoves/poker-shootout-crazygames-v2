@@ -82,33 +82,42 @@ export function ScorePanel({
   gameMode = 'classic'
 }: ScorePanelProps) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [wasPausedBeforeSettings, setWasPausedBeforeSettings] = useState(false);
+  // Track if user manually paused while in settings - prevents auto-resume on close
+  const [manuallyPausedInSettings, setManuallyPausedInSettings] = useState(false);
   const { theme, setTheme, themes } = useTheme();
   const { isMuted, toggleMute, playSound } = useAudio();
 
   const handleOpenSettings = () => {
-    // Remember if game was already paused before opening settings
-    setWasPausedBeforeSettings(isPaused ?? false);
+    setManuallyPausedInSettings(false); // Reset on open
     setIsSettingsOpen(true);
   };
 
-  const handleSettingsClose = () => {
-    setIsSettingsOpen(false);
-    // Auto-resume when closing settings if game wasn't paused before opening
-    if (!wasPausedBeforeSettings && isPaused) {
-      onPause?.(); // Toggle pause to resume
+  const handleSettingsClose = (open: boolean) => {
+    if (!open) {
+      setIsSettingsOpen(false);
+      // Only auto-resume if user didn't manually pause while in settings
+      // and the game is currently paused
+      if (!manuallyPausedInSettings && isPaused) {
+        onPause?.(); // Toggle pause to resume
+      }
+      setManuallyPausedInSettings(false);
     }
   };
 
-  const handlePause = () => {
+  const handlePauseToggle = () => {
     onPause?.();
-    // Update our tracking of pause state
-    setWasPausedBeforeSettings(!isPaused);
+    // If user is pausing (game was not paused), mark that they manually paused
+    if (!isPaused) {
+      setManuallyPausedInSettings(true);
+    } else {
+      // If user is resuming, clear the manual pause flag
+      setManuallyPausedInSettings(false);
+    }
   };
 
   const handleRestart = () => {
     setIsSettingsOpen(false);
-    setWasPausedBeforeSettings(false);
+    setManuallyPausedInSettings(false);
     onRestart?.();
   };
 
@@ -212,7 +221,7 @@ export function ScorePanel({
       </div>
 
       {/* Settings Modal */}
-      <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+      <Dialog open={isSettingsOpen} onOpenChange={handleSettingsClose}>
         <DialogContent className="sm:max-w-md bg-card border-border max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl font-display">Settings</DialogTitle>
@@ -225,7 +234,7 @@ export function ScorePanel({
                 <Button
                   variant="outline"
                   className="flex-1 gap-2 border-primary"
-                  onClick={handlePause}
+                  onClick={handlePauseToggle}
                 >
                   {isPaused ? (
                     <>
