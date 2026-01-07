@@ -4,14 +4,16 @@ import { useAudio } from '@/contexts/AudioContext';
 
 const Index = () => {
   const navigate = useNavigate();
-  const { playSound } = useAudio();
+  const { playSound, unlockAudio } = useAudio();
 
-  const handleTestBonusRound = () => {
+  const handleTestBonusRound = async () => {
+    await unlockAudio();
     playSound('buttonClick');
     navigate('/game?testBonus=true');
   };
 
-  const handleTestOrbitMode = () => {
+  const handleTestOrbitMode = async () => {
+    await unlockAudio();
     playSound('buttonClick');
     // Level 22 is the first Orbit level in Cycle 2
     navigate('/game?startLevel=22');
