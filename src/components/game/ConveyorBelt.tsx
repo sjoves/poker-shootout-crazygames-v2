@@ -66,11 +66,11 @@ export function ConveyorBelt({
   // Card height is capped to fit within rows, with gaps accounted for
   const getCardDimensions = useCallback(() => {
     const vh = window.innerHeight / 100;
-    const vw = window.innerWidth / 100;
     
-    // Available height for cards: 90vh total, split across 3 rows with gaps
+    // Available height for cards: account for hand display (150px) at bottom
     const rowGap = isMobile ? 8 : 16; // Gap between rows in px
-    const availableHeight = vh * 90 - (rowGap * 2); // Total height minus gaps
+    const handDisplayReserve = 150; // Reserved space for hand display
+    const availableHeight = (vh * 90) - handDisplayReserve - (rowGap * 2); // Total height minus gaps and hand display
     const maxCardHeight = availableHeight / 3; // Each row's max card height
     
     // Desktop full-screen: larger cards
@@ -78,16 +78,19 @@ export function ConveyorBelt({
     // Breakpoint at 1024px for desktop full-screen mode
     const isFullScreen = window.innerWidth >= 1024;
     
+    // Max height capped at 22vh to prevent overlap on shorter screens
+    const maxVhHeight = vh * 22;
+    
     let cardHeight: number;
     if (isFullScreen) {
-      // Full-screen: cards scale to fill height
-      cardHeight = Math.min(maxCardHeight, vh * 22); // Cap at 22vh per card
+      // Full-screen: cards scale to fill height, capped at 22vh
+      cardHeight = Math.min(maxCardHeight, maxVhHeight);
     } else if (isMobile) {
       // Mobile: smaller cards
-      cardHeight = Math.min(maxCardHeight, vh * 14);
+      cardHeight = Math.min(maxCardHeight, vh * 14, maxVhHeight);
     } else {
       // Tablet/smaller desktop
-      cardHeight = Math.min(maxCardHeight, vh * 18);
+      cardHeight = Math.min(maxCardHeight, vh * 18, maxVhHeight);
     }
     
     // Maintain aspect ratio
@@ -397,7 +400,7 @@ export function ConveyorBelt({
         className="relative w-full max-w-[100vw] flex flex-col justify-center"
         style={{ 
           height: totalHeight,
-          maxHeight: 'calc(90vh - 120px)', // Leave room for header/footer
+          maxHeight: 'calc(90vh - 180px)', // Leave room for header and hand display
         }}
       >
         {/* Track backgrounds */}

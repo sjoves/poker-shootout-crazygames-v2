@@ -503,15 +503,17 @@ export default function GameScreen() {
           />
         )}
         {isConveyor && (
-          <ConveyorBelt
-            deck={state.deck}
-            selectedCardIds={selectedIds}
-            onSelectCard={selectCard}
-            speed={baseSpeed * (isBlitz ? 1.5 : isSSC ? sscSpeed : 1)}
-            isPaused={state.isPaused || state.isLevelComplete}
-            isRecycling={isBlitz || isSSC}
-            reshuffleTrigger={state.reshuffleTrigger}
-          />
+          <div className="flex-grow flex items-center justify-center pb-[150px]">
+            <ConveyorBelt
+              deck={state.deck}
+              selectedCardIds={selectedIds}
+              onSelectCard={selectCard}
+              speed={baseSpeed * (isBlitz ? 1.5 : isSSC ? sscSpeed : 1)}
+              isPaused={state.isPaused || state.isLevelComplete}
+              isRecycling={isBlitz || isSSC}
+              reshuffleTrigger={state.reshuffleTrigger}
+            />
+          </div>
         )}
         {isStatic && (
           <StaticGrid
