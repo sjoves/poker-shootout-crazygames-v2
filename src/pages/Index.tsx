@@ -1,20 +1,14 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { useAudio } from '@/contexts/AudioContext';
 
 const Index = () => {
   const navigate = useNavigate();
-  const { playSound, unlockAudio } = useAudio();
 
-  const handleTestBonusRound = async () => {
-    await unlockAudio();
-    playSound('buttonClick');
+  const handleTestBonusRound = () => {
     navigate('/game?testBonus=true');
   };
 
-  const handleTestOrbitMode = async () => {
-    await unlockAudio();
-    playSound('buttonClick');
+  const handleTestOrbitMode = () => {
     // Level 22 is the first Orbit level in Cycle 2
     navigate('/game?startLevel=22');
   };
