@@ -65,7 +65,12 @@ export default function GameScreen() {
   const isTestBonus = searchParams.get('testBonus') === 'true';
   const startLevelParam = searchParams.get('startLevel');
   const startLevel = startLevelParam ? parseInt(startLevelParam, 10) : undefined;
-  const phaseOverride = searchParams.get('phase') as 'sitting_duck' | 'conveyor' | 'falling' | null;
+
+  const phaseParam = searchParams.get('phase');
+  const phaseClean = phaseParam?.trim().replace(/[^a-z_]/g, '') ?? null;
+  const phaseOverride = phaseClean === 'sitting_duck' || phaseClean === 'conveyor' || phaseClean === 'falling'
+    ? phaseClean
+    : null;
 
   const { user } = useAuth();
   const { gameplayStart, gameplayStop, happytime, showMidgameAd } = useCrazyGames();
