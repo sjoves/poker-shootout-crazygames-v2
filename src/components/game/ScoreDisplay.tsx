@@ -128,9 +128,9 @@ export function ScorePanel({
   
   return (
     <>
-      <div className="absolute top-4 max-[900px]:top-2 max-[800px]:landscape:top-1 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 max-[900px]:gap-2 max-[900px]:scale-[0.85] max-[800px]:landscape:scale-[0.75] origin-top">
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3">
         {/* Main stats pill */}
-        <div className="flex items-center gap-4 max-[900px]:gap-2 bg-transparent rounded-full px-5 max-[900px]:px-3 py-2.5 max-[900px]:py-1.5 border border-primary">
+        <div className="flex items-center gap-4 bg-transparent rounded-full px-5 py-2.5 border border-primary">
           {/* Score */}
           <div className="flex items-center gap-2 min-w-[5.5rem]">
             <TrophyIcon className="w-5 h-5 text-primary flex-shrink-0" />
@@ -195,11 +195,11 @@ export function ScorePanel({
           )}
         </div>
 
-        {/* Mute/Unmute button - touch-friendly */}
+        {/* Mute/Unmute button */}
         <Button 
           variant="outline" 
           size="icon" 
-          className="w-11 h-11 min-w-[44px] min-h-[44px] border-primary bg-transparent hover:bg-primary/10 hover:text-foreground cg-touch-target"
+          className="w-11 h-11 border-primary bg-transparent hover:bg-primary/10 hover:text-foreground"
           onClick={toggleMute}
         >
           {isMuted ? (
@@ -209,11 +209,11 @@ export function ScorePanel({
           )}
         </Button>
 
-        {/* Settings button - touch-friendly */}
+        {/* Settings button */}
         <Button 
           variant="outline" 
           size="icon" 
-          className="w-11 h-11 min-w-[44px] min-h-[44px] border-primary bg-transparent hover:bg-primary/10 hover:text-foreground cg-touch-target"
+          className="w-11 h-11 border-primary bg-transparent hover:bg-primary/10 hover:text-foreground"
           onClick={handleOpenSettings}
         >
           <Cog6ToothIcon className="w-5 h-5 text-primary" />

@@ -105,8 +105,7 @@ export default function SplashScreen() {
   };
 
   return (
-    <div className="cg-game-root cg-letterbox">
-      <div className="cg-game-container modern-bg flex flex-col items-center justify-center p-6 max-[900px]:p-3 overflow-y-auto">
+    <div className="min-h-screen modern-bg flex flex-col items-center justify-center p-6 overflow-y-auto">
       {/* Achievement notification */}
       {newAchievements.length > 0 && (
         <AchievementNotification 
@@ -118,9 +117,9 @@ export default function SplashScreen() {
       <motion.div
         initial={{ opacity: 0, y: -30 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-6 max-[900px]:mb-3 cg-reduced-margin"
+        className="text-center mb-6"
       >
-        <img src={currentLogo} alt="Poker Shootout" className="w-[22rem] md:w-[26.4rem] max-[900px]:max-w-[55%] max-[900px]:mt-2 mx-auto mb-4 max-[900px]:mb-2" />
+        <img src={currentLogo} alt="Poker Shootout" className="w-[22rem] md:w-[26.4rem] mx-auto mb-4" />
         {isPremium && (
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
@@ -138,19 +137,19 @@ export default function SplashScreen() {
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.2 }}
-        className="flex flex-col gap-4 max-[900px]:gap-2 w-full max-w-4xl cg-reduced-gap"
+        className="flex flex-col gap-4 w-full max-w-4xl"
       >
         {/* Main Game Mode Buttons Row */}
-        <div className="grid grid-cols-1 md:grid-cols-3 max-[900px]:grid-cols-2 max-[800px]:landscape:grid-cols-1 max-[800px]:landscape:max-w-[280px] max-[800px]:landscape:mx-auto gap-4 max-[900px]:gap-2">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Classic Mode */}
-          <div className="space-y-2 max-[900px]:space-y-1">
+          <div className="space-y-2">
             <Button
               variant="outline"
               size="lg"
-              className="w-full h-14 max-[900px]:h-10 text-lg max-[900px]:text-[0.85rem] font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground gap-2"
+              className="w-full h-14 text-lg font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground gap-2"
               onClick={() => setSelectedMode(selectedMode === 'classic' ? null : 'classic')}
             >
-              <Target className="w-5 h-5 max-[900px]:w-4 max-[900px]:h-4 text-primary" />
+              <Target className="w-5 h-5 text-primary" />
               Classic Mode
             </Button>
             {selectedMode === 'classic' && (
@@ -163,14 +162,14 @@ export default function SplashScreen() {
           </div>
 
           {/* Blitz Mode */}
-          <div className="space-y-2 max-[900px]:space-y-1">
+          <div className="space-y-2">
             <Button
               variant="outline"
               size="lg"
-              className="w-full h-14 max-[900px]:h-10 text-lg max-[900px]:text-[0.85rem] font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground gap-2"
+              className="w-full h-14 text-lg font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground gap-2"
               onClick={() => setSelectedMode(selectedMode === 'blitz' ? null : 'blitz')}
             >
-              <Zap className="w-5 h-5 max-[900px]:w-4 max-[900px]:h-4 text-primary" />
+              <Zap className="w-5 h-5 text-primary" />
               52-Card Blitz
             </Button>
             {selectedMode === 'blitz' && (
@@ -183,16 +182,16 @@ export default function SplashScreen() {
           </div>
 
           {/* SSC Mode */}
-          <div className="space-y-2 max-[900px]:space-y-1 max-[900px]:col-span-2">
+          <div className="space-y-2">
             {user && profile?.highest_ssc_level && profile.highest_ssc_level > 1 ? (
               <>
                 <Button
                   variant="outline"
                   size="lg"
-                  className="w-full h-14 max-[900px]:h-10 text-lg max-[900px]:text-[0.85rem] font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground gap-2"
+                  className="w-full h-14 text-lg font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground gap-2"
                   onClick={() => setSelectedMode(selectedMode === 'ssc' ? null : 'ssc')}
                 >
-                  <Trophy className="w-5 h-5 max-[900px]:w-4 max-[900px]:h-4 text-primary" />
+                  <Trophy className="w-5 h-5 text-primary" />
                   Sharp Shooter Challenge
                 </Button>
                 {selectedMode === 'ssc' && (
@@ -210,10 +209,10 @@ export default function SplashScreen() {
               <Button
                 variant="outline"
                 size="lg"
-                className="w-full h-14 max-[900px]:h-10 text-lg max-[900px]:text-[0.85rem] font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground gap-2"
+                className="w-full h-14 text-lg font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground gap-2"
                 onClick={() => handleSSCStart(1)}
               >
-                <Trophy className="w-5 h-5 max-[900px]:w-4 max-[900px]:h-4 text-primary" />
+                <Trophy className="w-5 h-5 text-primary" />
                 Sharp Shooter Challenge
               </Button>
             )}
@@ -221,35 +220,35 @@ export default function SplashScreen() {
         </div>
 
         {/* Settings & Tutorial Buttons - Centered below game modes */}
-        <div className="flex justify-center gap-3 max-[900px]:gap-2">
+        <div className="flex justify-center gap-3">
           <Button 
             variant="outline" 
-            className="gap-2 max-[900px]:text-[0.85rem] max-[900px]:h-9 max-[900px]:px-3 border-primary bg-transparent hover:bg-primary/10 hover:text-foreground" 
+            className="gap-2 border-primary bg-transparent hover:bg-primary/10 hover:text-foreground" 
             onClick={() => setShowSettings(true)}
           >
-            <Settings className="w-5 h-5 max-[900px]:w-4 max-[900px]:h-4 text-primary" />
+            <Settings className="w-5 h-5 text-primary" />
             Settings
           </Button>
           <Button 
             variant="outline" 
-            className="gap-2 max-[900px]:text-[0.85rem] max-[900px]:h-9 max-[900px]:px-3 border-primary bg-transparent hover:bg-primary/10 hover:text-foreground" 
+            className="gap-2 border-primary bg-transparent hover:bg-primary/10 hover:text-foreground" 
             onClick={() => setShowTutorial(true)}
           >
-            <HelpCircle className="w-5 h-5 max-[900px]:w-4 max-[900px]:h-4 text-primary" />
+            <HelpCircle className="w-5 h-5 text-primary" />
             Tutorial
           </Button>
         </div>
 
         {/* Daily Challenges - Contains Streak, Reward, and Challenges */}
         {user && (
-          <div className="space-y-2 max-[900px]:space-y-1 max-w-md mx-auto w-full max-[500px]:hidden">
+          <div className="space-y-2 max-w-md mx-auto w-full">
             <Button
               variant="outline"
               size="lg"
-              className="w-full h-14 max-[900px]:h-10 text-lg max-[900px]:text-[0.85rem] font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground gap-2"
+              className="w-full h-14 text-lg font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground gap-2"
               onClick={() => setShowChallenges(!showChallenges)}
             >
-              <Target className="w-5 h-5 max-[900px]:w-4 max-[900px]:h-4 text-primary" />
+              <Target className="w-5 h-5 text-primary" />
               Daily Challenges
               {challenges.length > 0 && (
                 <span className="ml-2 text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">
@@ -312,7 +311,6 @@ export default function SplashScreen() {
         todayReward={todayReward}
         timeUntilNext={getTimeUntilNextReward()}
       />
-      </div>
     </div>
   );
 }

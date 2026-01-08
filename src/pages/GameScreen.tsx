@@ -57,13 +57,10 @@ export default function GameScreen() {
   const [bonusIntroActive, setBonusIntroActive] = useState(false);
   const [isLoadingMusic, setIsLoadingMusic] = useState(true);
   const [introPhase, setIntroPhase] = useState<'loading' | 'ready' | 'begin' | 'playing'>('loading');
-  const [initError, setInitError] = useState<string | null>(null);
-  const [initTimeout, setInitTimeout] = useState(false);
   const prevHandsPlayed = useRef(state.handsPlayed);
   const gameInitializedRef = useRef(false);
   const didStartGameRef = useRef(false);
   const didForceUnpauseRef = useRef(false);
-  const initTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const isTestBonus = searchParams.get('testBonus') === 'true';
   const startLevelParam = searchParams.get('startLevel');
@@ -121,34 +118,10 @@ export default function GameScreen() {
   useEffect(() => {
     if (gameInitializedRef.current) return;
 
-    // Set a 3-second timeout to force-proceed if initialization hangs
-    initTimeoutRef.current = setTimeout(() => {
-      if (introPhase === 'loading') {
-        console.warn('Game init timeout - forcing proceed');
-        setInitTimeout(true);
-        setIsLoadingMusic(false);
-        
-        // Force start the game even if music failed
-        if (!didStartGameRef.current && mode) {
-          try {
-            didStartGameRef.current = true;
-            startGame(mode as GameMode, false, startLevel ?? 1, phaseOverride || undefined);
-            setPaused(true);
-          } catch (e) {
-            console.error('Failed to force-start game:', e);
-            setInitError('Failed to initialize game. Please refresh.');
-          }
-        }
-        setIntroPhase('ready');
-        gameInitializedRef.current = true;
-      }
-    }, 3000);
-
     const initGame = async () => {
       console.log('Game init effect:', { mode, isTestBonus, startLevel });
       setIsLoadingMusic(true);
       setIntroPhase('loading');
-      setInitError(null);
 
       // Wait for music to load with a timeout to prevent hanging
       try {
@@ -173,21 +146,11 @@ export default function GameScreen() {
             didStartGameRef.current = true;
             startGame(mode as GameMode, false, startLevel ?? 1, phaseOverride || undefined);
             setPaused(true);
-          } else {
-            // No valid mode - this shouldn't happen but handle gracefully
-            console.error('No valid game mode provided');
-            setInitError('Invalid game mode. Please return to the menu.');
           }
         } catch (e) {
           didStartGameRef.current = false;
           console.error('Failed to pre-start game:', e);
-          setInitError('Failed to initialize game. Please try again.');
         }
-      }
-
-      // Clear the timeout since we succeeded
-      if (initTimeoutRef.current) {
-        clearTimeout(initTimeoutRef.current);
       }
 
       // Start intro sequence
@@ -201,9 +164,6 @@ export default function GameScreen() {
     // Stop music when component unmounts
     return () => {
       stopMusic();
-      if (initTimeoutRef.current) {
-        clearTimeout(initTimeoutRef.current);
-      }
     };
   }, [mode, isTestBonus, startLevel, phaseOverride, startGame, setPaused, startMusic, stopMusic]);
 
@@ -389,31 +349,7 @@ export default function GameScreen() {
 
   const selectedIds = state.selectedCards.map(c => c.id);
 
-  // Show error screen if initialization failed
-  if (initError) {
-    return (
-      <div className="h-screen max-h-screen flex flex-col items-center justify-center overflow-hidden modern-bg">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center p-8"
-        >
-          <div className="w-16 h-16 mx-auto mb-4 bg-destructive/20 rounded-full flex items-center justify-center">
-            <span className="text-3xl">⚠️</span>
-          </div>
-          <p className="text-lg font-display text-foreground mb-4">{initError}</p>
-          <button 
-            onClick={() => navigate('/')}
-            className="px-6 py-3 bg-primary text-primary-foreground rounded-lg font-display hover:bg-primary/90 transition-colors"
-          >
-            Return to Menu
-          </button>
-        </motion.div>
-      </div>
-    );
-  }
-
-  // Show loading screen while music is loading (with timeout indicator)
+  // Show loading screen while music is loading
   if (isLoadingMusic || introPhase === 'loading') {
     return (
       <div className="h-screen max-h-screen flex flex-col items-center justify-center overflow-hidden modern-bg">
@@ -428,9 +364,6 @@ export default function GameScreen() {
             className="w-16 h-16 border-4 border-primary/30 border-t-primary rounded-full mx-auto mb-4"
           />
           <p className="text-lg font-display text-foreground">Loading...</p>
-          {initTimeout && (
-            <p className="text-sm text-muted-foreground mt-2">Taking longer than expected...</p>
-          )}
         </motion.div>
       </div>
     );
