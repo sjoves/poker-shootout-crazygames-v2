@@ -225,7 +225,7 @@ export default function SplashScreen() {
             <div className="grid grid-cols-2 gap-3 max-[900px]:gap-2 w-full">
               <Button 
                 variant="outline" 
-                className="w-full gap-2 max-[900px]:text-[0.85rem] max-[900px]:h-9 border-primary bg-transparent hover:bg-primary/10 hover:text-foreground" 
+                className="w-full gap-2 text-sm font-light max-[900px]:text-[0.75rem] max-[900px]:h-9 border-primary bg-transparent hover:bg-primary/10 hover:text-foreground" 
                 onClick={() => setShowSettings(true)}
               >
                 <Settings className="w-5 h-5 max-[900px]:w-4 max-[900px]:h-4 text-primary" />
@@ -233,7 +233,7 @@ export default function SplashScreen() {
               </Button>
               <Button 
                 variant="outline" 
-                className="w-full gap-2 max-[900px]:text-[0.85rem] max-[900px]:h-9 border-primary bg-transparent hover:bg-primary/10 hover:text-foreground" 
+                className="w-full gap-2 text-sm font-light max-[900px]:text-[0.75rem] max-[900px]:h-9 border-primary bg-transparent hover:bg-primary/10 hover:text-foreground" 
                 onClick={() => setShowTutorial(true)}
               >
                 <HelpCircle className="w-5 h-5 max-[900px]:w-4 max-[900px]:h-4 text-primary" />
