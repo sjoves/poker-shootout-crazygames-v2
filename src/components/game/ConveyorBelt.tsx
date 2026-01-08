@@ -73,11 +73,11 @@ export function ConveyorBelt({
     const isMobileLandscape = vw <= 800 && window.innerWidth > window.innerHeight;
     const isSmallDesktop = vw <= 900 && vw > 800;
     
-    // Scale factor for different breakpoints
-    let scaleFactor = 1;
-    if (isTablet) scaleFactor = 0.85; // 15% reduction for tablet
-    if (isMobileLandscape) scaleFactor = 0.7; // 30% reduction for mobile landscape
-    if (isSmallDesktop) scaleFactor = 0.85; // 15% reduction for small desktop
+    // Base scale factor: 25% reduction for all conveyor belt cards
+    let scaleFactor = 0.75;
+    if (isTablet) scaleFactor = 0.75 * 0.85; // Additional 15% reduction for tablet
+    if (isMobileLandscape) scaleFactor = 0.75 * 0.7; // Additional 30% reduction for mobile landscape
+    if (isSmallDesktop) scaleFactor = 0.75 * 0.85; // Additional 15% reduction for small desktop
     
     // Available height for cards: account for hand display (150px) at bottom
     const rowGap = isMobile ? 8 : 16; // Gap between rows in px
@@ -408,7 +408,7 @@ export function ConveyorBelt({
   return (
     <div 
       ref={containerRef}
-      className="absolute inset-0 z-10 flex items-center justify-center overflow-hidden px-2 sm:px-4 lg:px-8"
+      className="absolute inset-0 z-10 flex items-start justify-center overflow-hidden px-2 sm:px-4 lg:px-8 pt-[2%]"
       style={{ maxWidth: '100vw' }}
     >
       <div 
