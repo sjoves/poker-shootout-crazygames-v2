@@ -435,7 +435,7 @@
   height: 100%;
   min-height: 100vh;
   min-height: 100dvh;
-  background: hsl(var(--background));
+  background: linear-gradient(180deg, hsl(var(--background-gradient-start)) 0%, hsl(var(--background-gradient-end)) 100%);
 }
 
 .cg-game-container {
@@ -452,9 +452,9 @@
   overflow: hidden;
 }
 
-/* Letterbox background for non-16:9 ratios */
+/* Letterbox background for non-16:9 ratios - matches modern-bg gradient */
 .cg-letterbox {
-  background: hsl(var(--background-gradient-start));
+  background: linear-gradient(180deg, hsl(var(--background-gradient-start)) 0%, hsl(var(--background-gradient-end)) 100%);
 }
 
 /* Responsive typography with clamp() */
