@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, forwardRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { StarIcon, TrophyIcon } from '@heroicons/react/24/solid';
 import { StarIcon as StarOutlineIcon } from '@heroicons/react/24/outline';
@@ -21,7 +21,7 @@ interface LevelCompleteModalProps {
   onStartBonusRound: () => void;
 }
 
-export function LevelCompleteModal({
+export const LevelCompleteModal = forwardRef<HTMLDivElement, LevelCompleteModalProps>(function LevelCompleteModal({
   isOpen,
   level,
   score,
@@ -35,7 +35,7 @@ export function LevelCompleteModal({
   bonusTimePoints,
   onNextLevel,
   onStartBonusRound,
-}: LevelCompleteModalProps) {
+}, ref) {
   const stars = [1, 2, 3];
   const { showMidgameAd, isAvailable: isCrazyGamesAvailable } = useCrazyGames();
   const [isShowingAd, setIsShowingAd] = useState(false);
@@ -82,6 +82,7 @@ export function LevelCompleteModal({
     <AnimatePresence>
       {isOpen && (
         <motion.div
+          ref={ref}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -211,4 +212,4 @@ export function LevelCompleteModal({
       )}
     </AnimatePresence>
   );
-}
+});
