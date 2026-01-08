@@ -153,7 +153,7 @@ export default function SplashScreen() {
               <Button
                 variant="outline"
                 size="lg"
-                className="w-full h-14 max-[900px]:h-10 text-lg max-[900px]:text-[0.85rem] font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground gap-2"
+                className="w-full h-14 max-[900px]:h-10 text-base max-[900px]:text-[0.75rem] font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground gap-2"
                 onClick={() => setSelectedMode(selectedMode === 'classic' ? null : 'classic')}
               >
                 <Target className="w-5 h-5 max-[900px]:w-4 max-[900px]:h-4 text-primary" />
@@ -164,7 +164,7 @@ export default function SplashScreen() {
               <Button
                 variant="outline"
                 size="lg"
-                className="w-full h-14 max-[900px]:h-10 text-lg max-[900px]:text-[0.85rem] font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground gap-2"
+                className="w-full h-14 max-[900px]:h-10 text-base max-[900px]:text-[0.75rem] font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground gap-2"
                 onClick={() => setSelectedMode(selectedMode === 'blitz' ? null : 'blitz')}
               >
                 <Zap className="w-5 h-5 max-[900px]:w-4 max-[900px]:h-4 text-primary" />
@@ -176,7 +176,7 @@ export default function SplashScreen() {
                 <Button
                   variant="outline"
                   size="lg"
-                  className="w-full h-14 max-[900px]:h-10 text-lg max-[900px]:text-[0.85rem] font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground gap-2"
+                  className="w-full h-14 max-[900px]:h-10 text-base max-[900px]:text-[0.75rem] font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground gap-2"
                   onClick={() => setSelectedMode(selectedMode === 'ssc' ? null : 'ssc')}
                 >
                   <Trophy className="w-5 h-5 max-[900px]:w-4 max-[900px]:h-4 text-primary" />
@@ -186,7 +186,7 @@ export default function SplashScreen() {
                 <Button
                   variant="outline"
                   size="lg"
-                  className="w-full h-14 max-[900px]:h-10 text-lg max-[900px]:text-[0.85rem] font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground gap-2"
+                  className="w-full h-14 max-[900px]:h-10 text-base max-[900px]:text-[0.75rem] font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground gap-2"
                   onClick={() => handleSSCStart(1)}
                 >
                   <Trophy className="w-5 h-5 max-[900px]:w-4 max-[900px]:h-4 text-primary" />
