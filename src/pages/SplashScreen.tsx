@@ -147,87 +147,81 @@ export default function SplashScreen() {
             transition={{ delay: 0.2 }}
             className="flex flex-col items-center gap-4 max-[900px]:gap-2 w-full"
           >
-            {/* Main Game Mode Buttons - stacked vertically for uniform width */}
-            <div className="flex flex-col gap-3 max-[900px]:gap-2 w-full">
+            {/* Main Game Mode Buttons - horizontal row */}
+            <div className="grid grid-cols-3 gap-3 max-[900px]:gap-2 w-full">
               {/* Classic Mode */}
-              <div className="w-full">
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="w-full h-14 max-[900px]:h-10 text-lg max-[900px]:text-[0.85rem] font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground gap-2"
-                  onClick={() => setSelectedMode(selectedMode === 'classic' ? null : 'classic')}
-                >
-                  <Target className="w-5 h-5 max-[900px]:w-4 max-[900px]:h-4 text-primary" />
-                  Classic Mode
-                </Button>
-                {selectedMode === 'classic' && (
-                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="flex justify-center gap-2 mt-2">
-                    <Button variant="secondary" size="sm" className="text-xs" onClick={() => handleModeSelect('classic_cb', 'sitting_duck')}>Sitting Duck</Button>
-                    <Button variant="secondary" size="sm" className="text-xs" onClick={() => handleModeSelect('classic_cb')}>Carnival Gallery</Button>
-                    <Button variant="secondary" size="sm" className="text-xs" onClick={() => handleModeSelect('classic_fc')}>Sky is Falling</Button>
-                  </motion.div>
-                )}
-              </div>
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full h-14 max-[900px]:h-10 text-lg max-[900px]:text-[0.85rem] font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground gap-2"
+                onClick={() => setSelectedMode(selectedMode === 'classic' ? null : 'classic')}
+              >
+                <Target className="w-5 h-5 max-[900px]:w-4 max-[900px]:h-4 text-primary" />
+                Classic Mode
+              </Button>
 
               {/* Blitz Mode */}
-              <div className="w-full">
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full h-14 max-[900px]:h-10 text-lg max-[900px]:text-[0.85rem] font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground gap-2"
+                onClick={() => setSelectedMode(selectedMode === 'blitz' ? null : 'blitz')}
+              >
+                <Zap className="w-5 h-5 max-[900px]:w-4 max-[900px]:h-4 text-primary" />
+                52-Card Blitz
+              </Button>
+
+              {/* SSC Mode */}
+              {user && profile?.highest_ssc_level && profile.highest_ssc_level > 1 ? (
                 <Button
                   variant="outline"
                   size="lg"
                   className="w-full h-14 max-[900px]:h-10 text-lg max-[900px]:text-[0.85rem] font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground gap-2"
-                  onClick={() => setSelectedMode(selectedMode === 'blitz' ? null : 'blitz')}
+                  onClick={() => setSelectedMode(selectedMode === 'ssc' ? null : 'ssc')}
                 >
-                  <Zap className="w-5 h-5 max-[900px]:w-4 max-[900px]:h-4 text-primary" />
-                  52-Card Blitz
+                  <Trophy className="w-5 h-5 max-[900px]:w-4 max-[900px]:h-4 text-primary" />
+                  Sharp Shooter
                 </Button>
-                {selectedMode === 'blitz' && (
-                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="flex justify-center gap-2 mt-2">
-                    <Button variant="secondary" size="sm" className="text-xs" onClick={() => handleModeSelect('blitz_cb', 'sitting_duck')}>Sitting Duck</Button>
-                    <Button variant="secondary" size="sm" className="text-xs" onClick={() => handleModeSelect('blitz_cb')}>Carnival Gallery</Button>
-                    <Button variant="secondary" size="sm" className="text-xs" onClick={() => handleModeSelect('blitz_fc')}>Sky is Falling</Button>
-                  </motion.div>
-                )}
-              </div>
-
-              {/* SSC Mode */}
-              <div className="w-full">
-                {user && profile?.highest_ssc_level && profile.highest_ssc_level > 1 ? (
-                  <>
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      className="w-full h-14 max-[900px]:h-10 text-lg max-[900px]:text-[0.85rem] font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground gap-2"
-                      onClick={() => setSelectedMode(selectedMode === 'ssc' ? null : 'ssc')}
-                    >
-                      <Trophy className="w-5 h-5 max-[900px]:w-4 max-[900px]:h-4 text-primary" />
-                      Sharp Shooter Challenge
-                    </Button>
-                    {selectedMode === 'ssc' && (
-                      <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} className="flex gap-2 mt-2">
-                        <Button variant="secondary" className="flex-1" onClick={() => handleSSCStart(1)}>
-                          Start Level 1
-                        </Button>
-                        <Button variant="secondary" className="flex-1" onClick={() => handleSSCStart(profile.highest_ssc_level)}>
-                          Continue Lv.{profile.highest_ssc_level}
-                        </Button>
-                      </motion.div>
-                    )}
-                  </>
-                ) : (
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    className="w-full h-14 max-[900px]:h-10 text-lg max-[900px]:text-[0.85rem] font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground gap-2"
-                    onClick={() => handleSSCStart(1)}
-                  >
-                    <Trophy className="w-5 h-5 max-[900px]:w-4 max-[900px]:h-4 text-primary" />
-                    Sharp Shooter Challenge
-                  </Button>
-                )}
-              </div>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="w-full h-14 max-[900px]:h-10 text-lg max-[900px]:text-[0.85rem] font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground gap-2"
+                  onClick={() => handleSSCStart(1)}
+                >
+                  <Trophy className="w-5 h-5 max-[900px]:w-4 max-[900px]:h-4 text-primary" />
+                  Sharp Shooter
+                </Button>
+              )}
             </div>
 
-            {/* Settings & Tutorial Buttons - 2-column grid matching parent width */}
+            {/* Sub-mode selection panels */}
+            {selectedMode === 'classic' && (
+              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="flex justify-center gap-2 w-full">
+                <Button variant="secondary" size="sm" className="text-xs" onClick={() => handleModeSelect('classic_cb', 'sitting_duck')}>Sitting Duck</Button>
+                <Button variant="secondary" size="sm" className="text-xs" onClick={() => handleModeSelect('classic_cb')}>Carnival Gallery</Button>
+                <Button variant="secondary" size="sm" className="text-xs" onClick={() => handleModeSelect('classic_fc')}>Sky is Falling</Button>
+              </motion.div>
+            )}
+            {selectedMode === 'blitz' && (
+              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="flex justify-center gap-2 w-full">
+                <Button variant="secondary" size="sm" className="text-xs" onClick={() => handleModeSelect('blitz_cb', 'sitting_duck')}>Sitting Duck</Button>
+                <Button variant="secondary" size="sm" className="text-xs" onClick={() => handleModeSelect('blitz_cb')}>Carnival Gallery</Button>
+                <Button variant="secondary" size="sm" className="text-xs" onClick={() => handleModeSelect('blitz_fc')}>Sky is Falling</Button>
+              </motion.div>
+            )}
+            {selectedMode === 'ssc' && user && profile?.highest_ssc_level && profile.highest_ssc_level > 1 && (
+              <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} className="flex gap-2 w-full">
+                <Button variant="secondary" className="flex-1" onClick={() => handleSSCStart(1)}>
+                  Start Level 1
+                </Button>
+                <Button variant="secondary" className="flex-1" onClick={() => handleSSCStart(profile.highest_ssc_level)}>
+                  Continue Lv.{profile.highest_ssc_level}
+                </Button>
+              </motion.div>
+            )}
+
+            {/* Settings & Tutorial Buttons - 2-column grid */}
             <div className="grid grid-cols-2 gap-3 max-[900px]:gap-2 w-full">
               <Button 
                 variant="outline" 
