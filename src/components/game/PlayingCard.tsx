@@ -8,7 +8,7 @@ interface PlayingCardProps {
   onClick?: () => void;
   isSelected?: boolean;
   isDisabled?: boolean;
-  size?: 'xs' | 'sm' | 'ssc' | 'sdm' | 'sdm-lg' | 'sd' | 'md' | 'hand' | 'lg' | 'conveyor-sm' | 'conveyor-md' | 'conveyor-lg';
+  size?: 'xxs' | 'xs' | 'sm' | 'ssc' | 'sdm' | 'sdm-lg' | 'sd' | 'md' | 'hand' | 'lg' | 'conveyor-sm' | 'conveyor-md' | 'conveyor-lg';
   animate?: boolean;
   className?: string;
 }
@@ -24,6 +24,7 @@ const isRedSuit = (suit: Suit) => suit === 'hearts' || suit === 'diamonds';
 
 // Jumbo-style sizing with larger ranks and pips like Bicycle cards
 const SIZE_CONFIG = {
+  xxs: { card: 'w-10 h-[56px]', rank: 'text-sm font-black', corner: 'text-[10px]', center: 'text-xs', pip: 'text-[7px]', gap: 'gap-0' },
   xs: { card: 'w-12 h-[67px]', rank: 'text-base font-black', corner: 'text-xs', center: 'text-sm', pip: 'text-[8px]', gap: 'gap-0' },
   sm: { card: 'w-14 h-[79px]', rank: 'text-lg font-black', corner: 'text-sm', center: 'text-base', pip: 'text-[9px]', gap: 'gap-0' },
   ssc: { card: 'w-[68px] h-[95px]', rank: 'text-xl font-black', corner: 'text-base', center: 'text-lg', pip: 'text-[10px]', gap: 'gap-0' },
@@ -143,6 +144,7 @@ export const PlayingCard = memo(PlayingCardInner, (prevProps, nextProps) => {
 });
 
 const EMPTY_SLOT_SIZES = {
+  xxs: 'w-10 h-[56px]',
   xs: 'w-12 h-[67px]',
   sm: 'w-14 h-[79px]',
   ssc: 'w-[68px] h-[95px]',

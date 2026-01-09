@@ -103,18 +103,14 @@ const EXAMPLE_HANDS: Record<string, CardType[]> = {
   ],
 };
 
-// Cards for guided interactive demo - setup for a flush
+// Cards for guided interactive demo - setup for a flush (6 cards in single row)
 const GUIDED_DEMO_CARDS: CardType[] = [
   { id: '7-hearts', suit: 'hearts', rank: '7', value: 7 },
-  { id: 'K-diamonds', suit: 'diamonds', rank: 'K', value: 13 },
   { id: '3-hearts', suit: 'hearts', rank: '3', value: 3 },
   { id: 'J-hearts', suit: 'hearts', rank: 'J', value: 11 },
-  { id: '5-clubs', suit: 'clubs', rank: '5', value: 5 },
   { id: 'A-hearts', suit: 'hearts', rank: 'A', value: 14 },
-  { id: '9-spades', suit: 'spades', rank: '9', value: 9 },
   { id: '2-hearts', suit: 'hearts', rank: '2', value: 2 },
   { id: '10-hearts', suit: 'hearts', rank: '10', value: 10 },
-  { id: 'Q-diamonds', suit: 'diamonds', rank: 'Q', value: 12 },
 ];
 
 // Target cards for guided selection (hearts for flush)
@@ -208,10 +204,10 @@ function GuidedInteractiveDemo({ onComplete }: { onComplete: () => void }) {
   }, [selectedCards]);
 
   return (
-    <div className="space-y-3 relative">
+    <div className="space-y-2 relative">
       {/* Instruction banner */}
       <motion.div 
-        className="bg-primary/10 border border-primary/30 rounded-lg p-2 text-center"
+        className="bg-primary/10 border border-primary/30 rounded-lg p-1.5 text-center"
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
       >
@@ -224,7 +220,7 @@ function GuidedInteractiveDemo({ onComplete }: { onComplete: () => void }) {
           ) : (
             <>
               👆 Tap 5 cards to build a poker hand!
-              <span className="block text-xs text-primary/70 mt-1">
+              <span className="block text-xs text-primary/70">
                 Hint: Select the hearts for a Flush!
               </span>
             </>
@@ -232,12 +228,51 @@ function GuidedInteractiveDemo({ onComplete }: { onComplete: () => void }) {
         </p>
       </motion.div>
 
-      {/* Hand Display Area */}
-      <div className="bg-muted/30 rounded-xl p-3 relative overflow-hidden">
+      {/* Available Cards Row - NOW FIRST */}
+      <div className="relative">
+        <p className="text-xs text-muted-foreground mb-1 text-center">
+          TAP CARDS TO SELECT
+        </p>
+        <div className="flex justify-center gap-0.5">
+          {availableCards.map((card, index) => {
+            const isTarget = card.id === currentTargetId;
+            return (
+              <motion.div
+                key={card.id}
+                className="relative"
+                animate={isTarget && showHandPointer ? {
+                  scale: [1, 1.08, 1],
+                } : {}}
+                transition={{ repeat: Infinity, duration: 0.8 }}
+              >
+                <PlayingCard
+                  card={card}
+                  size="xxs"
+                  onClick={() => handleCardClick(card)}
+                  animate={false}
+                  className={isTarget && showHandPointer ? 'ring-2 ring-primary ring-offset-1 ring-offset-background' : ''}
+                />
+                {isTarget && showHandPointer && (
+                  <motion.div
+                    className="absolute -top-5 left-1/2 -translate-x-1/2"
+                    animate={{ y: [0, 3, 0] }}
+                    transition={{ repeat: Infinity, duration: 0.5 }}
+                  >
+                    <Hand className="w-4 h-4 text-primary rotate-180" />
+                  </motion.div>
+                )}
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Hand Display Area - NOW SECOND */}
+      <div className="bg-muted/30 rounded-xl p-2 relative overflow-hidden">
         <p className="text-xs text-muted-foreground mb-1 text-center font-medium">
           YOUR HAND
         </p>
-        <div className="flex justify-center gap-1 min-h-[58px]">
+        <div className="flex justify-center gap-0.5 min-h-[52px]">
           {Array.from({ length: 5 }).map((_, i) => (
             selectedCards[i] ? (
               <motion.div
@@ -248,7 +283,7 @@ function GuidedInteractiveDemo({ onComplete }: { onComplete: () => void }) {
               >
                 <TutorialCard
                   card={selectedCards[i]}
-                  size="sm"
+                  size="xs"
                 />
               </motion.div>
             ) : (
@@ -260,7 +295,7 @@ function GuidedInteractiveDemo({ onComplete }: { onComplete: () => void }) {
                 } : {}}
                 transition={{ repeat: Infinity, duration: 1 }}
               >
-                <EmptyCardSlot size="sm" />
+                <EmptyCardSlot size="xs" />
               </motion.div>
             )
           ))}
@@ -280,9 +315,9 @@ function GuidedInteractiveDemo({ onComplete }: { onComplete: () => void }) {
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: "spring", delay: 0.2 }}
-                  className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-full text-lg font-display shadow-lg"
+                  className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-full text-base font-display shadow-lg"
                 >
-                  <Sparkles className="w-5 h-5" />
+                  <Sparkles className="w-4 h-4" />
                   {handResult?.name}
                   <span className="font-bold">+{handResult?.points}</span>
                 </motion.div>
@@ -290,7 +325,7 @@ function GuidedInteractiveDemo({ onComplete }: { onComplete: () => void }) {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 }}
-                  className="mt-3 text-sm text-muted-foreground"
+                  className="mt-2 text-xs text-muted-foreground"
                 >
                   Great job! You built a poker hand!
                 </motion.p>
@@ -298,45 +333,6 @@ function GuidedInteractiveDemo({ onComplete }: { onComplete: () => void }) {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
-
-      {/* Available Cards Grid */}
-      <div className="relative">
-        <p className="text-xs text-muted-foreground mb-1 text-center">
-          TAP CARDS TO SELECT
-        </p>
-        <div className="grid grid-cols-5 gap-1 justify-items-center">
-          {availableCards.map((card, index) => {
-            const isTarget = card.id === currentTargetId;
-            return (
-              <motion.div
-                key={card.id}
-                className="relative"
-                animate={isTarget && showHandPointer ? {
-                  scale: [1, 1.08, 1],
-                } : {}}
-                transition={{ repeat: Infinity, duration: 0.8 }}
-              >
-                <PlayingCard
-                  card={card}
-                  size="xs"
-                  onClick={() => handleCardClick(card)}
-                  animate={false}
-                  className={isTarget && showHandPointer ? 'ring-2 ring-primary ring-offset-1 ring-offset-background' : ''}
-                />
-                {isTarget && showHandPointer && (
-                  <motion.div
-                    className="absolute -top-6 left-1/2 -translate-x-1/2"
-                    animate={{ y: [0, 3, 0] }}
-                    transition={{ repeat: Infinity, duration: 0.5 }}
-                  >
-                    <Hand className="w-5 h-5 text-primary rotate-180" />
-                  </motion.div>
-                )}
-              </motion.div>
-            );
-          })}
-        </div>
       </div>
 
       {/* Action buttons */}
