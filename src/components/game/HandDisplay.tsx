@@ -49,7 +49,7 @@ export function HandDisplay({ cards, maxCards = 5, currentHand, className }: Han
                     transition={{ type: 'spring', stiffness: 300, damping: 25 }}
                   >
                     {card ? (
-                      <PlayingCard card={card} size={cardSize} isDisabled animate={false} />
+                      <PlayingCard card={card} size={cardSize} isDisabled animate={false} simplified={!isMobile} />
                     ) : (
                       <EmptyCardSlot size={cardSize} />
                     )}

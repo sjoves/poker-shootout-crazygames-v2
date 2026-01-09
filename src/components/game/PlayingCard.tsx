@@ -11,6 +11,7 @@ interface PlayingCardProps {
   size?: 'xxs' | 'xs' | 'sm' | 'ssc' | 'sdm' | 'sdm-lg' | 'sd' | 'md' | 'hand' | 'hand-sm' | 'lg' | 'conveyor-sm' | 'conveyor-md' | 'conveyor-lg';
   animate?: boolean;
   className?: string;
+  simplified?: boolean; // Centered layout with no corner pips
 }
 
 const SUIT_SYMBOLS: Record<Suit, string> = {
@@ -86,6 +87,7 @@ const PlayingCardInner = forwardRef<HTMLButtonElement, PlayingCardProps>(functio
     size = 'md',
     animate = true,
     className,
+    simplified = false,
   },
   ref
 ) {
@@ -115,19 +117,27 @@ const PlayingCardInner = forwardRef<HTMLButtonElement, PlayingCardProps>(functio
         className
       )}
     >
-      {/* Top-left corner */}
-      <div className={cn('absolute top-0.5 left-1 flex flex-col items-center leading-none')}>
-        <span className={cn('font-bold', config.rank)}>{card.rank}</span>
-        <span className={config.corner}>{suitSymbol}</span>
-      </div>
+      {simplified ? (
+        /* Simplified centered layout - no corner pips */
+        <div className="flex flex-col items-center justify-center leading-tight">
+          <span className={cn('font-bold', config.rank)}>{card.rank}</span>
+          <span className={config.corner}>{suitSymbol}</span>
+        </div>
+      ) : (
+        <>
+          {/* Top-left corner */}
+          <div className={cn('absolute top-0.5 left-1 flex flex-col items-center leading-none')}>
+            <span className={cn('font-bold', config.rank)}>{card.rank}</span>
+            <span className={config.corner}>{suitSymbol}</span>
+          </div>
 
-      {/* Center - clean look without pips */}
-
-      {/* Bottom-right corner (inverted) */}
-      <div className={cn('absolute bottom-0.5 right-1 flex flex-col items-center leading-none rotate-180')}>
-        <span className={cn('font-bold', config.rank)}>{card.rank}</span>
-        <span className={config.corner}>{suitSymbol}</span>
-      </div>
+          {/* Bottom-right corner (inverted) */}
+          <div className={cn('absolute bottom-0.5 right-1 flex flex-col items-center leading-none rotate-180')}>
+            <span className={cn('font-bold', config.rank)}>{card.rank}</span>
+            <span className={config.corner}>{suitSymbol}</span>
+          </div>
+        </>
+      )}
     </motion.button>
   );
 });
@@ -141,7 +151,8 @@ export const PlayingCard = memo(PlayingCardInner, (prevProps, nextProps) => {
     prevProps.isSelected === nextProps.isSelected &&
     prevProps.isDisabled === nextProps.isDisabled &&
     prevProps.size === nextProps.size &&
-    prevProps.className === nextProps.className
+    prevProps.className === nextProps.className &&
+    prevProps.simplified === nextProps.simplified
   );
 });
 
