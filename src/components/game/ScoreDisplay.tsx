@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { TrophyIcon, ClockIcon, Cog6ToothIcon, SpeakerWaveIcon, SpeakerXMarkIcon, HandRaisedIcon, HomeIcon, ArrowPathIcon, PauseIcon, PlayIcon, CheckIcon } from '@heroicons/react/24/outline';
+import { TrophyIcon, ClockIcon, Cog6ToothIcon, SpeakerWaveIcon, SpeakerXMarkIcon, HandRaisedIcon, HomeIcon, ArrowPathIcon, PauseIcon, PlayIcon, CheckIcon, BoltIcon } from '@heroicons/react/24/outline';
 import { RectangleVertical } from 'lucide-react';
 import { HandResult } from '@/types/game';
 import { cn } from '@/lib/utils';
@@ -59,6 +59,7 @@ interface ScorePanelProps {
   level?: number;
   isBonusRound?: boolean;
   isUrgent?: boolean;
+  inFinalStretch?: boolean;
   onHome?: () => void;
   onRestart?: () => void;
   onPause?: () => void;
@@ -75,6 +76,7 @@ export function ScorePanel({
   level,
   isBonusRound,
   isUrgent,
+  inFinalStretch,
   onHome,
   onRestart,
   onPause,
@@ -129,8 +131,51 @@ export function ScorePanel({
   return (
     <>
       <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3">
-        {/* Main stats pill */}
-        <div className="flex items-center gap-4 bg-transparent rounded-full px-5 py-2.5 border border-primary">
+        {/* Main stats pill - relative for overlay positioning */}
+        <div className="relative flex items-center gap-4 bg-transparent rounded-full px-5 py-2.5 border border-primary">
+          {/* Bonus x2 Overlay - shows for 1s then fades over 1s */}
+          <AnimatePresence>
+            {inFinalStretch && (
+              <motion.div
+                key="bonus-overlay"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ 
+                  opacity: [0, 1, 1, 0],
+                  scale: [0.8, 1.05, 1, 1]
+                }}
+                transition={{ 
+                  duration: 2,
+                  times: [0, 0.15, 0.5, 1],
+                  ease: 'easeOut'
+                }}
+                className="absolute inset-0 z-10 flex items-center justify-center rounded-full pointer-events-none overflow-hidden"
+              >
+                <motion.div 
+                  animate={{ 
+                    filter: ['brightness(1)', 'brightness(1.2)', 'brightness(1)']
+                  }}
+                  transition={{ duration: 0.3, repeat: 4, ease: 'easeInOut' }}
+                  className="absolute inset-0 flex items-center justify-center gap-2 bg-gradient-to-r from-primary via-accent to-primary shadow-[0_0_20px_rgba(var(--primary),0.5)]"
+                >
+                  <motion.div
+                    animate={{ rotate: [0, 15, -15, 0] }}
+                    transition={{ duration: 0.25, repeat: 5, ease: 'easeInOut' }}
+                  >
+                    <BoltIcon className="w-5 h-5 text-primary-foreground" />
+                  </motion.div>
+                  <span className="text-lg font-bold text-primary-foreground whitespace-nowrap">
+                    BONUS x2
+                  </span>
+                  <motion.div
+                    animate={{ rotate: [0, -15, 15, 0] }}
+                    transition={{ duration: 0.25, repeat: 5, ease: 'easeInOut' }}
+                  >
+                    <BoltIcon className="w-5 h-5 text-primary-foreground" />
+                  </motion.div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
           {/* Score */}
           <div className="flex items-center gap-2 min-w-[5.5rem]">
             <TrophyIcon className="w-5 h-5 text-primary flex-shrink-0" />

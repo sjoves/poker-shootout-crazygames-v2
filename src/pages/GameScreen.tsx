@@ -439,6 +439,7 @@ export default function GameScreen() {
               goalScore={isSSC ? state.levelGoal : undefined}
               level={isSSC ? state.sscLevel : undefined}
               isUrgent={inFinalStretch}
+              inFinalStretch={inFinalStretch}
               onHome={() => { resetGame(); navigate('/'); }}
               onRestart={() => { startGame(mode as GameMode); }}
               onPause={pauseGame}
@@ -466,50 +467,6 @@ export default function GameScreen() {
                     <span className="text-xs text-accent/80">
                       ({state.betterHandStreak} streak)
                     </span>
-                  </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Final Stretch Bonus Indicator - Overlays directly on scoreboard */}
-            <AnimatePresence>
-              {inFinalStretch && (
-                <motion.div
-                  key="bonus-overlay"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ 
-                    opacity: [0, 1, 1, 0],
-                    scale: [0.8, 1.05, 1, 1]
-                  }}
-                  transition={{ 
-                    duration: 2,
-                    times: [0, 0.15, 0.5, 1],
-                    ease: 'easeOut'
-                  }}
-                  className="absolute top-4 left-1/2 -translate-x-1/2 z-[60] pointer-events-none"
-                >
-                  <motion.div 
-                    animate={{ 
-                      filter: ['brightness(1)', 'brightness(1.2)', 'brightness(1)']
-                    }}
-                    transition={{ duration: 0.3, repeat: 4, ease: 'easeInOut' }}
-                    className="flex items-center justify-center gap-2 bg-gradient-to-r from-primary via-accent to-primary rounded-full px-5 py-2.5 border border-primary/50 shadow-[0_0_20px_rgba(var(--primary),0.5)]"
-                  >
-                    <motion.div
-                      animate={{ rotate: [0, 15, -15, 0] }}
-                      transition={{ duration: 0.25, repeat: 5, ease: 'easeInOut' }}
-                    >
-                      <BoltIcon className="w-4 h-4 text-primary-foreground" />
-                    </motion.div>
-                    <span className="text-base font-bold text-primary-foreground whitespace-nowrap">
-                      BONUS x2
-                    </span>
-                    <motion.div
-                      animate={{ rotate: [0, -15, 15, 0] }}
-                      transition={{ duration: 0.25, repeat: 5, ease: 'easeInOut' }}
-                    >
-                      <BoltIcon className="w-4 h-4 text-primary-foreground" />
-                    </motion.div>
                   </motion.div>
                 </motion.div>
               )}
