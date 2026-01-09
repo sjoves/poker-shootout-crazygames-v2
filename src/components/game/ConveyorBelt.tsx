@@ -119,9 +119,13 @@ export function ConveyorBelt({
 
   const { cardWidth, cardHeight, spacing: cardSpacing, rowGap } = dimensions;
 
-  // Reset on reshuffle
+  // Reset on reshuffle or row count change
+  const prevRowsRef = useRef(actualRows);
   useEffect(() => {
-    if (reshuffleTrigger > 0) {
+    const shouldReset = reshuffleTrigger > 0 || prevRowsRef.current !== actualRows;
+    prevRowsRef.current = actualRows;
+    
+    if (shouldReset) {
       initializedRef.current = false;
       cardsRef.current = [];
       cardElementsRef.current.clear();
@@ -129,7 +133,7 @@ export function ConveyorBelt({
       setCardsReady(false);
       triggerRender();
     }
-  }, [reshuffleTrigger, triggerRender]);
+  }, [reshuffleTrigger, actualRows, triggerRender]);
 
   // Initialize cards on tracks - only when deck has cards
   useEffect(() => {
