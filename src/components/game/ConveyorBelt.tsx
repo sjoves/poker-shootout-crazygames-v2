@@ -21,8 +21,9 @@ interface ConveyorBeltProps {
   reshuffleTrigger?: number;
 }
 
-// Fixed to exactly 3 rows
-const FIXED_ROWS = 3;
+// Default rows (desktop)
+const DESKTOP_ROWS = 3;
+const MOBILE_ROWS = 4;
 
 // Card aspect ratio: 2.5:3.5 = 0.714
 const CARD_ASPECT_RATIO = 2.5 / 3.5;
@@ -33,12 +34,13 @@ export function ConveyorBelt({
   onSelectCard,
   speed = 1,
   isPaused = false,
-  rows = FIXED_ROWS, // Enforce 3 rows
+  rows = DESKTOP_ROWS,
   isRecycling = false,
   reshuffleTrigger = 0,
 }: ConveyorBeltProps) {
-  // Always use exactly 3 rows
-  const actualRows = FIXED_ROWS;
+  const isMobile = useIsMobile();
+  // 4 rows on mobile, 3 on desktop
+  const actualRows = isMobile ? MOBILE_ROWS : DESKTOP_ROWS;
   
   // Use refs for card positions to avoid React state updates every frame
   const cardsRef = useRef<ConveyorCard[]>([]);
@@ -49,7 +51,6 @@ export function ConveyorBelt({
   const initializedRef = useRef(false);
   const returnDelayMs = 3000;
   const { playSound } = useAudio();
-  const isMobile = useIsMobile();
 
   // Atomic lock to prevent multi-touch / ghost taps (no time-based gating)
   const isSelectingRef = useRef(false);
@@ -68,10 +69,11 @@ export function ConveyorBelt({
     const vh = window.innerHeight / 100;
     
     // Available height for cards: account for hand display at bottom
-    const rowGap = isMobile ? 16 : 16; // Increased mobile row gap from 8 to 16
-    const handDisplayReserve = isMobile ? 110 : 150; // 40px less on mobile
-    const availableHeight = (vh * 90) - handDisplayReserve - (rowGap * 2); // Total height minus gaps and hand display
-    const maxCardHeight = availableHeight / 3; // Each row's max card height
+    const rowGap = isMobile ? 12 : 16; // Row gap
+    const handDisplayReserve = isMobile ? 110 : 150; // Reserved for hand display
+    const numRows = isMobile ? 4 : 3; // 4 rows on mobile, 3 on desktop
+    const availableHeight = (vh * 90) - handDisplayReserve - (rowGap * (numRows - 1)); // Total height minus gaps and hand display
+    const maxCardHeight = availableHeight / numRows; // Each row's max card height
     
     // Desktop full-screen: larger cards
     // Mobile: smaller cards
@@ -83,8 +85,8 @@ export function ConveyorBelt({
     
     let cardHeight: number;
     if (isMobile) {
-      // Mobile: normal size cards (14vh)
-      cardHeight = vh * 14;
+      // Mobile: scale cards to fit 4 rows
+      cardHeight = Math.min(maxCardHeight, vh * 14);
     } else if (isFullScreen) {
       // Full-screen: cards scale to fill height, capped at 22vh
       cardHeight = Math.min(maxCardHeight, maxVhHeight);
