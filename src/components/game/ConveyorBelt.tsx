@@ -83,8 +83,8 @@ export function ConveyorBelt({
     
     let cardHeight: number;
     if (isMobile) {
-      // Mobile: fixed smaller cards (40% smaller than original 14vh = 8.4vh)
-      cardHeight = vh * 8.4;
+      // Mobile: fixed smaller cards (20% smaller than original 14vh = 11.2vh)
+      cardHeight = vh * 11.2;
     } else if (isFullScreen) {
       // Full-screen: cards scale to fill height, capped at 22vh
       cardHeight = Math.min(maxCardHeight, maxVhHeight);
