@@ -626,19 +626,6 @@ export function TutorialModal({ isOpen, onClose }: TutorialModalProps) {
             </Button>
           </div>
           
-          {/* Progress bar */}
-          <div className="flex gap-1 mt-3">
-            {steps.map((_, index) => (
-              <motion.div
-                key={index}
-                className={`h-1 flex-1 rounded-full transition-colors ${
-                  index <= currentStep ? 'bg-primary' : 'bg-muted/50'
-                }`}
-                initial={false}
-                animate={{ scaleX: index <= currentStep ? 1 : 0.5 }}
-              />
-            ))}
-          </div>
         </div>
 
         {/* Content */}
