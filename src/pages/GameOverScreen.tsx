@@ -262,7 +262,7 @@ export default function GameOverScreen() {
           {displayScore.toLocaleString()}
         </div>
 
-        <div className="bg-card/80 rounded-xl p-4 mb-6 text-left space-y-1 w-full max-w-md mx-auto">
+        <div className="bg-card/80 rounded-xl p-4 mb-6 text-center space-y-1 w-full max-w-md mx-auto">
           {/* Hide hands played for Classic Mode - only show for Blitz and SSC */}
           {!isClassicMode && (
             <p className="text-sm text-muted-foreground">Hands Played: {gameState.handsPlayed}</p>
