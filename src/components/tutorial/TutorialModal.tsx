@@ -598,22 +598,22 @@ export function TutorialModal({ isOpen, onClose }: TutorialModalProps) {
 
   const steps: TutorialStep[] = [
     {
+      id: 'rankings',
+      title: 'How to Play Poker',
+      icon: <Trophy className="w-8 h-8 text-gold" />,
+      content: <HandRankingsContent />,
+    },
+    {
       id: 'quickstart',
       title: 'Interactive QuickStart',
       icon: <Sparkles className="w-8 h-8 text-primary" />,
-      content: <GuidedInteractiveDemo onComplete={() => setCurrentStep(1)} />,
+      content: <GuidedInteractiveDemo onComplete={() => setCurrentStep(2)} />,
     },
     {
       id: 'modes',
       title: 'Game Modes',
       icon: <Target className="w-8 h-8 text-accent" />,
       content: <GameModesContent />,
-    },
-    {
-      id: 'rankings',
-      title: 'How to Play Poker',
-      icon: <Trophy className="w-8 h-8 text-gold" />,
-      content: <HandRankingsContent />,
     },
   ];
 
