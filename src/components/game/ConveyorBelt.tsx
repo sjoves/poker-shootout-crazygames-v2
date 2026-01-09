@@ -67,9 +67,9 @@ export function ConveyorBelt({
   const getCardDimensions = useCallback(() => {
     const vh = window.innerHeight / 100;
     
-    // Available height for cards: account for hand display (150px) at bottom
+    // Available height for cards: account for hand display at bottom
     const rowGap = isMobile ? 8 : 16; // Gap between rows in px
-    const handDisplayReserve = 150; // Reserved space for hand display
+    const handDisplayReserve = isMobile ? 130 : 150; // 20px less on mobile
     const availableHeight = (vh * 90) - handDisplayReserve - (rowGap * 2); // Total height minus gaps and hand display
     const maxCardHeight = availableHeight / 3; // Each row's max card height
     
@@ -86,8 +86,8 @@ export function ConveyorBelt({
       // Full-screen: cards scale to fill height, capped at 22vh
       cardHeight = Math.min(maxCardHeight, maxVhHeight);
     } else if (isMobile) {
-      // Mobile: smaller cards
-      cardHeight = Math.min(maxCardHeight, vh * 14, maxVhHeight);
+      // Mobile: smaller cards (10% smaller than before: 14 * 0.9 = 12.6)
+      cardHeight = Math.min(maxCardHeight, vh * 12.6, maxVhHeight);
     } else {
       // Tablet/smaller desktop
       cardHeight = Math.min(maxCardHeight, vh * 18, maxVhHeight);

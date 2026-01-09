@@ -51,7 +51,9 @@ export default function GameScreen() {
   const { playSound, startMusic, stopMusic, isMusicLoading, isMuted, setMasterVolume, masterVolume } = useAudio();
   const isMobile = useIsMobile();
   const isSSC = state.mode === 'ssc';
-  const baseSpeed = isMobile ? 0.6 : 1;
+  const isBlitzCB = state.mode === 'blitz_cb';
+  // Blitz/CB uses full speed on mobile, other modes use reduced speed
+  const baseSpeed = isMobile ? (isBlitzCB ? 1.0 : 0.6) : 1;
   const sscSpeed = isSSC ? getSSCSpeed(state.sscLevel) : 1;
   const [showUsedCards, setShowUsedCards] = useState(false);
   const [bonusIntroActive, setBonusIntroActive] = useState(false);
