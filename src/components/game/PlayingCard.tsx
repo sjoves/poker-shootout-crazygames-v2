@@ -28,7 +28,7 @@ const SIZE_CONFIG = {
   sm: { card: 'w-14 h-[79px]', rank: 'text-lg font-black', corner: 'text-sm', center: 'text-base', pip: 'text-[9px]', gap: 'gap-0' },
   ssc: { card: 'w-[68px] h-[95px]', rank: 'text-xl font-black', corner: 'text-base', center: 'text-lg', pip: 'text-[10px]', gap: 'gap-0' },
   // Game cards use vh-based sizing for CrazyGames compatibility (no scrolling)
-  sdm: { card: 'w-[calc(13.6vh*0.714)] h-[13.6vh]', rank: 'text-lg font-black', corner: 'text-sm', center: 'text-base', pip: 'text-[9px]', gap: 'gap-0' },
+  sdm: { card: 'w-[calc(14.96vh*0.714)] h-[14.96vh]', rank: 'text-lg font-black', corner: 'text-sm', center: 'text-base', pip: 'text-[9px]', gap: 'gap-0' },
   // Larger mobile cards for 3-row layout (~18% bigger than sdm)
   'sdm-lg': { card: 'w-[calc(16vh*0.714)] h-[16vh]', rank: 'text-xl font-black', corner: 'text-base', center: 'text-lg', pip: 'text-[10px]', gap: 'gap-0' },
   sd: { card: 'w-[calc(17vh*0.714)] h-[17vh]', rank: 'text-2xl font-black', corner: 'text-lg', center: 'text-xl', pip: 'text-xs', gap: 'gap-0' },
