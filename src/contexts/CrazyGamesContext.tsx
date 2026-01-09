@@ -1,5 +1,13 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 
+// Sitelock whitelist - domains where the game is allowed to run
+const ALLOWED_ORIGINS = ['crazygames.com', 'bi0s.art', 'localhost', 'lovable.app', 'lovableproject.com'];
+
+function isAllowedOrigin(): boolean {
+  const origin = window.location.origin.toLowerCase();
+  return ALLOWED_ORIGINS.some(domain => origin.includes(domain));
+}
+
 // CrazyGames SDK types
 interface CrazyGamesUser {
   userId: string;
@@ -311,6 +319,70 @@ export function CrazyGamesProvider({ children }: { children: ReactNode }) {
     }
     await window.CrazyGames.SDK.data.deleteValue(key);
   }, [isAvailable]);
+
+  // Check sitelock on mount
+  const [isSitelocked, setIsSitelocked] = useState(false);
+
+  useEffect(() => {
+    if (!isAllowedOrigin()) {
+      setIsSitelocked(true);
+    }
+  }, []);
+
+  // Sitelock overlay - blocks the game on unauthorized domains
+  if (isSitelocked) {
+    return (
+      <div
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 99999,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+          color: 'white',
+          textAlign: 'center',
+          padding: '2rem',
+        }}
+      >
+        <h1 style={{ fontSize: '2rem', marginBottom: '1rem', fontWeight: 'bold' }}>
+          🎮 Game Access Restricted
+        </h1>
+        <p style={{ fontSize: '1.25rem', marginBottom: '2rem', opacity: 0.9 }}>
+          Please play this game on CrazyGames
+        </p>
+        <a
+          href="https://www.crazygames.com/game/poker-shootout"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: 'inline-block',
+            padding: '1rem 2rem',
+            background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+            color: 'white',
+            borderRadius: '0.5rem',
+            textDecoration: 'none',
+            fontWeight: 'bold',
+            fontSize: '1.125rem',
+            boxShadow: '0 4px 15px rgba(99, 102, 241, 0.4)',
+            transition: 'transform 0.2s, box-shadow 0.2s',
+          }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.transform = 'scale(1.05)';
+            e.currentTarget.style.boxShadow = '0 6px 20px rgba(99, 102, 241, 0.6)';
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.transform = 'scale(1)';
+            e.currentTarget.style.boxShadow = '0 4px 15px rgba(99, 102, 241, 0.4)';
+          }}
+        >
+          Play on CrazyGames →
+        </a>
+      </div>
+    );
+  }
 
   return (
     <CrazyGamesContext.Provider
