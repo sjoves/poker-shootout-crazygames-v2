@@ -398,7 +398,11 @@ export function ConveyorBelt({
 
   // Determine card size variant based on viewport
   const isFullScreen = typeof window !== 'undefined' && window.innerWidth >= 1024;
+  const isSmallDesktop = typeof window !== 'undefined' && !isMobile && !isFullScreen;
   const cardSizeVariant = isFullScreen ? 'conveyor-lg' : (isMobile ? 'conveyor-sm' : 'conveyor-md');
+  
+  // Reduce max height by 20% for smaller desktop views
+  const maxHeightValue = isSmallDesktop ? 'calc(72vh - 180px)' : 'calc(90vh - 180px)';
 
   return (
     <div 
@@ -410,7 +414,7 @@ export function ConveyorBelt({
         className="relative w-full max-w-[100vw] flex flex-col justify-center"
         style={{ 
           height: totalHeight,
-          maxHeight: 'calc(90vh - 180px)', // Leave room for header and hand display
+          maxHeight: maxHeightValue,
         }}
       >
         {/* Track backgrounds */}
