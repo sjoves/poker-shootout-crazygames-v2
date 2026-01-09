@@ -75,14 +75,14 @@ export function HandDisplay({ cards, maxCards = 5, currentHand, className }: Han
                   transition={{ delay: 0.1, type: "spring", stiffness: 300 }}
                   className="text-center px-2"
                 >
-                  <div className="text-lg sm:text-2xl md:text-base font-bold text-primary-foreground tracking-wide uppercase drop-shadow-lg">
+                  <div className="text-lg sm:text-2xl md:text-sm font-bold text-primary-foreground tracking-wide uppercase drop-shadow-lg">
                     {visibleHand.hand.name}
                   </div>
                   <motion.div 
                     initial={{ scale: 0.5, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ delay: 0.15, type: "spring", stiffness: 400 }}
-                    className="text-2xl sm:text-4xl md:text-xl font-bold text-black drop-shadow-lg"
+                    className="text-2xl sm:text-4xl md:text-lg font-bold text-black drop-shadow-lg"
                   >
                     +{visibleHand.totalPoints}
                   </motion.div>
