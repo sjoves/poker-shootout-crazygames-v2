@@ -407,11 +407,13 @@ export function ConveyorBelt({
   return (
     <div 
       ref={containerRef}
-      className="absolute inset-0 z-10 flex items-center justify-center overflow-hidden px-2 sm:px-4 lg:px-8"
+      className={`absolute inset-0 z-10 flex justify-center overflow-hidden px-2 sm:px-4 lg:px-8 ${
+        isMobile ? 'items-center' : 'items-start pt-4'
+      }`}
       style={{ maxWidth: '100vw' }}
     >
       <div 
-        className="relative w-full max-w-[100vw] flex flex-col justify-center"
+        className={`relative w-full max-w-[100vw] flex flex-col ${isMobile ? 'justify-center' : 'justify-start'}`}
         style={{ 
           height: totalHeight,
           maxHeight: maxHeightValue,
