@@ -16,7 +16,7 @@ const MAX_VISIBLE_CARDS = 25; // Works for both 5x5 and 6x4+
 // Memoized card slot - only re-renders when its specific card changes
 interface CardSlotProps {
   card: Card;
-  cardSize: 'sdm' | 'sdm-lg' | 'sd';
+  cardSize: 'sdm' | 'sdm-lg' | 'sd' | 'conveyor-md';
   onPointerDown: (card: Card, e: React.PointerEvent) => void;
 }
 
@@ -50,7 +50,13 @@ export function StaticGrid({ deck, selectedCardIds, onSelectCard }: StaticGridPr
   const gridColumns = isMobile ? 4 : 7;
   const maxVisibleCards = isMobile ? 16 : 21; // 4x4 on mobile, 7x3 on desktop
   const visibleCards = deck.slice(0, maxVisibleCards);
-  const cardSize = isMobile ? 'sdm' : 'sd'; // sdm for 4-row layout on mobile
+  
+  // Detect smaller desktop views (not fullscreen) to match CB card sizing
+  const isFullScreen = typeof window !== 'undefined' && window.innerWidth >= 1024;
+  const isSmallDesktop = !isMobile && !isFullScreen;
+  
+  // For smaller desktop views, use conveyor-md sizing to match CB cards
+  const cardSize = isMobile ? 'sdm' : (isSmallDesktop ? 'conveyor-md' : 'sd');
 
   // Simple handler - let the store handle all validation
   const handleCardPointerDown = useCallback(
