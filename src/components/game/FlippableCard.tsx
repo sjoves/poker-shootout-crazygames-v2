@@ -19,7 +19,7 @@ interface FlippableCardProps {
 const SIZE_CLASSES = {
   sm: { card: 'w-[40px] h-[57px]', rank: 'text-base font-black', corner: 'text-xs' },
   sdm: { card: 'w-[50px] h-[71px]', rank: 'text-lg font-black', corner: 'text-sm' },
-  sd: { card: 'w-[60px] h-[85px]', rank: 'text-xl font-black', corner: 'text-base' },
+  sd: { card: 'w-[60px] h-[85px]', rank: 'text-lg font-black', corner: 'text-sm' },
 };
 
 const SUIT_SYMBOLS: Record<Suit, string> = {
