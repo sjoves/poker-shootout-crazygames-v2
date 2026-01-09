@@ -408,9 +408,9 @@ export function ConveyorBelt({
     <div 
       ref={containerRef}
       className={`absolute inset-0 z-10 flex justify-center overflow-hidden px-2 sm:px-4 lg:px-8 ${
-        isMobile ? 'items-center' : 'items-start pt-4'
+        isMobile ? 'items-center' : 'items-start'
       }`}
-      style={{ maxWidth: '100vw' }}
+      style={{ maxWidth: '100vw', paddingTop: isMobile ? undefined : '46px' }}
     >
       <div 
         className={`relative w-full max-w-[100vw] flex flex-col ${isMobile ? 'justify-center' : 'justify-start'}`}
