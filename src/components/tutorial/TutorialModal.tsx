@@ -656,37 +656,30 @@ export function TutorialModal({ isOpen, onClose }: TutorialModalProps) {
           </AnimatePresence>
         </div>
 
-        {/* Footer navigation */}
-        <div className="sticky bottom-0 bg-background/95 backdrop-blur-sm border-t border-border/50 px-4 py-3">
+        {/* Footer navigation - compact */}
+        <div className="sticky bottom-0 bg-background/95 backdrop-blur-sm border-t border-border/50 px-3 py-2">
           <div className="flex justify-between items-center">
             <Button
               variant="ghost"
+              size="icon"
               onClick={prevStep}
               disabled={currentStep === 0}
-              className="gap-1"
+              className="h-8 w-8"
             >
-              <ChevronLeft className="w-4 h-4" />
-              Back
+              <ChevronLeft className="w-5 h-5" />
             </Button>
 
-            {/* Step dots */}
-            <div className="flex gap-2">
-              {steps.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentStep(index)}
-                  className={`w-2 h-2 rounded-full transition-all ${
-                    index === currentStep
-                      ? 'bg-primary w-4'
-                      : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
-                  }`}
-                />
-              ))}
-            </div>
+            {/* Minimal step indicator */}
+            <span className="text-xs text-muted-foreground font-medium">
+              {currentStep + 1}/{steps.length}
+            </span>
 
-            <Button onClick={nextStep} className="gap-1">
-              {currentStep === steps.length - 1 ? "Let's Play!" : 'Next'}
-              <ChevronRight className="w-4 h-4" />
+            <Button 
+              size="icon" 
+              onClick={nextStep} 
+              className="h-8 w-8"
+            >
+              <ChevronRight className="w-5 h-5" />
             </Button>
           </div>
         </div>
