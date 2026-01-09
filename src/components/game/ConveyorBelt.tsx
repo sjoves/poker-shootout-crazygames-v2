@@ -70,7 +70,7 @@ export function ConveyorBelt({
     
     // Available height for cards: account for hand display at bottom
     const rowGap = isMobile ? 17 : 16; // Row gap - increased by 5px on mobile
-    const handDisplayReserve = isMobile ? 75 : 150; // Reserved for hand display - decreased by 35px total on mobile
+    const handDisplayReserve = isMobile ? 60 : 150; // Reserved for hand display - decreased by 50px total on mobile
     const numRows = isMobile ? 4 : 3; // 4 rows on mobile, 3 on desktop
     const availableHeight = (vh * 90) - handDisplayReserve - (rowGap * (numRows - 1)); // Total height minus gaps and hand display
     const maxCardHeight = availableHeight / numRows; // Each row's max card height
