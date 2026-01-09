@@ -104,9 +104,13 @@ export function ConveyorBelt({
 
   const [dimensions, setDimensions] = useState(getCardDimensions);
   
-  // Update dimensions on resize
+  // Update dimensions on resize (and when breakpoint-derived sizing changes)
   useEffect(() => {
     const handleResize = () => setDimensions(getCardDimensions());
+
+    // Run once immediately so changes like isMobile toggling take effect
+    handleResize();
+
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [getCardDimensions]);
