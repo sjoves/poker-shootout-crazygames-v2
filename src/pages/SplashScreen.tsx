@@ -15,16 +15,17 @@ import { StreakDisplay } from '@/components/retention/StreakDisplay';
 import { DailyChallenges } from '@/components/retention/DailyChallenges';
 import { AchievementsPanel, AchievementNotification } from '@/components/retention/AchievementsPanel';
 import { DailyRewardWheel } from '@/components/retention/DailyRewardWheel';
-import { StarIcon } from '@heroicons/react/24/solid';
-import { Target, Zap, Trophy, Gift, Settings, HelpCircle } from 'lucide-react';
+import { StarIcon, UserIcon } from '@heroicons/react/24/solid';
+import { Target, Zap, Trophy, Gift, Settings, HelpCircle, LogIn } from 'lucide-react';
 
 export default function SplashScreen() {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const { isPremium, loading } = useSubscription();
   const { currentLogo } = useTheme();
-  const { user: crazyGamesUser, loadingStop } = useCrazyGames();
+  const { user: crazyGamesUser, loadingStop, isAvailable: isCrazyGamesAvailable, isUserLoggedIn: isCrazyGamesLoggedIn, showAuthPrompt } = useCrazyGames();
   const { unlockAudio } = useAudio();
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const {
     streak,
     achievements,
@@ -104,8 +105,62 @@ export default function SplashScreen() {
     navigate(`/play/ssc?startLevel=${startLevel}`);
   };
 
+  // Handle CrazyGames login button click
+  const handleCrazyGamesLogin = async () => {
+    if (isLoggingIn) return;
+    setIsLoggingIn(true);
+    try {
+      await showAuthPrompt();
+    } catch (err) {
+      console.log('CrazyGames login prompt failed:', err);
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen modern-bg flex flex-col items-center justify-center p-6 overflow-y-auto">
+    <div className="min-h-screen modern-bg flex flex-col items-center justify-center p-6 overflow-y-auto relative">
+      {/* CrazyGames Login Button - Top Right Corner (non-intrusive) */}
+      {isCrazyGamesAvailable && !isCrazyGamesLoggedIn && (
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.5 }}
+          className="absolute top-4 right-4 z-10"
+        >
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleCrazyGamesLogin}
+            disabled={isLoggingIn}
+            className="gap-2 text-muted-foreground hover:text-foreground hover:bg-primary/10 border border-primary/20"
+          >
+            <LogIn className="w-4 h-4" />
+            {isLoggingIn ? 'Logging in...' : 'Login'}
+          </Button>
+        </motion.div>
+      )}
+      
+      {/* Show logged-in CrazyGames user avatar in top right */}
+      {isCrazyGamesAvailable && isCrazyGamesLoggedIn && crazyGamesUser && (
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.5 }}
+          className="absolute top-4 right-4 z-10 flex items-center gap-2 bg-primary/10 rounded-full px-3 py-1.5 border border-primary/20"
+        >
+          {crazyGamesUser.profilePictureUrl ? (
+            <img 
+              src={crazyGamesUser.profilePictureUrl} 
+              alt={crazyGamesUser.username} 
+              className="w-6 h-6 rounded-full"
+            />
+          ) : (
+            <UserIcon className="w-5 h-5 text-primary" />
+          )}
+          <span className="text-sm text-foreground font-medium">{crazyGamesUser.username}</span>
+        </motion.div>
+      )}
       {/* Achievement notification */}
       {newAchievements.length > 0 && (
         <AchievementNotification 

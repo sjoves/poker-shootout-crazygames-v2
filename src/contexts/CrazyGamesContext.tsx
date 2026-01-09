@@ -39,6 +39,7 @@ interface CrazyGamesSDK {
   user: {
     isUserAccountAvailable: boolean;
     getUser: () => Promise<CrazyGamesUser | null>;
+    getUserToken: () => Promise<string | null>;
     showAuthPrompt: () => Promise<CrazyGamesUser | null>;
     addAuthListener: (callback: (user: CrazyGamesUser | null) => void) => void;
     removeAuthListener: (callback: (user: CrazyGamesUser | null) => void) => void;
@@ -49,6 +50,9 @@ interface CrazyGamesSDK {
     deleteValue: (key: string) => Promise<void>;
   };
 }
+
+// Local storage keys for guest data fallback
+const GUEST_PROGRESS_KEY = 'poker_shootout_guest_progress';
 
 declare global {
   interface Window {
@@ -65,7 +69,9 @@ interface CrazyGamesContextValue {
   isAvailable: boolean;
   isInitialized: boolean;
   user: CrazyGamesUser | null;
+  userToken: string | null;
   hasAdblock: boolean;
+  isUserLoggedIn: boolean;
   // SDK methods
   gameplayStart: () => void;
   gameplayStop: () => void;
@@ -75,10 +81,13 @@ interface CrazyGamesContextValue {
   showMidgameAd: () => Promise<boolean>;
   showRewardedAd: () => Promise<boolean>;
   showAuthPrompt: () => Promise<CrazyGamesUser | null>;
-  // Data persistence
+  // Data persistence - auto-syncs to cloud for logged-in users, local for guests
   saveData: (key: string, value: string) => Promise<void>;
   loadData: (key: string) => Promise<string | null>;
   deleteData: (key: string) => Promise<void>;
+  // Progress sync helpers
+  saveProgress: (progress: Record<string, unknown>) => Promise<void>;
+  loadProgress: () => Promise<Record<string, unknown> | null>;
 }
 
 const CrazyGamesContext = createContext<CrazyGamesContextValue | null>(null);
@@ -90,7 +99,11 @@ export function CrazyGamesProvider({ children }: { children: ReactNode }) {
   const [isInitialized, setIsInitialized] = useState(false);
   const [isAvailable, setIsAvailable] = useState(false);
   const [user, setUser] = useState<CrazyGamesUser | null>(null);
+  const [userToken, setUserToken] = useState<string | null>(null);
   const [hasAdblock, setHasAdblock] = useState(false);
+  
+  // User is logged in if they have a CrazyGames user account
+  const isUserLoggedIn = !!user;
 
   // Input protection: prevent scrolling on arrow keys, spacebar, and wheel
   useEffect(() => {
@@ -154,22 +167,40 @@ export function CrazyGamesProvider({ children }: { children: ReactNode }) {
           // Ignore adblock check errors
         }
 
-        // Try to get logged in user
+        // Try to get logged in user and token for identification
         if (window.CrazyGames.SDK.user.isUserAccountAvailable) {
           try {
+            // Get user token first for identification (works for both guests and logged-in users)
+            const token = await window.CrazyGames.SDK.user.getUserToken();
+            if (token) {
+              setUserToken(token);
+              console.log('CrazyGames: Got user token for identification');
+            }
+
+            // Get user profile if logged in
             const cgUser = await window.CrazyGames.SDK.user.getUser();
             if (cgUser) {
               setUser(cgUser);
               console.log('CrazyGames user logged in:', cgUser.username);
+              
+              // Migrate any local guest progress to cloud
+              await migrateGuestProgressToCloud(cgUser.userId);
             }
 
             // Listen for auth changes
-            window.CrazyGames.SDK.user.addAuthListener((newUser) => {
+            window.CrazyGames.SDK.user.addAuthListener(async (newUser) => {
               setUser(newUser);
               console.log('CrazyGames auth changed:', newUser?.username || 'logged out');
+              
+              // When user logs in, migrate guest progress and refresh token
+              if (newUser) {
+                const newToken = await window.CrazyGames.SDK.user.getUserToken();
+                setUserToken(newToken);
+                await migrateGuestProgressToCloud(newUser.userId);
+              }
             });
-          } catch {
-            // Ignore user fetch errors
+          } catch (err) {
+            console.log('CrazyGames user/token fetch error:', err);
           }
         }
       } catch (error: unknown) {
@@ -316,28 +347,118 @@ export function CrazyGamesProvider({ children }: { children: ReactNode }) {
     }
   }, [isAvailable]);
 
+  // Data persistence - for logged-in users, sync to CrazyGames cloud; for guests, use localStorage
   const saveData = useCallback(async (key: string, value: string) => {
-    if (!isAvailable || !window.CrazyGames?.SDK) {
-      localStorage.setItem(key, value);
-      return;
+    // If SDK available AND user is logged in, save to cloud
+    if (isAvailable && window.CrazyGames?.SDK && isUserLoggedIn) {
+      try {
+        await window.CrazyGames.SDK.data.setValue(key, value);
+        console.log('CrazyGames: Saved data to cloud:', key);
+        return;
+      } catch (err) {
+        console.log('CrazyGames cloud save failed, falling back to local:', err);
+      }
     }
-    await window.CrazyGames.SDK.data.setValue(key, value);
-  }, [isAvailable]);
+    // Fallback to localStorage for guests or if cloud fails
+    localStorage.setItem(key, value);
+  }, [isAvailable, isUserLoggedIn]);
 
   const loadData = useCallback(async (key: string): Promise<string | null> => {
-    if (!isAvailable || !window.CrazyGames?.SDK) {
-      return localStorage.getItem(key);
+    // If SDK available AND user is logged in, load from cloud
+    if (isAvailable && window.CrazyGames?.SDK && isUserLoggedIn) {
+      try {
+        const cloudValue = await window.CrazyGames.SDK.data.getValue(key);
+        if (cloudValue !== null) {
+          console.log('CrazyGames: Loaded data from cloud:', key);
+          return cloudValue;
+        }
+      } catch (err) {
+        console.log('CrazyGames cloud load failed, falling back to local:', err);
+      }
     }
-    return window.CrazyGames.SDK.data.getValue(key);
-  }, [isAvailable]);
+    // Fallback to localStorage for guests or if cloud fails
+    return localStorage.getItem(key);
+  }, [isAvailable, isUserLoggedIn]);
 
   const deleteData = useCallback(async (key: string) => {
-    if (!isAvailable || !window.CrazyGames?.SDK) {
-      localStorage.removeItem(key);
-      return;
+    // If SDK available AND user is logged in, delete from cloud
+    if (isAvailable && window.CrazyGames?.SDK && isUserLoggedIn) {
+      try {
+        await window.CrazyGames.SDK.data.deleteValue(key);
+        console.log('CrazyGames: Deleted data from cloud:', key);
+      } catch (err) {
+        console.log('CrazyGames cloud delete failed:', err);
+      }
     }
-    await window.CrazyGames.SDK.data.deleteValue(key);
-  }, [isAvailable]);
+    // Also clear from localStorage
+    localStorage.removeItem(key);
+  }, [isAvailable, isUserLoggedIn]);
+
+  // Helper to migrate guest progress to cloud when user logs in
+  const migrateGuestProgressToCloud = async (userId: string) => {
+    if (!isAvailable || !window.CrazyGames?.SDK) return;
+    
+    try {
+      const guestProgress = localStorage.getItem(GUEST_PROGRESS_KEY);
+      if (guestProgress) {
+        // Save guest progress to cloud under user's account
+        await window.CrazyGames.SDK.data.setValue('game_progress', guestProgress);
+        // Clear local guest progress after successful migration
+        localStorage.removeItem(GUEST_PROGRESS_KEY);
+        console.log('CrazyGames: Migrated guest progress to cloud for user:', userId);
+      }
+    } catch (err) {
+      console.log('CrazyGames: Failed to migrate guest progress:', err);
+    }
+  };
+
+  // Convenience methods for game progress sync
+  const saveProgress = useCallback(async (progress: Record<string, unknown>) => {
+    const progressJson = JSON.stringify(progress);
+    
+    if (isUserLoggedIn && isAvailable && window.CrazyGames?.SDK) {
+      // Logged-in user: save to cloud
+      try {
+        await window.CrazyGames.SDK.data.setValue('game_progress', progressJson);
+        console.log('CrazyGames: Saved progress to cloud');
+        return;
+      } catch (err) {
+        console.log('CrazyGames cloud progress save failed:', err);
+      }
+    }
+    // Guest: save to local storage
+    localStorage.setItem(GUEST_PROGRESS_KEY, progressJson);
+  }, [isAvailable, isUserLoggedIn]);
+
+  const loadProgress = useCallback(async (): Promise<Record<string, unknown> | null> => {
+    let progressJson: string | null = null;
+    
+    if (isUserLoggedIn && isAvailable && window.CrazyGames?.SDK) {
+      // Logged-in user: load from cloud
+      try {
+        progressJson = await window.CrazyGames.SDK.data.getValue('game_progress');
+        if (progressJson) {
+          console.log('CrazyGames: Loaded progress from cloud');
+        }
+      } catch (err) {
+        console.log('CrazyGames cloud progress load failed:', err);
+      }
+    }
+    
+    // Fallback to guest local storage
+    if (!progressJson) {
+      progressJson = localStorage.getItem(GUEST_PROGRESS_KEY);
+    }
+    
+    if (progressJson) {
+      try {
+        return JSON.parse(progressJson);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }, [isAvailable, isUserLoggedIn]);
 
   // Check sitelock on mount
   const [isSitelocked, setIsSitelocked] = useState(false);
@@ -409,7 +530,9 @@ export function CrazyGamesProvider({ children }: { children: ReactNode }) {
         isAvailable,
         isInitialized,
         user,
+        userToken,
         hasAdblock,
+        isUserLoggedIn,
         gameplayStart,
         gameplayStop,
         happytime,
@@ -421,6 +544,8 @@ export function CrazyGamesProvider({ children }: { children: ReactNode }) {
         saveData,
         loadData,
         deleteData,
+        saveProgress,
+        loadProgress,
       }}
     >
       {children}
