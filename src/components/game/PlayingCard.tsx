@@ -8,7 +8,7 @@ interface PlayingCardProps {
   onClick?: () => void;
   isSelected?: boolean;
   isDisabled?: boolean;
-  size?: 'xxs' | 'xs' | 'sm' | 'ssc' | 'sdm' | 'sdm-lg' | 'sd' | 'md' | 'hand' | 'lg' | 'conveyor-sm' | 'conveyor-md' | 'conveyor-lg';
+  size?: 'xxs' | 'xs' | 'sm' | 'ssc' | 'sdm' | 'sdm-lg' | 'sd' | 'md' | 'hand' | 'hand-sm' | 'lg' | 'conveyor-sm' | 'conveyor-md' | 'conveyor-lg';
   animate?: boolean;
   className?: string;
 }
@@ -36,6 +36,8 @@ const SIZE_CONFIG = {
   md: { card: 'w-[76px] h-[106px]', rank: 'text-2xl font-black', corner: 'text-lg', center: 'text-xl', pip: 'text-sm', gap: 'gap-0.5' },
   // Hand display uses vh-based sizing
   hand: { card: 'w-[calc(11vh*0.714)] h-[11vh]', rank: 'text-lg font-black', corner: 'text-sm', center: 'text-base', pip: 'text-[10px]', gap: 'gap-0' },
+  // Smaller hand display for desktop (scaled down ~20%)
+  'hand-sm': { card: 'w-[calc(8.8vh*0.714)] h-[8.8vh]', rank: 'text-base font-black', corner: 'text-xs', center: 'text-sm', pip: 'text-[8px]', gap: 'gap-0' },
   lg: { card: 'w-[115px] h-[158px]', rank: 'text-3xl font-black', corner: 'text-xl', center: 'text-2xl', pip: 'text-base', gap: 'gap-1' },
   // Responsive conveyor belt sizes - use w-full h-full to inherit from parent
   'conveyor-sm': { card: 'w-full h-full aspect-[2.5/3.5]', rank: 'text-base font-black', corner: 'text-xs', center: 'text-sm', pip: 'text-[8px]', gap: 'gap-0' },
@@ -153,6 +155,7 @@ const EMPTY_SLOT_SIZES = {
   sd: 'w-[calc(17vh*0.714)] h-[17vh]',
   md: 'w-[76px] h-[106px]',
   hand: 'w-[calc(11vh*0.714)] h-[11vh]',
+  'hand-sm': 'w-[calc(8.8vh*0.714)] h-[8.8vh]',
   lg: 'w-[115px] h-[158px]',
   'conveyor-sm': 'w-full h-full aspect-[2.5/3.5]',
   'conveyor-md': 'w-full h-full aspect-[2.5/3.5]',

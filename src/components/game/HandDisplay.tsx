@@ -28,8 +28,8 @@ export function HandDisplay({ cards, maxCards = 5, currentHand, className }: Han
     }
   }, [currentHand]);
 
-  // Use smaller cards on mobile, 'hand' size on desktop (30% smaller than lg)
-  const cardSize = isMobile ? 'sm' : 'hand';
+  // Use smaller cards on mobile, 'hand-sm' on desktop for compact display
+  const cardSize = isMobile ? 'sm' : 'hand-sm';
 
   return (
     <div className={cn('relative flex flex-col items-center gap-1 sm:gap-2 flex-shrink-0', className)}>
