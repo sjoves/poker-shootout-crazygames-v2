@@ -59,16 +59,27 @@ export function useGameControls(
 
   const endGame = useCallback(() => {
     setState(prev => {
+      const isBlitz = prev.mode === 'blitz_fc' || prev.mode === 'blitz_cb';
+      const isClassic = prev.mode === 'classic_fc' || prev.mode === 'classic_cb';
+      
       let finalScore = prev.score;
+      let timeBonus = 0;
+      let leftoverPenalty = 0;
 
-      if (prev.mode === 'classic_fc' || prev.mode === 'classic_cb') {
-        finalScore += calculateTimeBonus(prev.timeElapsed);
-        finalScore -= calculateLeftoverPenalty(prev.deck);
+      if (isBlitz) {
+        // Blitz: rawScore × handsPlayed
+        finalScore = prev.rawScore * prev.handsPlayed;
+      } else if (isClassic) {
+        timeBonus = calculateTimeBonus(prev.timeElapsed);
+        leftoverPenalty = calculateLeftoverPenalty(prev.deck);
+        finalScore = prev.rawScore + timeBonus - leftoverPenalty;
       }
 
       return {
         ...prev,
         score: finalScore,
+        timeBonus,
+        leftoverPenalty,
         isPlaying: false,
         isGameOver: true,
       };

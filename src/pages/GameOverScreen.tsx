@@ -219,6 +219,7 @@ export default function GameOverScreen() {
   };
 
   const isClassicMode = gameState.mode === 'classic_fc' || gameState.mode === 'classic_cb';
+  const isBlitzMode = gameState.mode === 'blitz_fc' || gameState.mode === 'blitz_cb';
   const isSSC = gameState.mode === 'ssc';
   // Use cumulative score for SSC, regular score for other modes
   const displayScore = isSSC ? gameState.cumulativeScore : gameState.score;
@@ -263,10 +264,22 @@ export default function GameOverScreen() {
         </div>
 
         <div className="bg-card/80 rounded-xl p-4 mb-6 text-center space-y-1 w-full max-w-md mx-auto">
-          {/* Hide hands played for Classic Mode - only show for Blitz and SSC */}
-          {!isClassicMode && (
-            <p className="text-sm text-muted-foreground">Hands Played: {gameState.handsPlayed}</p>
+          {/* Blitz Mode: Show score calculation breakdown */}
+          {isBlitzMode && (
+            <>
+              <p className="text-sm text-muted-foreground">
+                Base Score: {gameState.rawScore.toLocaleString()}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                × Hands Played: {gameState.handsPlayed}
+              </p>
+              <div className="border-t border-border my-2" />
+              <p className="text-sm font-medium text-primary">
+                = Final Score: {displayScore.toLocaleString()}
+              </p>
+            </>
           )}
+          {/* Classic Mode */}
           {isClassicMode && (
             <>
               <p className="text-sm text-muted-foreground">
@@ -289,6 +302,7 @@ export default function GameOverScreen() {
               )}
             </>
           )}
+          {/* SSC Mode */}
           {isSSC && (
             <>
               <p className="text-sm text-muted-foreground">Level Reached: {gameState.sscLevel}</p>

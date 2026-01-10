@@ -189,9 +189,21 @@ export const useGameStore = create<GameStore>()(
     
     endGame: () => {
       const state = get();
-      const leftoverPenalty = calculateLeftoverPenalty(state.deck);
-      const timeBonus = calculateTimeBonus(state.timeElapsed);
-      const finalScore = state.rawScore + timeBonus - leftoverPenalty;
+      const isBlitz = state.mode === 'blitz_fc' || state.mode === 'blitz_cb';
+      const isClassic = state.mode === 'classic_fc' || state.mode === 'classic_cb';
+      
+      let finalScore = state.score;
+      let timeBonus = 0;
+      let leftoverPenalty = 0;
+      
+      if (isBlitz) {
+        // Blitz: rawScore × handsPlayed
+        finalScore = state.rawScore * state.handsPlayed;
+      } else if (isClassic) {
+        leftoverPenalty = calculateLeftoverPenalty(state.deck);
+        timeBonus = calculateTimeBonus(state.timeElapsed);
+        finalScore = state.rawScore + timeBonus - leftoverPenalty;
+      }
       
       set({
         isGameOver: true,
@@ -242,6 +254,14 @@ export const useGameStore = create<GameStore>()(
       const modifiedResult = { ...result, totalPoints: multipliedPoints };
       
       const newHandsPlayed = state.handsPlayed + 1;
+      
+      // For Blitz: rawScore stores BASE points (before final stretch multiplier)
+      // This is used for final score calculation: rawScore × handsPlayed
+      const basePointsForRaw = isBlitz 
+        ? result.totalPoints  // Original points without final stretch multiplier
+        : multipliedPoints;   // For other modes, use multiplied points
+      
+      const newRawScore = state.rawScore + basePointsForRaw;
       const newScore = state.score + multipliedPoints;
       const newLevelScore = state.levelScore + multipliedPoints;
 
@@ -259,7 +279,7 @@ export const useGameStore = create<GameStore>()(
         const shouldBonus = shouldTriggerBonusRound(state.sscLevel);
         set({
           score: newScore,
-          rawScore: state.rawScore + multipliedPoints,
+          rawScore: newRawScore,
           levelScore: newLevelScore,
           cumulativeScore: state.cumulativeScore + multipliedPoints,
           handsPlayed: newHandsPlayed,
@@ -280,11 +300,11 @@ export const useGameStore = create<GameStore>()(
       if (classicGameOver) {
         const leftoverPenalty = calculateLeftoverPenalty(state.deck);
         const timeBonus = calculateTimeBonus(state.timeElapsed);
-        const finalScore = state.rawScore + multipliedPoints + timeBonus - leftoverPenalty;
+        const finalScore = newRawScore + timeBonus - leftoverPenalty;
         
         set({
           score: finalScore,
-          rawScore: state.rawScore + multipliedPoints,
+          rawScore: newRawScore,
           timeBonus,
           leftoverPenalty,
           handsPlayed: newHandsPlayed,
@@ -298,7 +318,7 @@ export const useGameStore = create<GameStore>()(
       // Normal hand submission
       set({
         score: newScore,
-        rawScore: state.rawScore + multipliedPoints,
+        rawScore: newRawScore,
         levelScore: newLevelScore,
         cumulativeScore: state.cumulativeScore + multipliedPoints,
         handsPlayed: newHandsPlayed,

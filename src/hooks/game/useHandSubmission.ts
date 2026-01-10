@@ -42,7 +42,7 @@ export function useHandSubmission(
         }
       }
       
-      // Apply multipliers
+      // Apply multipliers for display/live score
       let multipliedPoints = result.totalPoints;
       multipliedPoints = Math.floor(multipliedPoints * betterHandMultiplier);
       if (inFinalStretch) {
@@ -57,7 +57,14 @@ export function useHandSubmission(
       handResultsRef.current.push(modifiedResult);
 
       const newHandsPlayed = prev.handsPlayed + 1;
-      const newRawScore = prev.rawScore + multipliedPoints;
+      
+      // For Blitz: rawScore stores BASE points (before final stretch multiplier)
+      // This is used for final score calculation: rawScore × handsPlayed
+      const basePointsForRaw = isBlitz 
+        ? result.totalPoints  // Original points without final stretch multiplier
+        : multipliedPoints;   // For other modes, use multiplied points
+      
+      const newRawScore = prev.rawScore + basePointsForRaw;
       const newScore = prev.score + multipliedPoints;
       const newLevelScore = prev.levelScore + multipliedPoints;
       const newCumulativeScore = prev.cumulativeScore + multipliedPoints;

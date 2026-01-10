@@ -77,6 +77,19 @@ export function useGameTimer(
                 pendingBonusRound: shouldBonus,
                 starRating,
               }));
+            } else if (isBlitz) {
+              // Blitz final score: rawScore × handsPlayed
+              setState(prev => {
+                const finalScore = prev.rawScore * prev.handsPlayed;
+                return { 
+                  ...prev, 
+                  timeRemaining: 0, 
+                  timeElapsed: timeElapsedRef.current,
+                  score: finalScore,
+                  isGameOver: true, 
+                  isPlaying: false 
+                };
+              });
             } else {
               setState(prev => ({ 
                 ...prev, 
