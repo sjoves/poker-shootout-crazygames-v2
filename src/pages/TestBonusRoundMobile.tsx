@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { BonusRound } from '@/components/game/BonusRound';
 import { Card, Suit, Rank, HandResult, RANK_VALUES } from '@/types/game';
 
@@ -25,6 +26,7 @@ function createDeck(): Card[] {
 }
 
 export default function TestBonusRoundMobile() {
+  const navigate = useNavigate();
   const [deck, setDeck] = useState<Card[]>(createDeck);
   const [timeRemaining, setTimeRemaining] = useState(60);
   const [introComplete, setIntroComplete] = useState(false);
@@ -85,6 +87,8 @@ export default function TestBonusRoundMobile() {
           level={3}
           bonusRoundNumber={2}
           onIntroComplete={() => setIntroComplete(true)}
+          onHome={() => navigate('/')}
+          onRestart={handleReset}
         />
       </div>
     </div>
