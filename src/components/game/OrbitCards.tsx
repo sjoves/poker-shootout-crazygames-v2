@@ -52,6 +52,10 @@ export function OrbitCards({
   const cardElementsRef = useRef<Map<string, HTMLDivElement>>(new Map());
   // Track which cards have been positioned to avoid resetting on re-render
   const initializedCardsRef = useRef<Set<string>>(new Set());
+  // Keep latest slot metadata per card id (so stable refs can look it up)
+  const cardSlotByIdRef = useRef<Map<string, OrbitSlot>>(new Map());
+  // Stable ref callbacks per card id (prevents ref churn -> "jump" on selection)
+  const cardRefCallbacksRef = useRef<Map<string, (el: HTMLDivElement | null) => void>>(new Map());
 
   const containerRef = useRef<HTMLDivElement>(null);
   const safeZonePadding = 40;
@@ -299,23 +303,40 @@ export function OrbitCards({
     return () => clearInterval(interval);
   }, [baseRadii, effectiveBreathingAmplitude, breathingEnabled, breathingSpeed]);
 
-  // Ref callback to set initial position only once per card
-  const getCardRefCallback = useCallback((slot: OrbitSlot) => {
-    return (el: HTMLDivElement | null) => {
-      if (el) {
-        cardElementsRef.current.set(slot.card.id, el);
-        // Only set initial position if this card hasn't been positioned yet
-        if (!initializedCardsRef.current.has(slot.card.id)) {
-          const pos = calculatePosition(slot, globalTimeRef.current);
+  // Stable ref callback per card id.
+  // IMPORTANT: React calls function refs with null + element when the ref function identity changes.
+  // Our previous implementation created a new ref each render (closure over slot) which caused
+  // the remaining cards to "reset" on every selection.
+  const getStableCardRef = useCallback((cardId: string) => {
+    const cached = cardRefCallbacksRef.current.get(cardId);
+    if (cached) return cached;
+
+    const cb = (el: HTMLDivElement | null) => {
+      if (!el) {
+        // True unmount (key removed)
+        cardElementsRef.current.delete(cardId);
+        initializedCardsRef.current.delete(cardId);
+        cardSlotByIdRef.current.delete(cardId);
+        cardRefCallbacksRef.current.delete(cardId);
+        return;
+      }
+
+      cardElementsRef.current.set(cardId, el);
+
+      // Only set transform once on mount; rAF owns motion after that.
+      if (!initializedCardsRef.current.has(cardId)) {
+        const slot = cardSlotByIdRef.current.get(cardId);
+        if (slot) {
+          const pos = calculatePositionRef.current(slot, globalTimeRef.current);
           el.style.transform = `translate3d(${pos.x}px, ${pos.y}px, 0)`;
-          initializedCardsRef.current.add(slot.card.id);
+          initializedCardsRef.current.add(cardId);
         }
-      } else {
-        cardElementsRef.current.delete(slot.card.id);
-        initializedCardsRef.current.delete(slot.card.id);
       }
     };
-  }, [calculatePosition]);
+
+    cardRefCallbacksRef.current.set(cardId, cb);
+    return cb;
+  }, []);
 
   return (
     <div
@@ -349,10 +370,13 @@ export function OrbitCards({
             const isSelected = selectedCardIds.includes(slot.card.id);
             if (isSelected) return null;
 
+            // Update slot metadata for this card id (used by stable ref callback)
+            cardSlotByIdRef.current.set(slot.card.id, slot);
+
             return (
               <div
                 key={slot.card.id}
-                ref={getCardRefCallback(slot)}
+                ref={getStableCardRef(slot.card.id)}
                 className="absolute top-1/2 left-1/2 cursor-pointer z-20 hover:scale-110 hover:z-30 active:scale-95 transition-[scale] duration-100"
                 style={{
                   marginLeft: '-28px',
