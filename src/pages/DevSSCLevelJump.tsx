@@ -38,8 +38,8 @@ export default function DevSSCLevelJump() {
   const levels = Array.from({ length: 50 }, (_, i) => i + 1);
 
   return (
-    <div className="min-h-screen modern-bg overflow-y-auto">
-      <div className="max-w-4xl mx-auto p-6 pb-24">
+    <div className="h-screen modern-bg overflow-y-auto">
+      <div className="max-w-4xl mx-auto p-6 pb-32">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
           <Button
