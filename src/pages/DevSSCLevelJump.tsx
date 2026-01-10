@@ -141,34 +141,6 @@ export default function DevSSCLevelJump() {
               </span>
             </div>
           </div>
-
-          {/* Selected Level Info */}
-          {selectedLevel !== null && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-card/50 border border-primary/30 rounded-xl p-6"
-            >
-              <h3 className="text-xl font-display text-foreground mb-2">Level {selectedLevel}</h3>
-              {(() => {
-                const info = getSSCLevelInfo(selectedLevel);
-                return (
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">Phase:</span>{' '}
-                      <span className="text-foreground font-medium">
-                        {selectedPhase ? PHASE_LABELS[selectedPhase] : PHASE_LABELS[info.phase]}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Round:</span>{' '}
-                      <span className="text-foreground font-medium">{info.round}</span>
-                    </div>
-                  </div>
-                );
-              })()}
-            </motion.div>
-          )}
         </div>
       </div>
 
