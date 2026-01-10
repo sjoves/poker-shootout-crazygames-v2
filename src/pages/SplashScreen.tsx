@@ -16,7 +16,7 @@ import { DailyChallenges } from '@/components/retention/DailyChallenges';
 import { AchievementsPanel, AchievementNotification } from '@/components/retention/AchievementsPanel';
 import { DailyRewardWheel } from '@/components/retention/DailyRewardWheel';
 import { StarIcon, UserIcon } from '@heroicons/react/24/solid';
-import { Target, Zap, Trophy, Gift, Settings, HelpCircle, LogIn } from 'lucide-react';
+import { Target, Zap, Trophy, Gift, Settings, HelpCircle, LogIn, TestTubeDiagonal } from 'lucide-react';
 
 export default function SplashScreen() {
   const navigate = useNavigate();
@@ -275,7 +275,7 @@ export default function SplashScreen() {
         </div>
 
         {/* Settings & Tutorial Buttons - Centered below game modes */}
-        <div className="flex justify-center gap-3">
+        <div className="flex justify-center gap-3 flex-wrap">
           <Button 
             variant="outline" 
             className="gap-2 border-primary bg-transparent hover:bg-primary/10 hover:text-foreground" 
@@ -292,6 +292,16 @@ export default function SplashScreen() {
             <HelpCircle className="w-5 h-5 text-primary" />
             Tutorial
           </Button>
+          {import.meta.env.DEV && (
+            <Button
+              variant="outline"
+              className="gap-2 border-primary bg-transparent hover:bg-primary/10 hover:text-foreground"
+              onClick={() => navigate('/test-bonus-mobile')}
+            >
+              <TestTubeDiagonal className="w-5 h-5 text-primary" />
+              Bonus Test
+            </Button>
+          )}
         </div>
 
         {/* Daily Challenges - Contains Streak, Reward, and Challenges */}
