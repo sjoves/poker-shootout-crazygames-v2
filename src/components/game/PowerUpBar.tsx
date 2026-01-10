@@ -14,7 +14,7 @@ import {
   HomeModernIcon,
   Squares2X2Icon,
   FireIcon,
-} from '@heroicons/react/24/outline';
+} from '@heroicons/react/24/solid';
 import { Crown } from 'lucide-react';
 
 // Map power-up IDs to Heroicon components
@@ -98,8 +98,8 @@ export function PowerUpBar({
                   className={cn(
                     'relative w-9 h-9 sm:w-12 sm:h-12 rounded-full flex items-center justify-center',
                     'border-2 transition-all',
-                    isActive && 'bg-primary/20 border-primary cursor-pointer hover:bg-primary/30 animate-pulse-glow',
-                    wasUsed && !powerUp.isReusable && 'bg-muted/50 border-muted-foreground/50 opacity-60 cursor-not-allowed',
+                    isActive && 'border-primary cursor-pointer hover:bg-primary/10',
+                    wasUsed && !powerUp.isReusable && 'border-muted-foreground/50 opacity-60 cursor-not-allowed',
                   )}
                 >
                   {IconComponent ? (
