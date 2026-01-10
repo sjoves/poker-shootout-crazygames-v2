@@ -295,14 +295,6 @@ export default function SplashScreen() {
           <Button
             variant="outline"
             className="gap-2 border-primary bg-transparent hover:bg-primary/10 hover:text-foreground"
-            onClick={() => navigate('/test-bonus-mobile')}
-          >
-            <TestTubeDiagonal className="w-5 h-5 text-primary" />
-            Bonus Test
-          </Button>
-          <Button
-            variant="outline"
-            className="gap-2 border-primary bg-transparent hover:bg-primary/10 hover:text-foreground"
             onClick={() => navigate('/dev-ssc')}
           >
             <TestTubeDiagonal className="w-5 h-5 text-primary" />
