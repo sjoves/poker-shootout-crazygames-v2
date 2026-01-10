@@ -276,7 +276,7 @@ export function BonusRound({
                 exit={{ opacity: 0, y: 10 }}
                 className="flex flex-col gap-3"
               >
-                <div className="text-center py-3 border-2 border-primary rounded-xl bg-card/90 backdrop-blur-sm">
+                <div className="text-center py-3">
                   <h2 className="text-2xl font-display text-primary">
                     {handResult.hand.name}
                   </h2>
