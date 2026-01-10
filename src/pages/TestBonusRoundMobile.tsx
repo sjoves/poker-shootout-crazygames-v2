@@ -74,19 +74,8 @@ export default function TestBonusRoundMobile() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Mobile viewport notice */}
-      <div className="hidden sm:flex min-h-screen items-center justify-center p-4 text-center">
-        <div className="bg-card p-6 rounded-lg border border-border max-w-md">
-          <h1 className="text-xl font-display text-primary mb-2">Mobile Test Page</h1>
-          <p className="text-muted-foreground">
-            This page is designed to test the mobile bonus round layout (5 rows × 4 columns).
-            Please view on a mobile device or use browser dev tools to simulate mobile viewport.
-          </p>
-        </div>
-      </div>
-
-      {/* Mobile view */}
-      <div className="sm:hidden h-screen">
+      {/* Full-screen bonus round - works on all viewports for testing */}
+      <div className="h-screen">
         <BonusRound
           deck={deck}
           onSubmitHand={handleSubmitHand}
