@@ -48,12 +48,10 @@ export function OrbitCards({
   const lastTimeRef = useRef<number>(0);
   const rafRef = useRef<number>();
   
-  // Store calculated positions in ref for direct DOM updates
+  // Store DOM elements for direct manipulation
   const cardElementsRef = useRef<Map<string, HTMLDivElement>>(new Map());
-  
-  // Force render only when cards change
-  const [, setRenderTrigger] = useState(0);
-  const triggerRender = useCallback(() => setRenderTrigger(v => v + 1), []);
+  // Track which cards have been positioned to avoid resetting on re-render
+  const initializedCardsRef = useRef<Set<string>>(new Set());
 
   const containerRef = useRef<HTMLDivElement>(null);
   const safeZonePadding = 40;
@@ -123,6 +121,8 @@ export function OrbitCards({
       setHiddenDeckCount(queue.length);
     }
 
+    // Clear initialized cards on full re-init
+    initializedCardsRef.current.clear();
     setSlots(newSlots);
     globalTimeRef.current = 0;
     lastTimeRef.current = 0;
@@ -299,9 +299,22 @@ export function OrbitCards({
     return () => clearInterval(interval);
   }, [baseRadii, effectiveBreathingAmplitude, breathingEnabled, breathingSpeed]);
 
-  // Get initial positions for render
-  const getInitialPosition = useCallback((slot: OrbitSlot) => {
-    return calculatePosition(slot, globalTimeRef.current);
+  // Ref callback to set initial position only once per card
+  const getCardRefCallback = useCallback((slot: OrbitSlot) => {
+    return (el: HTMLDivElement | null) => {
+      if (el) {
+        cardElementsRef.current.set(slot.card.id, el);
+        // Only set initial position if this card hasn't been positioned yet
+        if (!initializedCardsRef.current.has(slot.card.id)) {
+          const pos = calculatePosition(slot, globalTimeRef.current);
+          el.style.transform = `translate3d(${pos.x}px, ${pos.y}px, 0)`;
+          initializedCardsRef.current.add(slot.card.id);
+        }
+      } else {
+        cardElementsRef.current.delete(slot.card.id);
+        initializedCardsRef.current.delete(slot.card.id);
+      }
+    };
   }, [calculatePosition]);
 
   return (
@@ -330,26 +343,20 @@ export function OrbitCards({
           </div>
         )}
 
-        {/* Cards - use pure DOM for smooth animation, no framer-motion animate */}
+        {/* Cards - pure DOM positioning via rAF, no style.transform in JSX */}
         <AnimatePresence>
           {slots.map((slot) => {
             const isSelected = selectedCardIds.includes(slot.card.id);
             if (isSelected) return null;
 
-            const pos = getInitialPosition(slot);
-
             return (
               <div
                 key={slot.card.id}
-                ref={(el) => {
-                  if (el) cardElementsRef.current.set(slot.card.id, el);
-                  else cardElementsRef.current.delete(slot.card.id);
-                }}
+                ref={getCardRefCallback(slot)}
                 className="absolute top-1/2 left-1/2 cursor-pointer z-20 hover:scale-110 hover:z-30 active:scale-95 transition-[scale] duration-100"
                 style={{
                   marginLeft: '-28px',
                   marginTop: '-40px',
-                  transform: `translate3d(${pos.x}px, ${pos.y}px, 0)`,
                   willChange: 'transform',
                 }}
                 onClick={() => handleCardClick(slot)}
