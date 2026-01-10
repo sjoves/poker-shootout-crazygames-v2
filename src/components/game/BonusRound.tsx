@@ -64,12 +64,13 @@ export function BonusRound({
   }, [timeRemaining, introPhase, playSound]);
 
   // Calculate number of cards based on bonus round number
-  // First bonus round: 10 cards (2x5), then 20, max 24
+  // Desktop: max 3 rows × 6 columns = 18 cards
+  // Mobile: max 4 rows × 4 columns = 16 cards
   const effectiveBonusRound = Math.max(bonusRoundNumber, 1);
-  const cardCount = Math.min(effectiveBonusRound * 10, 24);
-  // First bonus round uses 5 columns for 2x5 grid; others use 4 on mobile (same as SD), 6 on desktop
-  const isFirstBonusRound = effectiveBonusRound === 1;
-  const gridCols = isFirstBonusRound ? (isMobile ? 4 : 5) : (isMobile ? 4 : 6);
+  const maxCards = isMobile ? 16 : 18;
+  const cardCount = Math.min(effectiveBonusRound * 10, maxCards);
+  // Desktop: always 6 columns (max 3 rows), Mobile: 4 columns
+  const gridCols = isMobile ? 4 : 6;
   // Card size matches StaticGrid: sdm on mobile, sd on desktop
   const cardSize = isMobile ? 'sdm' : 'sd';
 
