@@ -263,75 +263,64 @@ export function BonusRound({
         </div>
       </div>
 
-      {/* Hand Result Modal */}
-      <AnimatePresence>
-        {handResult && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm"
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-card border-2 border-accent rounded-2xl shadow-2xl p-6 mx-4 max-w-sm w-full text-center"
-            >
-              <h2 className="text-2xl font-display text-primary mb-4">
-                {handResult.hand.name}
-              </h2>
-              <div className="text-muted-foreground space-y-2 mb-6">
-                <p className="text-lg">
-                  Hand: <span className="text-foreground font-semibold">{handResult.totalPoints} pts</span>
-                </p>
-                <p className="text-accent">
-                  Time Bonus: <span className="font-semibold">{timeRemaining * 10} pts</span>
-                  <span className="text-sm ml-1">({timeRemaining}s × 10)</span>
-                </p>
-                <div className="border-t border-border pt-3 mt-3">
-                  <p className="text-xl text-foreground font-bold">
-                    Total: {handResult.totalPoints + (timeRemaining * 10)} pts
-                  </p>
-                </div>
-              </div>
-              <Button
-                onClick={handleSubmit}
-                variant="outline"
-                className="w-full h-14 text-lg font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground"
-                size="lg"
+      {/* Action Area - below cards */}
+      <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
+        <div className="max-w-md mx-auto">
+          <AnimatePresence mode="wait">
+            {handResult ? (
+              /* Hand formed - show hand name and submit */
+              <motion.div
+                key="hand-result"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="flex flex-col gap-3"
               >
-                Submit Hand
-              </Button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Action Buttons - only show when no hand formed */}
-      {!handResult && (
-        <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
-          <div className="flex gap-3 max-w-md mx-auto">
-            <Button
-              onClick={handleSubmit}
-              disabled={!canSubmit}
-              variant="outline"
-              className="flex-1 h-14 text-lg font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground disabled:opacity-50 disabled:border-primary/50"
-              size="lg"
-            >
-              Submit Hand
-            </Button>
-            <Button
-              onClick={onSkip}
-              variant="outline"
-              className="h-14 border-primary bg-transparent hover:bg-primary/10 hover:text-foreground"
-              size="lg"
-            >
-              Skip
-            </Button>
-          </div>
+                <div className="text-center py-3 border-2 border-primary rounded-xl bg-card/90 backdrop-blur-sm">
+                  <h2 className="text-2xl font-display text-primary">
+                    {handResult.hand.name}
+                  </h2>
+                </div>
+                <Button
+                  onClick={handleSubmit}
+                  variant="outline"
+                  className="w-full h-14 text-lg font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground"
+                  size="lg"
+                >
+                  Submit Hand
+                </Button>
+              </motion.div>
+            ) : (
+              /* No hand yet - show submit (disabled) and skip */
+              <motion.div
+                key="no-hand"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex gap-3"
+              >
+                <Button
+                  onClick={handleSubmit}
+                  disabled={!canSubmit}
+                  variant="outline"
+                  className="flex-1 h-14 text-lg font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground disabled:opacity-50 disabled:border-primary/50"
+                  size="lg"
+                >
+                  Submit Hand
+                </Button>
+                <Button
+                  onClick={onSkip}
+                  variant="outline"
+                  className="h-14 border-primary bg-transparent hover:bg-primary/10 hover:text-foreground"
+                  size="lg"
+                >
+                  Skip
+                </Button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-      )}
+      </div>
     </div>
   );
 }
