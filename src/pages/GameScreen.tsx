@@ -53,8 +53,8 @@ export default function GameScreen() {
   const isSSC = state.mode === 'ssc';
   const isBlitzCB = state.mode === 'blitz_cb';
   const isClassicCB = state.mode === 'classic_cb';
-  // Blitz/CB and Classic/CB use 1.0 speed on mobile, other modes use reduced speed
-  const baseSpeed = isMobile ? ((isBlitzCB || isClassicCB) ? 1.0 : 0.6) : 1;
+  // Blitz/CB and Classic/CB use 1.0 speed on mobile, other modes use 1.0 as well
+  const baseSpeed = 1;
   const sscSpeed = isSSC ? getSSCSpeed(state.sscLevel) : 1;
   const [showUsedCards, setShowUsedCards] = useState(false);
   const [bonusIntroActive, setBonusIntroActive] = useState(false);
