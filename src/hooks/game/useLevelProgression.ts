@@ -54,12 +54,16 @@ export function useLevelProgression(
 
   // Proceed to next numbered level (called after bonus round or directly)
   const nextLevel = useCallback(() => {
+    console.log('[nextLevel] Called');
     setState(prev => {
+      console.log('[nextLevel] Current earnedPowerUps:', prev.earnedPowerUps, 'activePowerUps:', prev.activePowerUps);
       const newLevel = prev.sscLevel + 1;
       const levelInfo = getSSCLevelInfo(newLevel);
       const deck = shuffleDeck(createDeck());
 
       resetHandResults();
+      
+      console.log('[nextLevel] Setting activePowerUps to earnedPowerUps:', prev.earnedPowerUps);
 
       return {
         ...prev,
