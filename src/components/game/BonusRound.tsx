@@ -45,8 +45,6 @@ export function BonusRound({
   const [handResult, setHandResult] = useState<HandResult | null>(null);
   const [currentFlippedId, setCurrentFlippedId] = useState<string | null>(null);
   const [introPhase, setIntroPhase] = useState<IntroPhase>('instructions');
-  const [showScoreModal, setShowScoreModal] = useState(false);
-  const [submittedTime, setSubmittedTime] = useState<number>(0);
   const { playSound } = useAudio();
   const isMobile = useIsMobile();
   const lastPlayedSecondRef = useRef<number | null>(null);
@@ -121,14 +119,7 @@ export function BonusRound({
 
   const handleSubmit = () => {
     if (keptCards.length === 5 && handResult) {
-      setSubmittedTime(timeRemaining);
-      setShowScoreModal(true);
-    }
-  };
-
-  const handleConfirmSubmit = () => {
-    if (keptCards.length === 5 && handResult) {
-      onSubmitHand(keptCards, handResult, submittedTime);
+      onSubmitHand(keptCards, handResult, timeRemaining);
     }
   };
 
@@ -272,56 +263,11 @@ export function BonusRound({
         </div>
       </div>
 
-      {/* Score Breakdown Modal */}
-      <AnimatePresence>
-        {showScoreModal && handResult && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm"
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-card border-2 border-accent rounded-2xl shadow-2xl p-6 mx-4 max-w-sm w-full text-center"
-            >
-              <h2 className="text-2xl font-display text-primary mb-4">
-                {handResult.hand.name}
-              </h2>
-              <div className="text-muted-foreground space-y-2 mb-6">
-                <p className="text-lg">
-                  Hand: <span className="text-foreground font-semibold">{handResult.totalPoints} pts</span>
-                </p>
-                <p className="text-accent">
-                  Time Bonus: <span className="font-semibold">{submittedTime * 10} pts</span>
-                  <span className="text-sm ml-1">({submittedTime}s × 10)</span>
-                </p>
-                <div className="border-t border-border pt-3 mt-3">
-                  <p className="text-xl text-foreground font-bold">
-                    Total: {handResult.totalPoints + (submittedTime * 10)} pts
-                  </p>
-                </div>
-              </div>
-              <Button
-                onClick={handleConfirmSubmit}
-                variant="outline"
-                className="w-full h-14 text-lg font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground"
-                size="lg"
-              >
-                Continue
-              </Button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Action Area - below cards */}
       <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
         <div className="max-w-md mx-auto">
           <AnimatePresence mode="wait">
-            {handResult && !showScoreModal ? (
+            {handResult ? (
               /* Hand formed - show hand name and submit */
               <motion.div
                 key="hand-result"
@@ -344,7 +290,7 @@ export function BonusRound({
                   Submit Hand
                 </Button>
               </motion.div>
-            ) : !showScoreModal ? (
+            ) : (
               /* No hand yet - show submit (disabled) and skip */
               <motion.div
                 key="no-hand"
@@ -371,7 +317,7 @@ export function BonusRound({
                   Skip
                 </Button>
               </motion.div>
-            ) : null}
+            )}
           </AnimatePresence>
         </div>
       </div>
