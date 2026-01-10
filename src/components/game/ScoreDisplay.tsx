@@ -128,11 +128,15 @@ export function ScorePanel({
     onHome?.();
   };
   
+  // Determine if score display needs smaller font (over 6 characters)
+  const scoreText = goalScore ? `${score}/${goalScore}` : score.toLocaleString();
+  const needsSmallerFont = scoreText.length > 6;
+  
   return (
     <>
       <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3">
-        {/* Main stats pill - relative for overlay positioning */}
-        <div className="relative flex items-center gap-4 bg-transparent rounded-full px-5 py-2.5 border border-primary">
+        {/* Main stats pill - fixed width for consistency */}
+        <div className="relative flex items-center justify-between bg-transparent rounded-full px-5 py-2.5 border border-primary w-[320px] sm:w-[340px]">
           {/* Bonus x2 Overlay - shows for 1s then fades over 1s */}
           <AnimatePresence>
             {inFinalStretch && (
@@ -177,15 +181,18 @@ export function ScorePanel({
             )}
           </AnimatePresence>
           {/* Score */}
-          <div className="flex items-center gap-2 min-w-[5.5rem]">
+          <div className="flex items-center gap-2 min-w-[90px]">
             <TrophyIcon className="w-5 h-5 text-primary flex-shrink-0" />
             <motion.span
               key={score}
               initial={{ scale: 1.1 }}
               animate={{ scale: 1 }}
-              className="text-lg font-bold text-foreground tabular-nums"
+              className={cn(
+                "font-bold text-foreground tabular-nums",
+                needsSmallerFont ? "text-sm" : "text-lg"
+              )}
             >
-              {goalScore ? `${score}/${goalScore}` : score.toLocaleString()}
+              {scoreText}
             </motion.span>
           </div>
 
@@ -194,7 +201,7 @@ export function ScorePanel({
 
           {/* Time */}
           <motion.div 
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 min-w-[70px] justify-center"
             animate={isUrgent ? { 
               scale: [1, 1.1, 1],
             } : {}}
@@ -218,18 +225,16 @@ export function ScorePanel({
 
           {/* Level or Bonus Round indicator */}
           {isBonusRound ? (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-center min-w-[40px]">
               <span className="text-[10px] font-semibold text-accent uppercase tracking-wide whitespace-nowrap">BONUS</span>
             </div>
-          ) : level !== undefined && (
+          ) : level !== undefined ? (
             <div className="flex items-center justify-center w-8 h-8 rounded-full border-2 border-accent bg-transparent">
               <span className="text-lg font-bold text-accent">{level}</span>
             </div>
-          )}
-
-          {/* Progress - cards/hands (Classic & Blitz modes only, hidden during bonus round) */}
-          {level === undefined && !isBonusRound && (
-            <div className="flex items-center gap-2">
+          ) : !isBonusRound && (
+            /* Progress - cards/hands (Classic & Blitz modes only, hidden during bonus round) */
+            <div className="flex items-center gap-2 min-w-[40px] justify-center">
               {gameMode === 'blitz' ? (
                 <HandRaisedIcon className="w-5 h-5 text-accent" />
               ) : (
