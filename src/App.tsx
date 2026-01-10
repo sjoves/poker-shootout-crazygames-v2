@@ -16,6 +16,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import NotFound from "./pages/NotFound";
 import TestOrbitPage from "./pages/TestOrbitPage";
 import DevSandbox from "./pages/DevSandbox";
+import TestPowerUps from "./pages/TestPowerUps";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +40,7 @@ const App = () => (
                   <Route path="/privacy" element={<PrivacyPolicy />} />
                   <Route path="/test-orbit" element={<TestOrbitPage />} />
                   <Route path="/dev-sandbox" element={<DevSandbox />} />
+                  <Route path="/test-powerups" element={<TestPowerUps />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </HashRouter>
