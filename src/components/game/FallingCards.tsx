@@ -274,8 +274,9 @@ export function FallingCards({
           continue;
         }
 
-        // Drop if selected elsewhere
-        if (selectedCardIds.includes(card.id)) {
+        // Only remove cards that were picked via our own pointer handler
+        // Do NOT filter based on selectedCardIds - that causes other cards to disappear
+        if (pickedInstanceKeysRef.current.has(card.instanceKey)) {
           needsRender = true;
           continue;
         }
