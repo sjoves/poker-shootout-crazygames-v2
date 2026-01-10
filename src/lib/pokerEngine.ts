@@ -100,6 +100,10 @@ function countBits(n: number): number {
 
 // Check if a rank mask contains a straight pattern - O(1) with 10 comparisons
 function hasStraight(rankMask: number): boolean {
+  // Debug: log wheel check
+  const wheelPattern = STRAIGHT_PATTERNS[0];
+  console.log('[STRAIGHT CHECK] rankMask:', rankMask.toString(2).padStart(13, '0'), 'wheel:', wheelPattern.toString(2).padStart(13, '0'), 'match:', (rankMask & wheelPattern) === wheelPattern);
+  
   for (const pattern of STRAIGHT_PATTERNS) {
     if ((rankMask & pattern) === pattern) return true;
   }
