@@ -4,6 +4,32 @@ import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { 
+  ArrowPathIcon, 
+  ClockIcon, 
+  Square2StackIcon,
+  CubeIcon,
+  ArrowRightIcon,
+  SparklesIcon,
+  HomeModernIcon,
+  Squares2X2Icon,
+  FireIcon,
+} from '@heroicons/react/24/outline';
+import { Crown } from 'lucide-react';
+
+// Map power-up IDs to Heroicon components
+const POWER_UP_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  reshuffle: ArrowPathIcon,
+  two_pair: Square2StackIcon,
+  three_kind: CubeIcon,
+  add_time: ClockIcon,
+  straight: ArrowRightIcon,
+  flush: SparklesIcon,
+  full_house: HomeModernIcon,
+  four_kind: Squares2X2Icon,
+  straight_flush: FireIcon,
+  royal_flush: Crown,
+};
 
 interface PowerUpBarProps {
   earnedPowerUps: string[];
@@ -54,6 +80,7 @@ export function PowerUpBar({
           const count = powerUpCounts[powerUpId] || 0;
           const isActive = activePowerUps.includes(powerUp.id);
           const wasUsed = !isActive;
+          const IconComponent = POWER_UP_ICONS[powerUp.id];
           
           return (
             <Tooltip key={powerUp.id}>
@@ -69,13 +96,20 @@ export function PowerUpBar({
                   }}
                   disabled={!isActive}
                   className={cn(
-                    'relative w-9 h-9 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-base sm:text-xl',
+                    'relative w-9 h-9 sm:w-12 sm:h-12 rounded-full flex items-center justify-center',
                     'border-2 transition-all',
                     isActive && 'bg-primary/20 border-primary cursor-pointer hover:bg-primary/30 animate-pulse-glow',
                     wasUsed && !powerUp.isReusable && 'bg-muted/50 border-muted-foreground/50 opacity-60 cursor-not-allowed',
                   )}
                 >
-                  {powerUp.emoji}
+                  {IconComponent ? (
+                    <IconComponent className={cn(
+                      "w-5 h-5 sm:w-6 sm:h-6",
+                      isActive ? "text-primary" : "text-muted-foreground"
+                    )} />
+                  ) : (
+                    <span className="text-base sm:text-xl">{powerUp.emoji}</span>
+                  )}
                   {/* Count badge for multiple power-ups */}
                   {count > 1 && (
                     <span className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-primary text-primary-foreground text-[10px] sm:text-xs font-bold rounded-full flex items-center justify-center">
