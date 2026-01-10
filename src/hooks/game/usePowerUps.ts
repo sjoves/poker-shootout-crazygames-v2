@@ -38,14 +38,24 @@ export function selectRewardPowerUp(score: number): string | null {
   return availablePowerUps[randomIndex];
 }
 
+// Helper to remove only ONE instance of a power-up ID from an array
+function removeOnePowerUp(arr: string[], id: string): string[] {
+  const idx = arr.indexOf(id);
+  if (idx === -1) return arr;
+  return [...arr.slice(0, idx), ...arr.slice(idx + 1)];
+}
+
 export function usePowerUps(
   setState: React.Dispatch<React.SetStateAction<GameState>>
 ) {
   const usePowerUp = useCallback((powerUpId: string) => {
     console.log('[usePowerUp] Called with powerUpId:', powerUpId);
     setState(prev => {
-      console.log('[usePowerUp] Current state - earnedPowerUps:', prev.earnedPowerUps, 'activePowerUps:', prev.activePowerUps);
-      if (!prev.activePowerUps.includes(powerUpId)) {
+      console.log('[usePowerUp] Current state - earnedPowerUps:', JSON.stringify(prev.earnedPowerUps), 'activePowerUps:', JSON.stringify(prev.activePowerUps));
+      
+      // Find the index of the power-up to remove (only remove ONE instance)
+      const activeIndex = prev.activePowerUps.indexOf(powerUpId);
+      if (activeIndex === -1) {
         console.log('[PowerUp] Not in activePowerUps:', powerUpId, 'available:', prev.activePowerUps);
         return prev;
       }
@@ -58,12 +68,14 @@ export function usePowerUps(
 
       console.log('[PowerUp] Using power-up:', powerUp.name, 'handType:', powerUp.handType);
 
+
       // Handle reshuffle power-up
       if (powerUp.id === 'reshuffle') {
         const shuffledDeck = shuffleDeck([...prev.deck]);
-        // Remove power-up from both earned and active lists (consumed until won again)
-        const newEarnedPowerUps = prev.earnedPowerUps.filter(id => id !== powerUpId);
-        const newActivePowerUps = prev.activePowerUps.filter(id => id !== powerUpId);
+        // Remove ONE instance from both earned and active lists (consumed until won again)
+        const newEarnedPowerUps = removeOnePowerUp(prev.earnedPowerUps, powerUpId);
+        const newActivePowerUps = removeOnePowerUp(prev.activePowerUps, powerUpId);
+        console.log('[PowerUp] Reshuffle used. New earnedPowerUps:', newEarnedPowerUps, 'newActivePowerUps:', newActivePowerUps);
         return {
           ...prev,
           deck: shuffledDeck,
@@ -74,9 +86,10 @@ export function usePowerUps(
       }
 
       if (powerUp.id === 'add_time') {
-        // Remove power-up from both earned and active lists (consumed until won again)
-        const newEarnedPowerUps = prev.earnedPowerUps.filter(id => id !== powerUpId);
-        const newActivePowerUps = prev.activePowerUps.filter(id => id !== powerUpId);
+        // Remove ONE instance from both earned and active lists (consumed until won again)
+        const newEarnedPowerUps = removeOnePowerUp(prev.earnedPowerUps, powerUpId);
+        const newActivePowerUps = removeOnePowerUp(prev.activePowerUps, powerUpId);
+        console.log('[PowerUp] Add Time used. New earnedPowerUps:', newEarnedPowerUps, 'newActivePowerUps:', newActivePowerUps);
         return {
           ...prev,
           timeRemaining: prev.timeRemaining + 15,
@@ -103,9 +116,10 @@ export function usePowerUps(
       // Remove the used cards from the deck
       const newDeck = prev.deck.filter(c => !hand.some(h => h.id === c.id));
       
-      // Remove power-up from both earned and active lists (consumed)
-      const newEarnedPowerUps = prev.earnedPowerUps.filter(id => id !== powerUpId);
-      const newActivePowerUps = prev.activePowerUps.filter(id => id !== powerUpId);
+      // Remove ONE instance from both earned and active lists (consumed)
+      const newEarnedPowerUps = removeOnePowerUp(prev.earnedPowerUps, powerUpId);
+      const newActivePowerUps = removeOnePowerUp(prev.activePowerUps, powerUpId);
+      console.log('[PowerUp] Hand power-up used. New earnedPowerUps:', newEarnedPowerUps, 'newActivePowerUps:', newActivePowerUps);
 
       return {
         ...prev,
@@ -140,13 +154,14 @@ export function usePowerUps(
     });
   }, [setState]);
 
-  // Swap: discard an existing power-up to make room for the new one
+  // Swap: discard ONE instance of an existing power-up to make room for the new one
   const swapPowerUp = useCallback((discardPowerUpId: string) => {
     setState(prev => {
       if (!prev.pendingReward) return prev;
       
-      const newEarnedPowerUps = prev.earnedPowerUps.filter(id => id !== discardPowerUpId);
-      const newActivePowerUps = prev.activePowerUps.filter(id => id !== discardPowerUpId);
+      // Remove only ONE instance of the discarded power-up
+      const newEarnedPowerUps = removeOnePowerUp(prev.earnedPowerUps, discardPowerUpId);
+      const newActivePowerUps = removeOnePowerUp(prev.activePowerUps, discardPowerUpId);
       
       newEarnedPowerUps.push(prev.pendingReward);
       newActivePowerUps.push(prev.pendingReward);
