@@ -5,7 +5,6 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, RotateCcw } from 'lucide-react';
 import { StaticGrid } from '@/components/game/StaticGrid';
 import { HandDisplay } from '@/components/game/HandDisplay';
-import { PowerUpBar } from '@/components/game/PowerUpBar';
 import { createDeck, shuffleDeck, evaluateHand, generateSpecificHand } from '@/lib/pokerEngine';
 import { useAudio } from '@/contexts/AudioContext';
 
@@ -18,11 +17,6 @@ export default function TestPowerUps() {
   const [selectedCards, setSelectedCards] = useState<Card[]>([]);
   const [currentHand, setCurrentHand] = useState<HandResult | null>(null);
   const [usedCards, setUsedCards] = useState<Card[]>([]);
-  
-  // All power-ups available for testing
-  const allPowerUpIds = POWER_UPS.map(p => p.id);
-  const [earnedPowerUps, setEarnedPowerUps] = useState<string[]>(allPowerUpIds);
-  const [activePowerUps, setActivePowerUps] = useState<string[]>(allPowerUpIds);
 
   // Select a card
   const handleSelectCard = useCallback((card: Card) => {
@@ -105,8 +99,6 @@ export default function TestPowerUps() {
     setSelectedCards([]);
     setCurrentHand(null);
     setUsedCards([]);
-    setEarnedPowerUps(allPowerUpIds);
-    setActivePowerUps(allPowerUpIds);
   };
 
   const tierColors = {
@@ -131,60 +123,40 @@ export default function TestPowerUps() {
         </Button>
       </div>
 
+      {/* Power-ups bar - horizontal across top */}
+      <div className="p-3 border-b border-primary/20 bg-card/30">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+          <span className="text-sm text-muted-foreground whitespace-nowrap mr-2">Power-ups:</span>
+          {POWER_UPS.map(powerUp => {
+            const tierColor = powerUp.tier === 3 ? 'border-gold bg-gold/20 hover:bg-gold/30' 
+                            : powerUp.tier === 2 ? 'border-silver bg-silver/20 hover:bg-silver/30'
+                            : 'border-bronze bg-bronze/20 hover:bg-bronze/30';
+            return (
+              <button
+                key={powerUp.id}
+                onClick={() => handleUsePowerUp(powerUp.id)}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg border-2 transition-all hover:scale-105 active:scale-95 ${tierColor}`}
+                title={`${powerUp.name}: ${powerUp.description}`}
+              >
+                <span className="text-2xl">{powerUp.emoji}</span>
+                <span className="text-sm font-medium text-foreground whitespace-nowrap">{powerUp.name}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Main game area */}
-      <div className="flex-1 flex relative overflow-hidden">
-        {/* Left side: Power-up reference list */}
-        <div className="w-72 border-r border-primary/20 p-4 overflow-y-auto">
-          <h2 className="font-display text-lg text-foreground mb-4">All Power-Ups</h2>
-          <div className="space-y-3">
-            {[1, 2, 3].map(tier => (
-              <div key={tier}>
-                <p className="text-xs text-muted-foreground mb-2">
-                  Tier {tier} ({tier === 1 ? 'Bronze' : tier === 2 ? 'Silver' : 'Gold'})
-                </p>
-                <div className="space-y-2">
-                  {POWER_UPS.filter(p => p.tier === tier).map(powerUp => (
-                    <div
-                      key={powerUp.id}
-                      className={`border rounded-lg p-2 ${tierColors[tier as 1 | 2 | 3]}`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="text-2xl">{powerUp.emoji}</span>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm text-foreground truncate">{powerUp.name}</p>
-                          <p className="text-xs text-muted-foreground truncate">{powerUp.description}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Center: Game area */}
-        <div className="flex-1 relative">
-          <StaticGrid
-            deck={deck}
-            selectedCardIds={selectedCards.map(c => c.id)}
-            onSelectCard={handleSelectCard}
-          />
-          
-          {/* Hand display */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50">
-            <HandDisplay cards={selectedCards} currentHand={currentHand} />
-          </div>
-        </div>
-
-        {/* Right side: Active power-ups */}
-        <div className="absolute right-4 top-1/2 -translate-y-1/2 z-40">
-          <PowerUpBar
-            earnedPowerUps={earnedPowerUps}
-            activePowerUps={activePowerUps}
-            onUsePowerUp={handleUsePowerUp}
-            currentPhase="sitting_duck"
-          />
+      <div className="flex-1 relative overflow-hidden">
+        <StaticGrid
+          deck={deck}
+          selectedCardIds={selectedCards.map(c => c.id)}
+          onSelectCard={handleSelectCard}
+        />
+        
+        {/* Hand display */}
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50">
+          <HandDisplay cards={selectedCards} currentHand={currentHand} />
         </div>
       </div>
 
@@ -196,9 +168,6 @@ export default function TestPowerUps() {
           </span>
           <span className="text-muted-foreground">
             Selected: <span className="text-foreground font-medium">{selectedCards.length}/5</span>
-          </span>
-          <span className="text-muted-foreground">
-            Power-ups: <span className="text-foreground font-medium">{activePowerUps.length}</span>
           </span>
         </div>
       </div>
