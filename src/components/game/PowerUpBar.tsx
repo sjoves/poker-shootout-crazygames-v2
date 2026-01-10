@@ -58,7 +58,12 @@ export function PowerUpBar({
                 <motion.button
                   whileHover={isActive ? { scale: 1.1 } : {}}
                   whileTap={isActive ? { scale: 0.9 } : {}}
-                  onClick={() => isActive && onUsePowerUp(powerUp.id)}
+                  onClick={() => {
+                    console.log('[PowerUpBar] Button clicked:', powerUp.id, 'isActive:', isActive);
+                    if (isActive) {
+                      onUsePowerUp(powerUp.id);
+                    }
+                  }}
                   disabled={!isActive}
                   className={cn(
                     'relative w-9 h-9 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-base sm:text-xl',
