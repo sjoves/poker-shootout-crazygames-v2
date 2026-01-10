@@ -448,7 +448,7 @@ export function FallingCards({
     <div
       ref={containerRef}
       onPointerDown={handleContainerPointerDown}
-      className="absolute inset-0 z-20 overflow-hidden touch-none cursor-pointer"
+      className="absolute inset-0 top-16 z-20 overflow-hidden touch-none cursor-pointer"
     >
       {visibleCards.map((card) => (
         <div
