@@ -108,7 +108,13 @@ export function FallingCards({
   const cardsRef = useRef<LocalFallingCard[]>([]);
   const cardElementsRef = useRef<Map<string, HTMLDivElement>>(new Map());
   const pickedInstanceKeysRef = useRef<Set<string>>(new Set());
+
+  // IMPORTANT: decouple falling simulation from parent state updates.
+  // We track selected ids + deck length in refs so effects/callbacks don't churn.
+  const selectedIdsRef = useRef<Set<string>>(new Set(selectedCardIds));
   const selectedCountRef = useRef<number>(selectedCardIds.length);
+  const deckLengthRef = useRef<number>(deck.length);
+
   const activePointerIdRef = useRef<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number>();
@@ -117,8 +123,13 @@ export function FallingCards({
   const { playSound } = useAudio();
 
   useEffect(() => {
+    selectedIdsRef.current = new Set(selectedCardIds);
     selectedCountRef.current = selectedCardIds.length;
-  }, [selectedCardIds.length]);
+  }, [selectedCardIds]);
+
+  useEffect(() => {
+    deckLengthRef.current = deck.length;
+  }, [deck.length]);
 
   // Force re-render only when cards are added/removed
   const [, setRenderTrigger] = useState(0);
@@ -144,24 +155,14 @@ export function FallingCards({
     // Don't clear cardsRef.current - let existing cards continue falling
   }, [reshuffleTrigger, reshuffleDeck]);
 
-  // Full game reset only when deck becomes 52 AND there are no falling cards
-  // This ensures new game starts fresh, but hand completion doesn't clear cards
-  const prevDeckLengthRef = useRef<number>(deck.length);
-  useEffect(() => {
-    const wasSmaller = prevDeckLengthRef.current < 52;
-    const isNow52 = deck.length === 52;
-    prevDeckLengthRef.current = deck.length;
-    
-    // Only reset on true new game: deck went from <52 to exactly 52
-    if (wasSmaller && isNow52) {
-      reshuffleDeck();
-      cardsRef.current = [];
-      cardElementsRef.current.clear();
-      pickedInstanceKeysRef.current.clear();
-      isSelectingGlobal = false;
-      triggerRender();
-    }
-  }, [deck.length, reshuffleDeck, triggerRender]);
+  // NOTE: We intentionally do NOT clear cardsRef based on parent deck length.
+  // Hand submission / deck refills are global state updates and should not wipe
+  // the currently falling instances. The falling pool is only mutated by:
+  // - the internal animation loop (off-screen cleanup)
+  // - an explicit pick of a specific instanceKey
+  // If you need a hard reset, use reshuffleTrigger (which reshuffles the deal queue)
+  // plus a parent-level remount/reset signal.
+
 
   // Deal next card from shuffled deck - completely hand-blind
   const dealNextCard = useCallback(
@@ -172,8 +173,8 @@ export function FallingCards({
       while (shuffledDeckRef.current.length > 0) {
         const candidate = shuffledDeckRef.current.shift()!;
 
-        // Skip if already selected by player
-        if (selectedCardIds.includes(candidate.id)) {
+        // Skip if already selected by player (read from ref to avoid callback churn)
+        if (selectedIdsRef.current.has(candidate.id)) {
           continue;
         }
 
@@ -190,7 +191,7 @@ export function FallingCards({
       if (!picked && shuffledDeckRef.current.length === 0) {
         // Reshuffle: get all cards not currently selected
         const availableForReshuffle = deckRef.current.filter(
-          (c) => !selectedCardIds.includes(c.id)
+          (c) => !selectedIdsRef.current.has(c.id)
         );
         shuffledDeckRef.current = fisherYatesShuffle(availableForReshuffle);
         dealtCardIdsRef.current.clear();
@@ -198,7 +199,7 @@ export function FallingCards({
         // Try to get next card from reshuffled deck
         while (shuffledDeckRef.current.length > 0) {
           const candidate = shuffledDeckRef.current.shift()!;
-          if (!selectedCardIds.includes(candidate.id)) {
+          if (!selectedIdsRef.current.has(candidate.id)) {
             picked = candidate;
             break;
           }
@@ -223,7 +224,7 @@ export function FallingCards({
         swaySpeed: 1.2 + Math.random() * 1.6,
       };
     },
-    [selectedCardIds, effectiveSpeed]
+    [effectiveSpeed]
   );
 
   // Seed first card - only when deck is populated
@@ -286,7 +287,7 @@ export function FallingCards({
 
       // Check if we need to spawn
       const shouldSpawn = t - lastSpawnRef.current > 600 / effectiveSpeed;
-      if (shouldSpawn && movedCards.length < 14 && deck.length > 0) {
+      if (shouldSpawn && movedCards.length < 14 && deckLengthRef.current > 0) {
         const next = dealNextCard(effectiveWidth);
         if (next) {
           movedCards.push(next);
@@ -310,7 +311,7 @@ export function FallingCards({
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [isPaused, effectiveSpeed, selectedCardIds, dealNextCard, deck.length, triggerRender]);
+  }, [isPaused, effectiveSpeed, dealNextCard, triggerRender]);
 
   // =========================================================================
   // DELEGATED TAP HANDLER: single container-level listener, hit-test cards
