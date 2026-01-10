@@ -535,7 +535,7 @@ export default function GameScreen() {
         )}
 
         {isSSC && !state.isLevelComplete && !isBonusRound && state.earnedPowerUps.length > 0 && (
-          <div className="absolute right-4 top-1/2 -translate-y-1/2">
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 z-50 pointer-events-auto">
             <PowerUpBar
               earnedPowerUps={state.earnedPowerUps}
               activePowerUps={state.activePowerUps}
