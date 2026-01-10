@@ -65,12 +65,12 @@ export function BonusRound({
 
   // Calculate number of cards based on bonus round number
   // Desktop: max 3 rows × 6 columns = 18 cards
-  // Mobile: 5 rows × 4 columns = 20 cards
+  // Mobile: 4 rows × 5 columns = 20 cards
   const effectiveBonusRound = Math.max(bonusRoundNumber, 1);
   const maxCards = isMobile ? 20 : 18;
   const cardCount = Math.min(effectiveBonusRound * 10, maxCards);
-  // Desktop: always 6 columns (max 3 rows), Mobile: 4 columns (5 rows)
-  const gridCols = isMobile ? 4 : 6;
+  // Desktop: always 6 columns (max 3 rows), Mobile: 5 columns (4 rows)
+  const gridCols = isMobile ? 5 : 6;
   // Card size: sdm-lg on mobile (20% larger than sdm), sd on desktop
   const cardSize = isMobile ? 'sdm-lg' : 'sd';
 
