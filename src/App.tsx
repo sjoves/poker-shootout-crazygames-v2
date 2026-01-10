@@ -18,6 +18,7 @@ import TestOrbitPage from "./pages/TestOrbitPage";
 import DevSandbox from "./pages/DevSandbox";
 import TestPowerUps from "./pages/TestPowerUps";
 import TestBonusRoundMobile from "./pages/TestBonusRoundMobile";
+import DevSSCLevelJump from "./pages/DevSSCLevelJump";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +44,7 @@ const App = () => (
                   <Route path="/dev-sandbox" element={<DevSandbox />} />
                   <Route path="/test-powerups" element={<TestPowerUps />} />
                   <Route path="/test-bonus-mobile" element={<TestBonusRoundMobile />} />
+                  <Route path="/dev-ssc" element={<DevSSCLevelJump />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </HashRouter>
