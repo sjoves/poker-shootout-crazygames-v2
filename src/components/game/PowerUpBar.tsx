@@ -37,6 +37,9 @@ export function PowerUpBar({
   // Get unique power-up IDs for display
   const uniquePowerUpIds = [...new Set(earnedPowerUpData.map(p => p.id))];
   
+  // Debug: log power-up state
+  console.log('[PowerUpBar] earnedPowerUps:', earnedPowerUps, 'activePowerUps:', activePowerUps, 'uniqueIds:', uniquePowerUpIds);
+  
   if (uniquePowerUpIds.length === 0) {
     return null;
   }

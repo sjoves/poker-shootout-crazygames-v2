@@ -42,7 +42,9 @@ export function usePowerUps(
   setState: React.Dispatch<React.SetStateAction<GameState>>
 ) {
   const usePowerUp = useCallback((powerUpId: string) => {
+    console.log('[usePowerUp] Called with powerUpId:', powerUpId);
     setState(prev => {
+      console.log('[usePowerUp] Current state - earnedPowerUps:', prev.earnedPowerUps, 'activePowerUps:', prev.activePowerUps);
       if (!prev.activePowerUps.includes(powerUpId)) {
         console.log('[PowerUp] Not in activePowerUps:', powerUpId, 'available:', prev.activePowerUps);
         return prev;
@@ -118,7 +120,9 @@ export function usePowerUps(
 
   // Claim the pending reward (add to inventory - no limit)
   const claimReward = useCallback(() => {
+    console.log('[claimReward] Called');
     setState(prev => {
+      console.log('[claimReward] pendingReward:', prev.pendingReward, 'earnedPowerUps:', prev.earnedPowerUps, 'activePowerUps:', prev.activePowerUps);
       if (!prev.pendingReward) return prev;
       
       const newEarnedPowerUps = [...prev.earnedPowerUps, prev.pendingReward];
