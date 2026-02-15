@@ -1,14 +1,31 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 
-// Sitelock - check if origin ends with allowed domain or is localhost
+// Sitelock - check if origin ends with allowed CrazyGames domains or dev domains
 function isAllowedOrigin(): boolean {
   const hostname = window.location.hostname.toLowerCase();
-  // CrazyGames requirement: must end with 'crazygames.com' OR be 'localhost'
-  // Also allow dev/preview domains for development
-  return hostname.endsWith('crazygames.com') || 
-         hostname === 'localhost' || 
-         hostname.endsWith('lovable.app') || 
-         hostname.endsWith('lovableproject.com');
+  // CrazyGames regional domains + video ad domain
+  const crazyGamesDomains = [
+    'crazygames.com',      // main
+    'crazygames.fr',       // France
+    'crazygames.co.id',    // Indonesia
+    'crazygames.nl',       // Netherlands
+    'crazygames.de',       // Germany
+    'crazygames.es',       // Spain
+    'crazygames.it',       // Italy
+    'crazygames.pt',       // Portugal
+    'crazygames.pl',       // Poland
+    'crazygames.ro',       // Romania
+    'crazygames.jp',       // Japan
+    'crazygames.kr',       // Korea
+    'crazygames.com.br',   // Brazil
+    'crazygames.com.tr',   // Turkey
+  ];
+  const isAllowedCG = crazyGamesDomains.some(d => hostname.endsWith(d));
+  // Dev/preview domains
+  const isDev = hostname === 'localhost' || 
+                hostname.endsWith('lovable.app') || 
+                hostname.endsWith('lovableproject.com');
+  return isAllowedCG || isDev;
 }
 
 // CrazyGames SDK types

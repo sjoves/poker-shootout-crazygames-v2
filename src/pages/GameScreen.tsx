@@ -257,6 +257,18 @@ export default function GameScreen() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [state.isPlaying, state.isGameOver, state.isLevelComplete, state.isPaused, pauseGame, gameplayStart, gameplayStop]);
 
+  // Pause on tab/window visibility change (CrazyGames requirement)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden && state.isPlaying && !state.isPaused && !state.isGameOver && !state.isLevelComplete) {
+        pauseGame();
+        gameplayStop();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [state.isPlaying, state.isPaused, state.isGameOver, state.isLevelComplete, pauseGame, gameplayStop]);
+
   // Trigger happytime on high-value hands (achievement moment)
   useEffect(() => {
     if (state.currentHand && state.currentHand.totalPoints >= 200) {
