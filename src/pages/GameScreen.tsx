@@ -3,6 +3,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameState } from '@/hooks/useGameState';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useInputMethod } from '@/hooks/useInputMethod';
 import { useAudio } from '@/contexts/AudioContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useCrazyGames } from '@/contexts/CrazyGamesContext';
@@ -50,6 +51,7 @@ export default function GameScreen() {
   } = useGameState();
   const { playSound, startMusic, stopMusic, isMusicLoading, isMuted, setMasterVolume, masterVolume } = useAudio();
   const isMobile = useIsMobile();
+  const inputMethod = useInputMethod();
   const isSSC = state.mode === 'ssc';
   const isBlitzCB = state.mode === 'blitz_cb';
   const isClassicCB = state.mode === 'classic_cb';
@@ -233,6 +235,27 @@ export default function GameScreen() {
       gameplayStop();
     }
   }, [state.isGameOver, state.isLevelComplete, gameplayStop]);
+
+  // P-key toggles pause
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'p' || e.key === 'P') {
+        // Don't toggle if in an input field
+        const target = e.target as HTMLElement;
+        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+        if (!state.isPlaying || state.isGameOver || state.isLevelComplete) return;
+        pauseGame();
+        // Signal CrazyGames
+        if (state.isPaused) {
+          gameplayStart();
+        } else {
+          gameplayStop();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [state.isPlaying, state.isGameOver, state.isLevelComplete, state.isPaused, pauseGame, gameplayStart, gameplayStop]);
 
   // Trigger happytime on high-value hands (achievement moment)
   useEffect(() => {
