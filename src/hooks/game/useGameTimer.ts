@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback, useSyncExternalStore } from 'react';
 import { GameState } from '@/types/game';
-import { calculateTimePenalty, calculateLeftoverBonus, calculateStarRating, shouldTriggerBonusRound } from '@/lib/pokerEngine';
+import { calculateTimePenalty, calculateLeftoverBonus, calculateBlitzFinalScore, calculateStarRating, shouldTriggerBonusRound } from '@/lib/pokerEngine';
 
 // Ref-based timer that doesn't cause re-renders on every tick
 export function useGameTimer(
@@ -78,9 +78,9 @@ export function useGameTimer(
                 starRating,
               }));
             } else if (isBlitz) {
-              // Blitz final score: rawScore × handsPlayed
+              // Blitz final score: rawScore × handsPlayed × (handsPlayed / 10)
               setState(prev => {
-                const finalScore = prev.rawScore * prev.handsPlayed;
+                const finalScore = calculateBlitzFinalScore(prev.rawScore, prev.handsPlayed);
                 return { 
                   ...prev, 
                   timeRemaining: 0, 
