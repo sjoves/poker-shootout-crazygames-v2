@@ -8,6 +8,7 @@ import {
   shuffleDeck, 
   calculateTimePenalty, 
   calculateLeftoverBonus,
+  calculateBlitzFinalScore,
   calculateStarRating,
   shouldTriggerBonusRound,
   getBetterHandMultiplier,
@@ -197,8 +198,8 @@ export const useGameStore = create<GameStore>()(
       let leftoverBonus = 0;
       
       if (isBlitz) {
-        // Blitz: rawScore × handsPlayed
-        finalScore = state.rawScore * state.handsPlayed;
+        // Blitz: rawScore × handsPlayed × (handsPlayed / 10)
+        finalScore = calculateBlitzFinalScore(state.rawScore, state.handsPlayed);
       } else if (isClassic) {
         timePenalty = calculateTimePenalty(state.timeElapsed);
         leftoverBonus = calculateLeftoverBonus(state.deck);
