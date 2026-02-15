@@ -210,7 +210,12 @@ export function ConveyorBelt({
     // Start cards further off-screen to ensure smooth entry
     const offScreenBuffer = cardWidth * 2;
     
-    const animate = () => {
+    let lastAnimTime = 0;
+    const animate = (timestamp: number) => {
+      if (lastAnimTime === 0) lastAnimTime = timestamp;
+      const dt = (timestamp - lastAnimTime) / 16.667; // normalize to 60fps
+      lastAnimTime = timestamp;
+
       const now = Date.now();
       let needsRender = false;
       
@@ -248,7 +253,7 @@ export function ConveyorBelt({
       const updatedCards: ConveyorCard[] = [];
       
       for (const card of cardsRef.current) {
-        card.x += card.speed;
+        card.x += card.speed * dt;
         
         // Update DOM element directly
         const element = cardElementsRef.current.get(card.id);
