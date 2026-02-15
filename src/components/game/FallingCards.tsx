@@ -248,7 +248,12 @@ export function FallingCards({
   useEffect(() => {
     if (isPaused) return;
 
+    let lastTime = 0;
     const tick = (t: number) => {
+      if (lastTime === 0) lastTime = t;
+      const dt = (t - lastTime) / 16.667; // normalize to 60fps
+      lastTime = t;
+
       const containerHeight = containerRef.current?.offsetHeight ?? 600;
       const measuredWidth = containerRef.current?.offsetWidth ?? 0;
       const effectiveWidth = measuredWidth > 0 ? measuredWidth : 480;
@@ -257,10 +262,10 @@ export function FallingCards({
       const movedCards: LocalFallingCard[] = [];
 
       for (const card of cardsRef.current) {
-        // Update position directly
-        card.y += card.speed;
-        card.rotation += card.rotationSpeed;
-        card.x += Math.sin((t / 1000) * card.swaySpeed) * 0.35;
+        // Update position using delta time
+        card.y += card.speed * dt;
+        card.rotation += card.rotationSpeed * dt;
+        card.x += Math.sin((t / 1000) * card.swaySpeed) * 0.35 * dt;
 
         // Update DOM element directly if it exists
         const element = cardElementsRef.current.get(card.instanceKey);
