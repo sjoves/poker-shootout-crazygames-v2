@@ -119,7 +119,7 @@ export function useGameTimer(
           if (isClassic && timeElapsedRef.current >= 600) {
             const timePenalty = calculateTimePenalty(600);
             const leftoverBonus = calculateLeftoverBonus(deckRef.current);
-            const finalScore = rawScoreRef.current - timePenalty + leftoverBonus;
+            const finalScore = Math.max(0, rawScoreRef.current - timePenalty + leftoverBonus);
             
             setState(prev => ({ 
               ...prev, 

@@ -73,7 +73,7 @@ export function useGameControls(
       } else if (isClassic) {
         timePenalty = calculateTimePenalty(prev.timeElapsed);
         leftoverBonus = calculateLeftoverBonus(prev.deck);
-        finalScore = prev.rawScore - timePenalty + leftoverBonus;
+        finalScore = Math.max(0, prev.rawScore - timePenalty + leftoverBonus);
       }
 
       return {
