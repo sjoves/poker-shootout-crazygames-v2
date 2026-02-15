@@ -273,6 +273,9 @@ export default function GameOverScreen() {
               <p className="text-sm text-muted-foreground">
                 × Hands Played: {gameState.handsPlayed}
               </p>
+              <p className="text-sm text-muted-foreground">
+                × Speed Multiplier: {(gameState.handsPlayed / 10).toFixed(1)}
+              </p>
               <div className="border-t border-border my-2" />
               <p className="text-sm font-medium text-primary">
                 = Final Score: {displayScore.toLocaleString()}
@@ -286,7 +289,7 @@ export default function GameOverScreen() {
                 Base Score: {gameState.rawScore.toLocaleString()}
               </p>
               <p className="text-sm text-destructive">
-                − Time Penalty: {gameState.timePenalty.toLocaleString()}
+                − Time Penalty: {gameState.timePenalty.toLocaleString()} ({gameState.timeElapsed}s × 100)
               </p>
               <p className="text-sm text-green-500">
                 + Leftover Card Bonus: {gameState.leftoverBonus.toLocaleString()}

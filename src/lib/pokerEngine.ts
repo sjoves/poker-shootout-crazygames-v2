@@ -235,9 +235,15 @@ export function calculateTimePenalty(seconds: number): number {
 }
 
 export function calculateLeftoverBonus(cards: Card[]): number {
-  // Classic Mode: Sum of card values × 10,000
+  // Classic Mode: Sum of card values × 100
   const totalValue = cards.reduce((sum, card) => sum + card.value, 0);
-  return totalValue * 10000;
+  return totalValue * 100;
+}
+
+export function calculateBlitzFinalScore(rawScore: number, handsPlayed: number): number {
+  // Blitz Mode: rawScore × handsPlayed × (handsPlayed / 10)
+  const speedMultiplier = handsPlayed / 10;
+  return Math.floor(rawScore * handsPlayed * speedMultiplier);
 }
 
 // SSC Level structure:
