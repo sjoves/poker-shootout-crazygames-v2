@@ -5,6 +5,7 @@ import {
   shuffleDeck, 
   calculateTimePenalty, 
   calculateLeftoverBonus,
+  calculateBlitzFinalScore,
   calculateLevelGoal,
   getSSCLevelInfo,
   createBonusFriendlyDeck,
@@ -67,8 +68,8 @@ export function useGameControls(
       let leftoverBonus = 0;
 
       if (isBlitz) {
-        // Blitz: rawScore × handsPlayed
-        finalScore = prev.rawScore * prev.handsPlayed;
+        // Blitz: rawScore × handsPlayed × (handsPlayed / 10)
+        finalScore = calculateBlitzFinalScore(prev.rawScore, prev.handsPlayed);
       } else if (isClassic) {
         timePenalty = calculateTimePenalty(prev.timeElapsed);
         leftoverBonus = calculateLeftoverBonus(prev.deck);
