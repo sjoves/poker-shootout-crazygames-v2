@@ -352,6 +352,12 @@
     font-family: 'Inter', sans-serif;
     background: linear-gradient(180deg, hsl(var(--background-gradient-start)) 0%, hsl(var(--background-gradient-end)) 100%);
     min-height: 100vh;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
   }
 
   h1, h2, h3 {
