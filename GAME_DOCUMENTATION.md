@@ -187,10 +187,21 @@ Consecutive hands that beat the previous hand's rank:
 
 ### Classic Mode Scoring
 ```
-Final Score = Raw Score + Time Bonus - Leftover Penalty
+Final Score = Base Score - Time Penalty + Leftover Card Bonus
 ```
-- **Time Bonus**: Points for finishing quickly (can be negative for slow play)
-- **Leftover Penalty**: Deduction for remaining cards in deck
+- **Time Penalty**: `Total seconds taken × 100` (always deducted)
+- **Leftover Card Bonus**: `Sum of remaining card face values × 10,000` (added to score)
+
+#### Example
+- Base Score: 7,500
+- Time Taken: 85 seconds → Time Penalty: 8,500
+- Leftover Cards: [K=13, 7=7] → Bonus: (13 + 7) × 10,000 = 200,000
+- **Final Score**: 7,500 − 8,500 + 200,000 = **199,000**
+
+### Blitz Mode Scoring
+```
+Final Score = Base Score × Hands Played
+```
 
 ---
 
@@ -349,8 +360,8 @@ interface GameState {
   
   // Scoring breakdown (Classic)
   rawScore: number;
-  timeBonus: number;
-  leftoverPenalty: number;
+  timePenalty: number;       // seconds × 100
+  leftoverBonus: number;     // sum of card values × 10,000
   
   // Bonus rounds
   bonusRoundCount: number;
