@@ -53,7 +53,7 @@ export default function GameOverScreen() {
   const { user, loading: authLoading } = useAuth();
   const { isPremium } = useSubscription();
   const { updateStats, updateStreak } = useRetention();
-  const { showMidgameAd, isAvailable: isCrazyGamesAvailable } = useCrazyGames();
+  const { showMidgameAd, isAvailable: isCrazyGamesAvailable, saveProgress, isUserLoggedIn: isCGLoggedIn } = useCrazyGames();
   const { saveGuestScore } = useGuestScores();
   const scoreSavedRef = useRef(false);
   const statsUpdatedRef = useRef(false);
@@ -106,6 +106,23 @@ export default function GameOverScreen() {
     
     updateRetentionStats();
   }, [gameState, handHistory, user, updateStats, updateStreak]);
+
+  // Sync stats to CrazyGames cloud for signed-in CG users
+  useEffect(() => {
+    if (!gameState || !isCGLoggedIn) return;
+    
+    const handTypes = handHistory ? mapHandTypesToStats(handHistory) : {};
+    const scoreToUse = gameState.mode === 'ssc' ? gameState.cumulativeScore : gameState.score;
+    
+    saveProgress({
+      lastGameMode: gameState.mode,
+      lastScore: scoreToUse,
+      handsPlayed: gameState.handsPlayed,
+      sscLevel: gameState.sscLevel,
+      handTypes,
+      timestamp: Date.now(),
+    }).catch(err => console.log('CrazyGames progress sync failed:', err));
+  }, [gameState, handHistory, isCGLoggedIn, saveProgress]);
 
   // Save score to leaderboard when component mounts
   useEffect(() => {
