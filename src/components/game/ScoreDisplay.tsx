@@ -136,7 +136,7 @@ export function ScorePanel({
     <>
       <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3">
         {/* Main stats pill - fixed width for consistency */}
-        <div className="relative flex items-center justify-between bg-transparent rounded-full px-5 py-2.5 border border-primary w-[320px] sm:w-[340px]">
+        <div className="relative flex items-center justify-between rounded-full px-5 py-2.5 w-[320px] sm:w-[340px]">
           {/* Bonus x2 Overlay - shows for 1s then fades over 1s */}
           <AnimatePresence>
             {inFinalStretch && (
